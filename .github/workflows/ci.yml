@@ -37,8 +37,10 @@ jobs:
         run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/near/cargo-near/releases/download/cargo-near-v0.23.0/cargo-near-installer.sh | sh
       - run: pnpm install --frozen-lockfile
       - name: Rust format
+        if: hashFiles('contracts/*/Cargo.toml') != ''
         run: cargo fmt --all -- --check
       - name: Rust lint
+        if: hashFiles('contracts/*/Cargo.toml') != ''
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Lint, typecheck, unit tests, build
         run: pnpm turbo run lint typecheck test build

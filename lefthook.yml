@@ -12,3 +12,6 @@ commit-msg:
   jobs:
     - name: commitlint
       run: pnpm exec commitlint --edit {1}
+
+output:
+  - failure

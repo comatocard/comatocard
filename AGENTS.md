@@ -12,6 +12,16 @@ Rules for every coding agent (Claude Code, Codex, others) and every human contri
 - Never edit generated files (lockfiles by hand, ABI output, build artifacts) or `CHANGELOG.md`.
 - Ask for explicit approval before starting any harness feature that spawns many subagents at once.
 
+## Quality gates
+- Zero warnings and zero errors: rustc, clippy, rustfmt, Biome, tsc, tests and install output stay clean. CI treats warnings as errors.
+- Root commands: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:integration`, `pnpm build`. Each workspace exposes the same script names.
+
+## Testing
+Every behaviour change ships with tests in the right layer.
+- Unit: next to the code (`#[cfg(test)] mod tests` in Rust, `*.test.ts` beside the module). No network, no chain, no database server.
+- Integration: contracts in `contracts/<name>/tests/` against `near-sandbox`; apps in `apps/<name>/test/integration/` against real dependencies run in-process (PGlite for Postgres, recorded blocks for neardata). Run with `pnpm test:integration`.
+- Regression: one test per fixed bug, named after its issue (`issue_42_*.rs`, `issue-42-*.test.ts`), plus golden snapshots for event JSON and API responses. A regression test is never deleted or loosened to make CI pass.
+
 ## Repository map
 See `README.md` for the layout and `docs/` for architecture, specs and workstreams. The specs in `docs/specs/` are the contract between workstreams; change them through a PR before changing code that depends on them.
 

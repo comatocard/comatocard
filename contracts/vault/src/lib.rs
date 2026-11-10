@@ -14,10 +14,12 @@ use near_sdk::{
 pub mod events;
 pub mod policy;
 pub mod types;
+pub use nft::MIN_HOLDER_ALLOWANCE;
 
 mod cards;
 mod ext;
 mod ledger;
+mod nft;
 mod owner;
 mod payments;
 mod views;
@@ -25,7 +27,7 @@ mod views;
 use types::{Card, CardId, Payment, PaymentId, TokenBalance};
 
 /// Version reported by `get_config`, bumped with every state or interface change.
-pub const CONTRACT_VERSION: &str = "0.1.0";
+pub const CONTRACT_VERSION: &str = "0.2.0";
 
 /// Default time a queued payment waits before anyone may expire it: 24 hours.
 pub const DEFAULT_APPROVAL_TTL_NS: u64 = 24 * 60 * 60 * 1_000_000_000;

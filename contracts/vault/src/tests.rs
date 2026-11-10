@@ -3,13 +3,13 @@
 
 use near_sdk::json_types::{U64, U128};
 use near_sdk::test_utils::{VMContextBuilder, get_logs};
-use near_sdk::{AccountId, PromiseError, PublicKey, testing_env};
+use near_sdk::{AccountId, NearToken, PromiseError, PublicKey, testing_env};
 
-use crate::Vault;
 use crate::types::{
     CardKind, CardStatus, MerchantRule, PaymentDecision, PaymentPreview, PaymentStatus, Policy,
     QueueCause, RegistryStatus, RejectReason, RiskMode,
 };
+use crate::{MIN_HOLDER_ALLOWANCE, Vault};
 
 const NOW: u64 = 1_800_000_000 * 1_000_000_000;
 
@@ -592,4 +592,125 @@ fn spend_resets_on_a_new_day() {
     harness.at(NOW + crate::policy::DAY_NS);
     assert_eq!(harness.day_spent(), 0);
     assert!(matches!(harness.pay(50), PaymentDecision::Submitted { .. }));
+}
+
+fn agent() -> AccountId {
+    id("agent.near")
+}
+
+impl Harness {
+    fn with_deposit(&mut self, account: AccountId, deposit: NearToken) {
+        testing_env!(
+            self.context
+                .predecessor_account_id(account)
+                .attached_deposit(deposit)
+                .build()
+        );
+    }
+
+    fn transfer(&mut self, from: AccountId, to: AccountId) {
+        self.with_deposit(from, NearToken::from_yoctonear(1));
+        self.vault.nft_transfer(to, "0".to_owned(), None, None);
+    }
+}
+
+#[test]
+fn every_card_is_a_token_of_the_owner() {
+    let harness = Harness::new();
+    assert!(has_event("nft_mint"));
+    let token = harness.vault.nft_token("0".to_owned()).unwrap();
+    assert_eq!(token.owner_id, owner());
+    assert_eq!(token.metadata.title, "research agent");
+    assert_eq!(harness.vault.nft_total_supply().0, 1);
+    assert_eq!(harness.vault.nft_supply_for_owner(owner()).0, 1);
+    assert_eq!(harness.vault.nft_tokens(None, None).len(), 1);
+    assert!(harness.vault.nft_token("7".to_owned()).is_none());
+}
+
+#[test]
+fn transfer_removes_the_key_until_the_holder_sets_one() {
+    let mut harness = Harness::new();
+    harness.transfer(owner(), agent());
+    assert!(has_event("card_transferred") && has_event("nft_transfer"));
+    assert!(harness.vault.get_card_by_key(card_key()).is_none());
+    assert_eq!(harness.vault.get_card(0).unwrap().holder, Some(agent()));
+    assert_eq!(
+        harness.vault.nft_tokens_for_owner(agent(), None, None)[0].token_id,
+        "0"
+    );
+    assert_eq!(harness.vault.nft_supply_for_owner(owner()).0, 0);
+
+    harness.with_deposit(agent(), MIN_HOLDER_ALLOWANCE);
+    harness.vault.set_card_key(0, other_key());
+    assert!(has_event("card_key_rotated"));
+    harness.as_card(other_key());
+    assert!(matches!(
+        harness.vault.pay(shop(), U128(10), None, None),
+        PaymentDecision::Submitted { .. }
+    ));
+}
+
+#[test]
+fn transfer_back_to_the_owner_follows_ownership() {
+    let mut harness = Harness::new();
+    harness.transfer(owner(), agent());
+    harness.transfer(agent(), owner());
+    assert_eq!(harness.vault.get_card(0).unwrap().holder, None);
+    assert_eq!(
+        harness.vault.nft_token("0".to_owned()).unwrap().owner_id,
+        owner()
+    );
+}
+
+#[test]
+#[should_panic(expected = "only the card holder may transfer the card")]
+fn strangers_cannot_transfer() {
+    let mut harness = Harness::new();
+    harness.transfer(agent(), shop());
+}
+
+#[test]
+#[should_panic(expected = "only the card holder may transfer the card")]
+fn owner_cannot_take_back_a_transferred_card() {
+    let mut harness = Harness::new();
+    harness.transfer(owner(), agent());
+    harness.transfer(owner(), shop());
+}
+
+#[test]
+#[should_panic(expected = "Requires attached deposit of exactly 1 yoctoNEAR")]
+fn transfer_requires_one_yocto() {
+    let mut harness = Harness::new();
+    harness
+        .vault
+        .nft_transfer(agent(), "0".to_owned(), None, None);
+}
+
+#[test]
+#[should_panic(expected = "attach at least 1 NEAR as the key allowance")]
+fn holder_pays_the_key_allowance() {
+    let mut harness = Harness::new();
+    harness.transfer(owner(), agent());
+    harness.with_deposit(agent(), NearToken::from_millinear(999));
+    harness.vault.set_card_key(0, other_key());
+}
+
+#[test]
+#[should_panic(expected = "only the card holder may set the key")]
+fn only_the_holder_sets_the_key() {
+    let mut harness = Harness::new();
+    harness.transfer(owner(), agent());
+    harness.with_deposit(shop(), MIN_HOLDER_ALLOWANCE);
+    harness.vault.set_card_key(0, other_key());
+}
+
+#[test]
+fn revoke_burns_a_transferred_card() {
+    let mut harness = Harness::new();
+    harness.transfer(owner(), agent());
+    harness.with_deposit(owner(), NearToken::from_yoctonear(0));
+    harness.vault.revoke_card(0);
+    assert!(has_event("nft_burn"));
+    assert!(harness.vault.nft_token("0".to_owned()).is_none());
+    assert_eq!(harness.vault.nft_total_supply().0, 0);
 }

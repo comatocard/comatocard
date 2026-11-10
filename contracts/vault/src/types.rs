@@ -155,7 +155,10 @@ pub struct Card {
     pub id: CardId,
     pub label: String,
     pub kind: CardKind,
-    pub public_key: PublicKey,
+    /// Key that signs payments. `None` after a token transfer until the new holder sets a key.
+    pub public_key: Option<PublicKey>,
+    /// Holder of the card token. `None` means the vault owner, so the card follows ownership.
+    pub holder: Option<AccountId>,
     pub status: CardStatus,
     pub policy: Policy,
     pub spend: Spend,

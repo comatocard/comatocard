@@ -1,0 +1,10 @@
+{
+  "name": "@comatocard/testkit",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "lint": "cargo clippy -p testkit --all-targets -- -D warnings && cargo fmt -p testkit -- --check",
+    "test": "cargo test -p testkit --lib",
+    "test:integration": "cargo test -p testkit --tests"
+  }
+}

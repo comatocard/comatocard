@@ -40,7 +40,7 @@ Events follow NEP-297 and are logged as `EVENT_JSON:{...}`.
 | `payment_declined` | `payment_id`, `approver_id` |
 | `payment_expired` | `payment_id` |
 | `payment_settled` | `payment_id`, `card_id`, `merchant`, `token`, `amount`, `reference` |
-| `payment_failed` | `payment_id`, `card_id`, `merchant`, `token`, `amount`, `cause` (`transfer_failed` or `merchant_blocked`) |
+| `payment_failed` | `payment_id`, `card_id`, `merchant`, `token`, `amount`, `cause` (`transfer_failed`, `merchant_blocked` or `registry_unavailable`) |
 | `payment_rejected` | `card_id`, `merchant`, `token`, `amount`, `reason` (a `RejectReason` in snake case), `reference` |
 | `owner_proposed`, `owner_changed` | `owner_id` |
 

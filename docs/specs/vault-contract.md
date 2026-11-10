@@ -60,7 +60,7 @@ pub enum PaymentDecision {
 pub enum RejectReason {
     CardFrozen, CardRevoked, CardNotYetValid, CardExpired,
     TokenNotAccepted, AmountZero,
-    MerchantNotAllowed, MerchantBlocked,
+    MerchantNotAllowed,
     PerTxLimit, DailyLimit, MonthlyLimit,
     InsufficientBalance,
 }
@@ -74,7 +74,7 @@ Caller must be the owner. Owner methods never require an attached deposit, so th
 
 | Method | Effect |
 |-|-|
-| `create_card(public_key, label, kind, policy, gas_allowance: Option<U128>) -> CardId` | Adds a function-call key on the vault (receiver: vault, methods: `["pay"]`) and stores the card |
+| `create_card(public_key, label, kind, policy, gas_allowance: Option<U128>) -> CardId` | Adds a function-call key on the vault (receiver: vault, methods: `["pay"]`, allowance in yoctoNEAR, default 1 NEAR) and stores the card |
 | `update_policy(card_id, policy)` | Replaces the policy; spend counters are kept |
 | `freeze_card(card_id)`, `unfreeze_card(card_id)` | Status change; frozen cards are rejected with `CardFrozen` |
 | `revoke_card(card_id)` | Deletes the access key, status becomes `Revoked`, final |
@@ -91,10 +91,15 @@ Caller must be the owner. Owner methods never require an attached deposit, so th
 ## Card method
 `pay(merchant: AccountId, amount: U128, memo: Option<String>, reference: Option<String>) -> PaymentDecision`
 
+`PaymentDecision` is tagged by `status`: `{"status":"submitted","payment_id":0}`, `{"status":"queued","payment_id":0,"cause":"threshold"}` or `{"status":"rejected","reason":"per_tx_limit"}`.
+
 - Requires `predecessor_account_id == current_account_id` and `signer_account_pk` to match an existing card.
 - `memo` max 256 bytes, `reference` max 64 bytes (an invoice id or an HTTP 402 challenge id; the merchant matches it against events).
 - Checks, in order: card status, validity window, token accepted, amount positive, merchant rule, per transaction limit, daily limit, monthly limit, balance, approval threshold, registry (when risk mode is not `Off`).
 - Funds and spend are reserved before any cross-contract call and released if the registry check or the transfer fails.
+- Card transactions attach 100 Tgas. The card key allowance (default 1 NEAR) is charged with the prepaid gas of every transaction, so a key covers about 100 payments at the minimum gas price before it must be rotated. The vault account pays this gas.
+- A registry error fails the payment closed with cause `registry_unavailable`.
+- In `strict` risk mode a flagged merchant moves a submitted payment back to the queue (`payment_submitted`, then `payment_queued` with cause `risk_flagged`). An approved payment is not queued again.
 
 ## Public methods
 | Method | Effect |
@@ -110,7 +115,7 @@ Caller must be the owner. Owner methods never require an attached deposit, so th
 | `list_cards(from_index, limit)`, `get_card(card_id)`, `get_card_by_key(public_key)` | Cards with current spend |
 | `list_payments(status, from_index, limit)`, `get_payment(payment_id)` | Queued and in-flight payments |
 | `list_approvers()` | Approvers and their limits |
-| `preview_payment(public_key, merchant, amount) -> PaymentDecision` | Dry run of the checks without the registry call, used by agents before signing |
+| `preview_payment(public_key, merchant, amount) -> PaymentPreview` | Dry run of the checks without the registry call, used by agents before signing: `{"status":"allowed"}`, `{"status":"needs_approval","cause":"threshold"}` or `{"status":"rejected","reason":"..."}` |
 
 ## Callbacks (private)
 - `on_registry_checked(payment_id)`

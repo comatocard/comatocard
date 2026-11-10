@@ -1,0 +1,2 @@
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"vault_code_published","data":[{"code_hash":"A88KMkJA5BR6MkqGifaHgZMrvwgfBjtxyh7jzD5mYBmh","code_version":1}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"vault_created","data":[{"vault_id":"alice.factory.near","owner_id":"alice.near","code_version":1}]}

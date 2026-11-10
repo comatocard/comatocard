@@ -1,0 +1,2 @@
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"report_submitted","data":[{"report_id":0,"account_id":"bad.testnet","reporter_id":"alice.near","category":"scam","evidence_uri":"ipfs://evidence"}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"status_changed","data":[{"account_id":"bad.testnet","status":"blocked","curator_id":"curator.near","report_ids":[0]}]}

@@ -1,5 +1,33 @@
 //! Shared building blocks of Comatocard contracts.
 
+#[cfg(not(target_arch = "wasm32"))]
+pub mod golden {
+    //! Golden files shared with `packages/sdk`: contract tests write the exact event lines the
+    //! contracts emit, and the SDK tests validate them. A schema change fails one side until both
+    //! agree.
+
+    use std::path::Path;
+
+    /// Compares `lines` with the fixture at `path`, or rewrites the fixture when the
+    /// `UPDATE_FIXTURES` environment variable is set.
+    ///
+    /// # Panics
+    /// Panics when the fixture differs or cannot be read or written.
+    pub fn assert_matches(path: &Path, lines: &[String]) {
+        let content = format!("{}\n", lines.join("\n"));
+        if std::env::var_os("UPDATE_FIXTURES").is_some() {
+            std::fs::write(path, &content).expect("write fixture");
+            return;
+        }
+        let expected = std::fs::read_to_string(path).unwrap_or_default();
+        assert!(
+            expected == content,
+            "{} is out of date, rerun with UPDATE_FIXTURES=1 and review the diff",
+            path.display()
+        );
+    }
+}
+
 pub mod events {
     //! NEP-297 envelope used by every Comatocard contract. The schema is documented in
     //! `docs/specs/events.md`.

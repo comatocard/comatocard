@@ -237,10 +237,48 @@ mod tests {
         )
     }
 
+    fn with_input(context: &VMContextBuilder, input: &[u8]) -> near_sdk::VMContext {
+        let mut built = context.build();
+        built.input = input.to_vec().into();
+        built
+    }
+
     /// Marks code as published without deploying it; deployment is covered by sandbox tests.
     fn publish(factory: &mut Factory) {
         factory.vault_code_hash = Some([7; 32]);
         factory.code_version = 1;
+    }
+
+    #[test]
+    fn publish_records_the_code_hash() {
+        let (mut factory, context) = setup();
+        testing_env!(with_input(&context, b"\0asm-vault"));
+        let hash = factory.publish_vault_code();
+        let config = factory.get_config();
+        assert_eq!(config.vault_code_hash, Some(hash));
+        assert_eq!(config.code_version, 1);
+    }
+
+    #[test]
+    fn golden_fixtures_match_the_sdk() {
+        let (mut factory, mut context) = setup();
+        testing_env!(with_input(&context, b"\0asm-vault"));
+        factory.publish_vault_code();
+        // `testing_env!` clears the logs, so collect them before switching the caller.
+        let mut events = get_logs();
+        testing_env!(context.predecessor_account_id(id("factory.near")).build());
+        factory.on_vault_created(
+            id("alice.factory.near"),
+            id("alice.near"),
+            id("alice.near"),
+            MIN_VAULT_DEPOSIT,
+            1,
+            Ok(()),
+        );
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../packages/sdk/test/fixtures/factory-events.jsonl");
+        events.extend(get_logs());
+        comatocard_common::golden::assert_matches(&path, &events);
     }
 
     #[test]

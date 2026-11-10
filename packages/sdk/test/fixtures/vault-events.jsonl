@@ -1,0 +1,20 @@
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"card_created","data":[{"card_id":1,"public_key":"ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp","label":"research agent","kind":"agent","policy":{"token":"tusd.testnet","per_tx_limit":"100000000","daily_limit":"150000000","monthly_limit":"1000000000","approval_threshold":"50000000","merchants":{"allow":["shop.testnet"]},"valid_from":null,"expires_at":"1900000000000000000","risk_mode":"strict"}}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"card_policy_updated","data":[{"card_id":1,"policy":{"token":"tusd.testnet","per_tx_limit":"100000000","daily_limit":"150000000","monthly_limit":"1000000000","approval_threshold":"50000000","merchants":{"allow":["shop.testnet"]},"valid_from":null,"expires_at":"1900000000000000000","risk_mode":"strict"}}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"card_frozen","data":[{"card_id":1}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"card_unfrozen","data":[{"card_id":1}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"card_revoked","data":[{"card_id":1}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"card_key_rotated","data":[{"card_id":1,"old_public_key":"ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp","new_public_key":"ed25519:DcA2MzgpJbrUATQLLceocVckhhAqrkingax4oJ9kZ847"}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"approver_set","data":[{"account_id":"council.testnet","max_amount":"80000000"}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"approver_set","data":[{"account_id":"council.testnet","max_amount":null}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"deposit","data":[{"token":"tusd.testnet","sender_id":"owner.testnet","amount":"500000000"}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"withdrawal","data":[{"token":"tusd.testnet","receiver_id":"owner.testnet","amount":"10000000","success":true}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"payment_submitted","data":[{"payment_id":3,"card_id":1,"merchant":"shop.testnet","token":"tusd.testnet","amount":"25000000","memo":"api credits","reference":"inv-42"}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"payment_queued","data":[{"payment_id":3,"card_id":1,"merchant":"shop.testnet","token":"tusd.testnet","amount":"25000000","memo":"api credits","reference":"inv-42","cause":"threshold"}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"payment_approved","data":[{"payment_id":3,"approver_id":"owner.testnet"}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"payment_declined","data":[{"payment_id":3,"approver_id":"owner.testnet"}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"payment_expired","data":[{"payment_id":3}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"payment_settled","data":[{"payment_id":3,"card_id":1,"merchant":"shop.testnet","token":"tusd.testnet","amount":"25000000","reference":"inv-42"}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"payment_failed","data":[{"payment_id":3,"card_id":1,"merchant":"shop.testnet","token":"tusd.testnet","amount":"25000000","cause":"transfer_failed"}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"payment_rejected","data":[{"card_id":1,"merchant":"shop.testnet","token":"tusd.testnet","amount":"101000000","reason":"per_tx_limit","reference":"inv-43"}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"owner_proposed","data":[{"owner_id":"dao.sputnik-v2.testnet"}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"owner_changed","data":[{"owner_id":"dao.sputnik-v2.testnet"}]}

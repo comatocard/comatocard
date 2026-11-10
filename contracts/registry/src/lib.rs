@@ -320,6 +320,23 @@ mod tests {
     }
 
     #[test]
+    fn golden_fixtures_match_the_sdk() {
+        let mut harness = Harness::new();
+        let report_id = harness.report("bad.testnet");
+        // `testing_env!` clears the logs, so collect them before switching the caller.
+        let mut events = get_logs();
+        harness.as_account("curator.near", NearToken::from_yoctonear(0));
+        harness
+            .registry
+            .set_status(id("bad.testnet"), Status::Blocked, vec![report_id]);
+        events.extend(get_logs());
+        events.retain(|line| line.starts_with("EVENT_JSON:"));
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../packages/sdk/test/fixtures/registry-events.jsonl");
+        comatocard_common::golden::assert_matches(&path, &events);
+    }
+
+    #[test]
     fn unknown_accounts_are_clear() {
         let harness = Harness::new();
         assert_eq!(

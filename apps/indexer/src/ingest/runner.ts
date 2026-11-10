@@ -144,7 +144,7 @@ export async function run(options: RunnerOptions, state: RunnerState, signal: Ab
         next += 1;
       }
     } catch (error) {
-      logger.error({ err: error, next }, "indexing failed, retrying");
+      if (!signal.aborted) logger.error({ err: error, next }, "indexing failed, retrying");
     }
     await new Promise((resolve) => {
       const timer = setTimeout(resolve, options.pollIntervalMs);

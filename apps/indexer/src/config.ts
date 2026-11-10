@@ -16,6 +16,10 @@ const schema = z.object({
   START_BLOCK: z.preprocess(emptyToUndefined, z.coerce.number().int().nonnegative().optional()),
   NEARDATA_URL: z.preprocess(emptyToUndefined, z.url().optional()),
   NEARDATA_API_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
+  NEARDATA_MIN_INTERVAL_MS: z.preprocess(
+    emptyToUndefined,
+    z.coerce.number().int().nonnegative().optional(),
+  ),
   RPC_URL: z.preprocess(emptyToUndefined, z.url().optional()),
   PORT: z.coerce.number().int().positive().default(4000),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
@@ -30,6 +34,7 @@ export interface Config {
   startBlock: number | undefined;
   neardataUrl: string;
   neardataApiKey: string | undefined;
+  neardataMinIntervalMs: number | undefined;
   rpcUrl: string;
   port: number;
   logLevel: z.infer<typeof schema>["LOG_LEVEL"];
@@ -52,6 +57,7 @@ export function loadConfig(env: Record<string, string | undefined>): Config {
     startBlock: value.START_BLOCK,
     neardataUrl: value.NEARDATA_URL ?? defaults.neardata,
     neardataApiKey: value.NEARDATA_API_KEY,
+    neardataMinIntervalMs: value.NEARDATA_MIN_INTERVAL_MS,
     rpcUrl: value.RPC_URL ?? defaults.rpc,
     port: value.PORT,
     logLevel: value.LOG_LEVEL,

@@ -1,6 +1,6 @@
 # Event schema
 
-Status: draft v0. Owner: contracts workstream. The indexer validates every event against the schemas in `packages/sdk`; the contract tests assert the exact JSON.
+Status: draft v0. Owner: contracts workstream. The indexer validates every event against the schemas in `packages/sdk`. The contract unit tests write the exact lines they emit to `packages/sdk/test/fixtures/*.jsonl` (`UPDATE_FIXTURES=1` regenerates them) and the SDK tests parse every line, so a schema change fails until both sides agree.
 
 ## Envelope
 Events follow NEP-297 and are logged as `EVENT_JSON:{...}`.
@@ -22,6 +22,7 @@ Events follow NEP-297 and are logged as `EVENT_JSON:{...}`.
 ## Factory events
 | Event | Data |
 |-|-|
+| `vault_code_published` | `code_hash` (base58), `code_version` |
 | `vault_created` | `vault_id`, `owner_id`, `code_version` |
 
 ## Vault events

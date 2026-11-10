@@ -51,7 +51,10 @@ export const card = z.strictObject({
   id,
   label: z.string().min(1).max(64),
   kind: cardKind,
-  public_key: publicKey,
+  /** Null after a token transfer until the new holder sets a key. */
+  public_key: publicKey.nullable(),
+  /** Holder of the card token; null means the vault owner. */
+  holder: accountId.nullable(),
   status: cardStatus,
   policy,
   spend,

@@ -1,0 +1,14 @@
+{
+  "name": "@comatocard/vault",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "lint": "cargo clippy -p vault --all-targets -- -D warnings && cargo fmt -p vault -- --check",
+    "test": "cargo test -p vault --lib",
+    "test:integration": "cargo test -p vault --tests",
+    "build": "cargo near build non-reproducible-wasm --locked --manifest-path Cargo.toml"
+  },
+  "devDependencies": {
+    "@comatocard/mock-ft": "workspace:*"
+  }
+}

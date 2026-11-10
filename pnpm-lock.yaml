@@ -188,6 +188,20 @@ importers:
         specifier: 7.0.2
         version: 7.0.2
 
+  contracts/common: {}
+
+  contracts/mock-ft: {}
+
+  contracts/registry: {}
+
+  contracts/testkit: {}
+
+  contracts/vault:
+    devDependencies:
+      '@comatocard/mock-ft':
+        specifier: workspace:*
+        version: link:../mock-ft
+
   packages/config: {}
 
 packages:

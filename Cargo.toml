@@ -4,6 +4,7 @@ members = [
     "contracts/common",
     "contracts/mock-ft",
     "contracts/testkit",
+    "contracts/vault",
 ]
 
 [workspace.package]

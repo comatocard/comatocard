@@ -70,6 +70,13 @@ describe("REST API", () => {
     expect((await get(`/vaults/${VAULT}/cards/9`)).status).toBe(404);
   });
 
+  it("finds cards by token holder", async () => {
+    const held = await get("/cards?holder=alice.testnet");
+    expect(held.body.map((c: { card_id: number }) => c.card_id)).toEqual([0]);
+    expect((await get("/cards?holder=agent.testnet")).body).toEqual([]);
+    expect((await get("/cards")).status).toBe(400);
+  });
+
   it("filters and paginates payments", async () => {
     const all = await get(`/vaults/${VAULT}/payments`);
     expect(all.body).toMatchSnapshot();

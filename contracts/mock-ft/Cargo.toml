@@ -1,0 +1,27 @@
+[package]
+name = "mock-ft"
+description = "NEP-141 test stablecoin with a public faucet, for testnet only"
+publish = false
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk.workspace = true
+near-contract-standards.workspace = true
+
+[dev-dependencies]
+near-sdk = { workspace = true, features = ["unit-testing"] }
+near-api.workspace = true
+serde_json.workspace = true
+testkit.workspace = true
+tokio.workspace = true
+anyhow.workspace = true
+
+[lints]
+workspace = true

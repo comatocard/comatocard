@@ -192,8 +192,6 @@ importers:
 
   contracts/mock-ft: {}
 
-  contracts/registry: {}
-
   contracts/testkit: {}
 
   contracts/vault:

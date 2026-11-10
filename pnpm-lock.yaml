@@ -190,6 +190,15 @@ importers:
 
   contracts/common: {}
 
+  contracts/factory:
+    devDependencies:
+      '@comatocard/mock-ft':
+        specifier: workspace:*
+        version: link:../mock-ft
+      '@comatocard/vault':
+        specifier: workspace:*
+        version: link:../vault
+
   contracts/mock-ft: {}
 
   contracts/registry:

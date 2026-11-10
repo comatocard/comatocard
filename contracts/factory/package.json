@@ -1,0 +1,15 @@
+{
+  "name": "@comatocard/factory",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "lint": "cargo clippy -p factory --all-targets -- -D warnings && cargo fmt -p factory -- --check",
+    "test": "cargo test -p factory --lib",
+    "test:integration": "cargo test -p factory --tests",
+    "build": "cargo near build non-reproducible-wasm --locked --manifest-path Cargo.toml"
+  },
+  "devDependencies": {
+    "@comatocard/mock-ft": "workspace:*",
+    "@comatocard/vault": "workspace:*"
+  }
+}

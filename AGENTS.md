@@ -26,7 +26,7 @@ Every behaviour change ships with tests in the right layer.
 See `README.md` for the layout and `docs/` for architecture, specs and workstreams. The specs in `docs/specs/` are the contract between workstreams; change them through a PR before changing code that depends on them.
 
 ## Identity
-- GitHub account: `aliens101`. Check with `gh auth status` before any push, issue or PR; switch with `gh auth switch -u aliens101`.
+- GitHub account: `aliens101`. Several accounts are logged in on this machine and other sessions may change the active one, so do not switch it: run `export GH_TOKEN=$(gh auth token -u aliens101)` in the same shell command as every `gh` call and `git push`.
 - Git author: `aliens101 <245101310+aliens101@users.noreply.github.com>` (repo-local config).
 - No AI attribution anywhere: no co-author trailer, no "Generated with" line, no agent name in commits, issues, PRs or comments.
 

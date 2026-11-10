@@ -8,12 +8,23 @@ Who builds what, in which order, and what "done" means. Each task becomes a GitH
 | B. Agents and services | `@owner-b` | `apps/agents`, `apps/relayer`, treasury and AI integrations |
 | C. Product and infrastructure | `@owner-c` | `apps/web`, `apps/merchant`, monorepo tooling, CI, SonarQube, README, demo |
 
+## Status of workstream A (2026-11-10)
+| Item | State |
+|-|-|
+| Contracts: vault, registry, factory (global contract), tUSD | Done, PRs #8 #11 #15 #16 #22 |
+| Sputnik DAO as vault owner | Done, PR #20 |
+| SDK with schemas and golden fixtures shared with the contracts | Done, PR #17 |
+| Indexer with REST, CSV, risk and WebSocket | Done, PRs #18 #27 |
+| Testnet deployment and end-to-end check | Done, PR #24, see `docs/deployments.md` |
+| Integration guide for B and C | `docs/integration.md` |
+
 ## Interfaces between workstreams
 The specs are the contract. Agree on them first, then build in parallel against mocks.
 - `docs/specs/vault-contract.md`: A writes, B and C consume.
 - `docs/specs/events.md`: A writes, the indexer, the web app and the merchant consume.
 - `docs/specs/indexer-api.md`: A writes, B and C consume.
 - `packages/sdk`: A publishes types, event schemas and the vault client; B and C import it, never redefine it.
+- `docs/integration.md`: how to use all of the above, with the rules every client must follow.
 
 ## Milestones
 Each milestone ends with a demo of the full path on testnet, not with isolated parts.

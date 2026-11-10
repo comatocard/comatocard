@@ -52,7 +52,13 @@ const server = serve(
 const ingestion = run(
   {
     db,
-    source: neardataSource({ baseUrl: config.neardataUrl, apiKey: config.neardataApiKey }),
+    source: neardataSource({
+      baseUrl: config.neardataUrl,
+      apiKey: config.neardataApiKey,
+      ...(config.neardataMinIntervalMs === undefined
+        ? {}
+        : { minIntervalMs: config.neardataMinIntervalMs }),
+    }),
     bus,
     logger,
     isTracked: trackedAccounts(config.factoryId, config.registryId),

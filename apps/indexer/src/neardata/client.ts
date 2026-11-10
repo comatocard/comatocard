@@ -14,37 +14,80 @@ export interface NeardataOptions {
   fetch?: typeof globalThis.fetch;
   /** Attempts per request for rate limits, server errors and network failures. */
   maxAttempts?: number;
+  /** First retry delay; it doubles per attempt up to `maxBackoffMs`. */
   backoffMs?: number;
+  maxBackoffMs?: number;
+  /**
+   * Minimum time between requests. Defaults to 350 ms without an API key, which stays below the
+   * free tier limit of 180 requests per minute, and to 0 with a key.
+   */
+  minIntervalMs?: number;
+  sleep?: (ms: number) => Promise<void>;
+  now?: () => number;
 }
+
+/** Free tier: 180 requests per minute per IP. */
+export const FREE_TIER_INTERVAL_MS = 350;
+/** Longest `Retry-After` the client waits for. */
+export const MAX_RETRY_AFTER_MS = 60_000;
 
 export class NeardataError extends Error {
   override name = "NeardataError";
 }
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-/** neardata.xyz client for finalized blocks, with bounded exponential backoff. */
+/** Parses `Retry-After` given in seconds; HTTP dates are treated as absent. */
+export function retryAfterMs(header: string | null): number | undefined {
+  if (header === null || !/^\d+$/.test(header.trim())) return undefined;
+  return Math.min(Number(header.trim()) * 1_000, MAX_RETRY_AFTER_MS);
+}
+
+/**
+ * neardata.xyz client for finalized blocks. Requests are paced to the free tier limit without an
+ * API key, rate limits honour `Retry-After`, and other transient failures back off exponentially.
+ */
 export function neardataSource(options: NeardataOptions): BlockSource {
   const fetchFn = options.fetch ?? globalThis.fetch;
-  const maxAttempts = options.maxAttempts ?? 5;
-  const backoffMs = options.backoffMs ?? 500;
+  const sleep = options.sleep ?? defaultSleep;
+  const now = options.now ?? Date.now;
+  const maxAttempts = options.maxAttempts ?? 8;
+  const backoffMs = options.backoffMs ?? 1_000;
+  const maxBackoffMs = options.maxBackoffMs ?? 30_000;
+  const minIntervalMs = options.minIntervalMs ?? (options.apiKey ? 0 : FREE_TIER_INTERVAL_MS);
+
+  // Requests reserve start times in order, so concurrent callers are paced too.
+  let nextSlot = 0;
+  async function paced<T>(request: () => Promise<T>): Promise<T> {
+    const start = Math.max(now(), nextSlot);
+    nextSlot = start + minIntervalMs;
+    const wait = start - now();
+    if (wait > 0) await sleep(wait);
+    return request();
+  }
 
   async function get(path: string): Promise<unknown> {
     const url = new URL(path, options.baseUrl);
     if (options.apiKey) url.searchParams.set("apiKey", options.apiKey);
     let lastError = "";
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      let delay = Math.min(backoffMs * 2 ** (attempt - 1), maxBackoffMs);
       try {
-        const response = await fetchFn(url, { headers: { accept: "application/json" } });
+        const response = await paced(() =>
+          fetchFn(url, { headers: { accept: "application/json" } }),
+        );
         if (response.ok) return await response.json();
         lastError = `${path} responded ${response.status}`;
         const retryable = response.status === 429 || response.status >= 500;
         if (!retryable) throw new NeardataError(lastError);
+        if (response.status === 429) {
+          delay = retryAfterMs(response.headers.get("retry-after")) ?? delay;
+        }
       } catch (error) {
         if (error instanceof NeardataError) throw error;
         lastError = `${path}: ${error instanceof Error ? error.message : String(error)}`;
       }
-      if (attempt < maxAttempts) await sleep(backoffMs * 2 ** (attempt - 1));
+      if (attempt < maxAttempts) await sleep(delay);
     }
     throw new NeardataError(`${lastError} after ${maxAttempts} attempts`);
   }

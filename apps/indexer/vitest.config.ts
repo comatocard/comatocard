@@ -10,7 +10,10 @@ export default defineConfig({
         test: {
           name: "integration",
           include: ["test/integration/**/*.test.ts"],
+          // Each test boots PGlite, migrates and indexes the scenario; CI runners share CPU
+          // with the contract builds, so the defaults are too tight there.
           testTimeout: 30_000,
+          hookTimeout: 30_000,
         },
       },
     ],

@@ -34,19 +34,29 @@ pub mod events {
 
     use near_sdk::env;
     use near_sdk::serde::Serialize;
-    use near_sdk::serde_json::{self, json};
+    use near_sdk::serde_json;
 
     pub const STANDARD: &str = "comatocard";
     pub const VERSION: &str = "1.0.0";
 
+    /// The NEP-297 envelope. Typed, so contracts do not pull `serde_json::Value` into the wasm.
+    #[derive(Serialize)]
+    #[serde(crate = "near_sdk::serde")]
+    struct Envelope<'a, T: Serialize> {
+        standard: &'static str,
+        version: &'static str,
+        event: &'a str,
+        data: [&'a T; 1],
+    }
+
     /// Formats the log line for `event` with a single `data` object.
     pub fn format(event: &str, data: &impl Serialize) -> String {
-        let envelope = json!({
-            "standard": STANDARD,
-            "version": VERSION,
-            "event": event,
-            "data": [data],
-        });
+        let envelope = Envelope {
+            standard: STANDARD,
+            version: VERSION,
+            event,
+            data: [data],
+        };
         format!(
             "EVENT_JSON:{}",
             serde_json::to_string(&envelope).unwrap_or_default()
@@ -60,6 +70,8 @@ pub mod events {
 
     #[cfg(test)]
     mod tests {
+        use near_sdk::serde_json::json;
+
         use super::*;
 
         #[test]

@@ -1,7 +1,10 @@
 //! Shared helpers for contract integration tests running against `near-sandbox`.
 //!
 //! Every test starts its own sandbox through [`Env::new`]. Contract wasm files are read from
-//! `target/near`, where the `build` task puts them.
+//! `target/near`, where the `build` task puts them. [`comatocard`] holds the setup steps that
+//! the contract tests share.
+
+pub mod comatocard;
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -217,4 +220,16 @@ pub fn wasm(name: &str) -> Result<Vec<u8>> {
             path.display()
         )
     })
+}
+
+/// Reads third-party contract code from `contracts/testkit/fixtures`; see the README there for
+/// provenance.
+///
+/// # Errors
+/// Fails when the fixture is missing.
+pub fn fixture(file: &str) -> Result<Vec<u8>> {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures")
+        .join(file);
+    std::fs::read(&path).with_context(|| format!("missing fixture {}", path.display()))
 }

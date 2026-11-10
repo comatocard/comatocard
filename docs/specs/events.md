@@ -31,7 +31,8 @@ Events follow NEP-297 and are logged as `EVENT_JSON:{...}`.
 | `card_created` | `card_id`, `public_key`, `label`, `kind`, `policy` |
 | `card_policy_updated` | `card_id`, `policy` |
 | `card_frozen`, `card_unfrozen`, `card_revoked` | `card_id` |
-| `card_key_rotated` | `card_id`, `old_public_key`, `new_public_key` |
+| `card_key_rotated` | `card_id`, `old_public_key` (null when the card had no key), `new_public_key` |
+| `card_transferred` | `card_id`, `old_holder`, `new_holder`; the card key is deleted |
 | `approver_set` | `account_id`, `max_amount` (null means removed) |
 | `deposit` | `token`, `sender_id`, `amount` |
 | `withdrawal` | `token`, `receiver_id`, `amount`, `success` |
@@ -44,6 +45,8 @@ Events follow NEP-297 and are logged as `EVENT_JSON:{...}`.
 | `payment_failed` | `payment_id`, `card_id`, `merchant`, `token`, `amount`, `cause` (`transfer_failed`, `merchant_blocked` or `registry_unavailable`) |
 | `payment_rejected` | `card_id`, `merchant`, `token`, `amount`, `reason` (a `RejectReason` in snake case), `reference` |
 | `owner_proposed`, `owner_changed` | `owner_id` |
+
+The vault also logs NEP-171 events (`standard` `nep171`, version `1.0.0`): `nft_mint` on `card_created`, `nft_transfer` next to `card_transferred` and `nft_burn` on `card_revoked`. Wallets and NFT indexers read them; the Comatocard indexer reads only the `comatocard` standard.
 
 Every `payment_id` has exactly one terminal event: `payment_settled`, `payment_failed`, `payment_declined` or `payment_expired`. A rejected payment stores nothing, so `payment_rejected` carries no `payment_id` and is terminal by itself.
 

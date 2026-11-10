@@ -1,6 +1,6 @@
 # Vault contract specification
 
-Status: draft v0. Owner: contracts workstream. This file is the interface the indexer, agents and web app build against; change it through a PR first.
+Status: v1, contract version 0.2.0. Owner: contracts workstream. This file is the interface the indexer, agents and web app build against; change it through a PR first.
 
 ## Conventions
 - Amounts are `U128` strings in the token's smallest unit.
@@ -43,7 +43,8 @@ pub struct Card {
     pub id: CardId,
     pub label: String,                    // max 64 bytes
     pub kind: CardKind,
-    pub public_key: PublicKey,
+    pub public_key: Option<PublicKey>,    // None after a token transfer until the holder sets a key
+    pub holder: Option<AccountId>,        // token holder, None means the vault owner
     pub status: CardStatus,
     pub policy: Policy,
     pub spent_day: U128,
@@ -100,6 +101,18 @@ Caller must be the owner. Owner methods never require an attached deposit, so th
 - Card transactions attach 100 Tgas. The card key allowance (default 1 NEAR) is charged with the prepaid gas of every transaction, so a key covers about 100 payments at the minimum gas price before it must be rotated. The vault account pays this gas.
 - A registry error fails the payment closed with cause `registry_unavailable`.
 - In `strict` risk mode a flagged merchant moves a submitted payment back to the queue (`payment_submitted`, then `payment_queued` with cause `risk_flagged`). An approved payment is not queued again.
+
+## Card tokens (NEP-171)
+Every card that is not revoked is a NEP-171 token whose `token_id` is the card id as a string. Holding the token grants two rights: transferring it and setting the card key. Policy, freeze, unfreeze, revoke and owner rotation stay with the vault owner, so a holder spends only inside limits it cannot change.
+
+| Method | Effect |
+|-|-|
+| `nft_transfer(receiver_id, token_id, approval_id, memo)` | Holder only, 1 yoctoNEAR attached, `approval_id` must be null. Moves the token and deletes the card key, so the previous holder can no longer pay. A card transferred to the vault owner follows future ownership changes |
+| `set_card_key(card_id, public_key)` | Holder other than the owner, at least 1 NEAR attached. Adds the key with the deposit as its gas allowance and deletes the previous key, so a holder funds its own payments |
+| `nft_token(token_id)`, `nft_metadata()` | Token with NEP-177 metadata (`title` is the label), contract metadata with symbol `CARD` |
+| `nft_total_supply()`, `nft_tokens(from_index, limit)`, `nft_supply_for_owner(account_id)`, `nft_tokens_for_owner(account_id, from_index, limit)` | NEP-181 enumeration over cards that are not revoked |
+
+`create_card` emits NEP-171 `nft_mint`, `nft_transfer` emits `nft_transfer`, `revoke_card` emits `nft_burn`. `nft_transfer_call` and approvals (NEP-178) are not offered.
 
 ## Public methods
 | Method | Effect |

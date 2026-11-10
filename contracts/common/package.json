@@ -1,0 +1,9 @@
+{
+  "name": "@comatocard/common",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "lint": "cargo clippy -p comatocard-common --all-targets -- -D warnings && cargo fmt -p comatocard-common -- --check",
+    "test": "cargo test -p comatocard-common --lib"
+  }
+}

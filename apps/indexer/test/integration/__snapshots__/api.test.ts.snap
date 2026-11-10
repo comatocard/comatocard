@@ -1,0 +1,187 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`REST API > aggregates analytics 1`] = `
+{
+  "error": "internal error",
+}
+`;
+
+exports[`REST API > assesses counterparty risk 1`] = `
+{
+  "account_id": "scam.testnet",
+  "reasons": [
+    {
+      "code": "registry_blocked",
+      "detail": "a registry curator blocked this account",
+      "level": "block",
+    },
+    {
+      "code": "first_payment",
+      "detail": "this vault has never paid this account",
+      "level": "info",
+    },
+    {
+      "code": "never_paid",
+      "detail": "no indexed vault has paid this account before",
+      "level": "info",
+    },
+  ],
+  "signals": {
+    "code_changed_at": null,
+    "exists": true,
+    "first_paid_at": null,
+    "is_contract": false,
+    "prior_payments": 0,
+    "registry_status": "blocked",
+    "report_count": 1,
+  },
+  "verdict": "block",
+}
+`;
+
+exports[`REST API > exports an accountant friendly CSV 1`] = `
+"date_utc,card_id,card_label,merchant,token,amount,amount_raw,status,queue_cause,reason,reference,memo,payment_id,transaction_hash
+2026-11-06T21:21:43.000Z,0,research agent,shop.testnet,tusd.comatocard.testnet,40,40000000,settled,,,inv-1,api credits,0,tx-pay-0
+2026-11-06T21:21:44.000Z,0,research agent,travel.testnet,tusd.comatocard.testnet,60,60000000,settled,threshold,,,,1,tx-pay-1
+2026-11-06T21:21:45.000Z,0,research agent,shop.testnet,tusd.comatocard.testnet,101,101000000,rejected,,per_tx_limit,inv-2,,,tx-105-0
+2026-11-06T21:21:47.000Z,0,research agent,scam.testnet,tusd.comatocard.testnet,10,10000000,failed,,merchant_blocked,,,2,tx-pay-2
+"
+`;
+
+exports[`REST API > filters and paginates payments 1`] = `
+{
+  "items": [
+    {
+      "amount": "10000000",
+      "approver_id": null,
+      "card_id": 0,
+      "created_at": "1794000107000000000",
+      "id": 4,
+      "memo": null,
+      "merchant": "scam.testnet",
+      "payment_id": 2,
+      "queue_cause": null,
+      "reason": "merchant_blocked",
+      "reference": null,
+      "status": "failed",
+      "token": "tusd.comatocard.testnet",
+      "tx_hash": "tx-pay-2",
+      "updated_at": "1794000108000000000",
+      "vault_id": "alice.factory.comatocard.testnet",
+    },
+    {
+      "amount": "101000000",
+      "approver_id": null,
+      "card_id": 0,
+      "created_at": "1794000105000000000",
+      "id": 3,
+      "memo": null,
+      "merchant": "shop.testnet",
+      "payment_id": null,
+      "queue_cause": null,
+      "reason": "per_tx_limit",
+      "reference": "inv-2",
+      "status": "rejected",
+      "token": "tusd.comatocard.testnet",
+      "tx_hash": "tx-105-0",
+      "updated_at": "1794000105000000000",
+      "vault_id": "alice.factory.comatocard.testnet",
+    },
+    {
+      "amount": "60000000",
+      "approver_id": "council.testnet",
+      "card_id": 0,
+      "created_at": "1794000104000000000",
+      "id": 2,
+      "memo": null,
+      "merchant": "travel.testnet",
+      "payment_id": 1,
+      "queue_cause": "threshold",
+      "reason": null,
+      "reference": null,
+      "status": "settled",
+      "token": "tusd.comatocard.testnet",
+      "tx_hash": "tx-pay-1",
+      "updated_at": "1794000107000000000",
+      "vault_id": "alice.factory.comatocard.testnet",
+    },
+    {
+      "amount": "40000000",
+      "approver_id": null,
+      "card_id": 0,
+      "created_at": "1794000103000000000",
+      "id": 1,
+      "memo": "api credits",
+      "merchant": "shop.testnet",
+      "payment_id": 0,
+      "queue_cause": null,
+      "reason": null,
+      "reference": "inv-1",
+      "status": "settled",
+      "token": "tusd.comatocard.testnet",
+      "tx_hash": "tx-pay-0",
+      "updated_at": "1794000104000000000",
+      "vault_id": "alice.factory.comatocard.testnet",
+    },
+  ],
+  "next_cursor": null,
+}
+`;
+
+exports[`REST API > lists vaults by owner and summarizes a vault 1`] = `
+[
+  {
+    "code_version": 1,
+    "created_at": "1794000100000000000",
+    "factory_id": "factory.comatocard.testnet",
+    "owner_id": "alice.testnet",
+    "vault_id": "alice.factory.comatocard.testnet",
+  },
+]
+`;
+
+exports[`REST API > lists vaults by owner and summarizes a vault 2`] = `
+{
+  "card_count": 1,
+  "code_version": 1,
+  "created_at": "1794000100000000000",
+  "factory_id": "factory.comatocard.testnet",
+  "indexed_balances": [
+    {
+      "available": "400000000",
+      "reserved": "0",
+      "token": "tusd.comatocard.testnet",
+    },
+  ],
+  "owner_id": "alice.testnet",
+  "pending_owner_id": null,
+  "spent_today": "<time dependent>",
+  "vault_id": "alice.factory.comatocard.testnet",
+}
+`;
+
+exports[`REST API > serves cards and one card with its recent payments 1`] = `
+[
+  {
+    "card_id": 0,
+    "created_at": "1794000101000000000",
+    "kind": "agent",
+    "label": "research agent",
+    "policy": {
+      "approval_threshold": "50000000",
+      "daily_limit": "150000000",
+      "expires_at": null,
+      "merchants": "any",
+      "monthly_limit": "1000000000",
+      "per_tx_limit": "100000000",
+      "risk_mode": "block_only",
+      "token": "tusd.comatocard.testnet",
+      "valid_from": null,
+    },
+    "public_key": "ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp",
+    "status": "active",
+    "updated_at": "1794000101000000000",
+    "vault_id": "alice.factory.comatocard.testnet",
+  },
+]
+`;

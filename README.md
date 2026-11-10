@@ -26,6 +26,8 @@ Status: in development for NEAR HACKATHON (tracks `realworld`, `security`, `agen
 - [Vault contract specification](docs/specs/vault-contract.md)
 - [Event schema](docs/specs/events.md)
 - [Indexer API](docs/specs/indexer-api.md)
+- [Integration guide](docs/integration.md)
+- [Deployments](docs/deployments.md)
 - [Workstreams and milestones](docs/workstreams.md)
 - [Research notes](docs/research.md)
 - [Hackathon rules checklist](docs/hackathon.md)

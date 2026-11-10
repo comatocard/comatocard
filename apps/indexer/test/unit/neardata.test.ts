@@ -60,4 +60,20 @@ describe("neardataSource", () => {
     await expect(source.finalHeight()).rejects.toThrow(/after 3 attempts/);
     expect(down).toHaveBeenCalledTimes(3);
   });
+
+  it("stops waiting and retrying once aborted", async () => {
+    const controller = new AbortController();
+    const source = neardataSource({
+      baseUrl: "https://n.example",
+      apiKey: "key",
+      backoffMs: 60_000,
+      signal: controller.signal,
+      fetch: async () => json({}, 503),
+    });
+    const started = Date.now();
+    const pending = source.finalHeight();
+    setTimeout(() => controller.abort(), 20);
+    await expect(pending).rejects.toThrow(/aborted/);
+    expect(Date.now() - started).toBeLessThan(5_000);
+  });
 });

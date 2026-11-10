@@ -81,12 +81,13 @@ describe("issue 25: neardata rate limit", () => {
     expect(clock.sleeps).toEqual([]);
   });
 
-  it("waits for Retry-After and outlasts a rate limit window", async () => {
+  it("waits at least Retry-After and outlasts a rate limit window", async () => {
     const clock = virtualClock();
     let calls = 0;
     const source = neardataSource({
       baseUrl: "https://n.example",
       apiKey: "key",
+      backoffMs: 1_000,
       fetch: async () => {
         calls += 1;
         if (calls <= 5) {
@@ -98,7 +99,32 @@ describe("issue 25: neardata rate limit", () => {
       now: clock.now,
     });
     await expect(source.block(1)).resolves.not.toBeNull();
-    expect(clock.sleeps).toEqual([7_000, 7_000, 7_000, 7_000, 7_000]);
+    expect(clock.sleeps).toEqual([7_000, 7_000, 7_000, 8_000, 16_000]);
+  });
+
+  it("keeps backing off when Retry-After is 0 during an active limit", async () => {
+    const clock = virtualClock();
+    let calls = 0;
+    const retries: number[] = [];
+    const source = neardataSource({
+      onRetry: (retry) => retries.push(retry.attempt),
+      baseUrl: "https://n.example",
+      apiKey: "key",
+      backoffMs: 1_000,
+      maxBackoffMs: 8_000,
+      fetch: async () => {
+        calls += 1;
+        if (calls <= 5) {
+          return new Response("{}", { status: 429, headers: { "retry-after": "0" } });
+        }
+        return ok();
+      },
+      sleep: clock.sleep,
+      now: clock.now,
+    });
+    await expect(source.block(1)).resolves.not.toBeNull();
+    expect(clock.sleeps).toEqual([1_000, 2_000, 4_000, 8_000, 8_000]);
+    expect(retries).toEqual([1, 2, 3, 4, 5]);
   });
 
   it("parses Retry-After seconds and caps it", () => {

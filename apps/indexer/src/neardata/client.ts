@@ -24,6 +24,10 @@ export interface NeardataOptions {
   minIntervalMs?: number;
   sleep?: (ms: number) => Promise<void>;
   now?: () => number;
+  /** Aborts pending waits and retries, so shutdown does not wait for a backoff to finish. */
+  signal?: AbortSignal;
+  /** Called before each retry, for logging. */
+  onRetry?: (retry: { path: string; attempt: number; delayMs: number; reason: string }) => void;
 }
 
 /** Free tier: 180 requests per minute per IP. */
@@ -35,7 +39,19 @@ export class NeardataError extends Error {
   override name = "NeardataError";
 }
 
-const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+/** Waits `ms`, or less when `signal` aborts first. */
+function abortableSleep(ms: number, signal: AbortSignal | undefined): Promise<void> {
+  return new Promise<void>((resolve) => {
+    if (signal?.aborted) return resolve();
+    const timer = setTimeout(done, ms);
+    function done() {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", done);
+      resolve();
+    }
+    signal?.addEventListener("abort", done, { once: true });
+  });
+}
 
 /** Parses `Retry-After` given in seconds; HTTP dates are treated as absent. */
 export function retryAfterMs(header: string | null): number | undefined {
@@ -45,11 +61,11 @@ export function retryAfterMs(header: string | null): number | undefined {
 
 /**
  * neardata.xyz client for finalized blocks. Requests are paced to the free tier limit without an
- * API key, rate limits honour `Retry-After`, and other transient failures back off exponentially.
+ * API key, and transient failures back off exponentially; on 429 a longer `Retry-After` wins.
  */
 export function neardataSource(options: NeardataOptions): BlockSource {
   const fetchFn = options.fetch ?? globalThis.fetch;
-  const sleep = options.sleep ?? defaultSleep;
+  const sleep = options.sleep ?? ((ms: number) => abortableSleep(ms, options.signal));
   const now = options.now ?? Date.now;
   const maxAttempts = options.maxAttempts ?? 8;
   const backoffMs = options.backoffMs ?? 1_000;
@@ -71,6 +87,7 @@ export function neardataSource(options: NeardataOptions): BlockSource {
     if (options.apiKey) url.searchParams.set("apiKey", options.apiKey);
     let lastError = "";
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      if (options.signal?.aborted) throw new NeardataError(`${path}: aborted`);
       let delay = Math.min(backoffMs * 2 ** (attempt - 1), maxBackoffMs);
       try {
         const response = await paced(() =>
@@ -81,13 +98,18 @@ export function neardataSource(options: NeardataOptions): BlockSource {
         const retryable = response.status === 429 || response.status >= 500;
         if (!retryable) throw new NeardataError(lastError);
         if (response.status === 429) {
-          delay = retryAfterMs(response.headers.get("retry-after")) ?? delay;
+          // Cloudflare in front of neardata sends `Retry-After: 0` while the limit is still
+          // active, so the header only raises the backoff, it never shortens it.
+          delay = Math.max(delay, retryAfterMs(response.headers.get("retry-after")) ?? 0);
         }
       } catch (error) {
         if (error instanceof NeardataError) throw error;
         lastError = `${path}: ${error instanceof Error ? error.message : String(error)}`;
       }
-      if (attempt < maxAttempts) await sleep(delay);
+      if (attempt < maxAttempts) {
+        options.onRetry?.({ path, attempt, delayMs: delay, reason: lastError });
+        await sleep(delay);
+      }
     }
     throw new NeardataError(`${lastError} after ${maxAttempts} attempts`);
   }

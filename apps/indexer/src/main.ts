@@ -19,7 +19,11 @@ import { tokenDecimalsReader } from "./tokens.js";
 
 const config = loadConfig(process.env);
 const logger = createLogger(config.logLevel);
-const sqlClient = postgres(config.databaseUrl, { max: 10 });
+const sqlClient = postgres(config.databaseUrl, {
+  max: 10,
+  // Migrations re-run on every start; Postgres reports skipped steps as notices.
+  onnotice: (notice) => logger.debug({ notice: notice.message }, "postgres notice"),
+});
 const db = drizzle(sqlClient, { schema }) as unknown as Database;
 await migrate(drizzle(sqlClient), { migrationsFolder: MIGRATIONS_FOLDER });
 
@@ -55,6 +59,8 @@ const ingestion = run(
     source: neardataSource({
       baseUrl: config.neardataUrl,
       apiKey: config.neardataApiKey,
+      signal: controller.signal,
+      onRetry: (retry) => logger.warn(retry, "neardata request retried"),
       ...(config.neardataMinIntervalMs === undefined
         ? {}
         : { minIntervalMs: config.neardataMinIntervalMs }),

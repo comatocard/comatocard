@@ -7,7 +7,8 @@
 
 use comatocard_common::events::emit;
 use near_sdk::json_types::{Base58CryptoHash, U64};
-use near_sdk::serde_json::json;
+use near_sdk::serde::Serialize;
+use near_sdk::serde_json;
 use near_sdk::store::LookupMap;
 use near_sdk::{
     AccountId, BorshStorageKey, CryptoHash, Gas, NearToken, PanicOnDefault, Promise, PromiseError,
@@ -23,6 +24,31 @@ pub const MAX_VAULTS_PER_OWNER: usize = 20;
 
 const GAS_VAULT_INIT: Gas = Gas::from_tgas(30);
 const GAS_ON_CREATED: Gas = Gas::from_tgas(15);
+
+/// Arguments of the vault `new` method.
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct VaultInit<'a> {
+    owner: &'a AccountId,
+    accepted_tokens: Vec<AccountId>,
+    registry: Option<AccountId>,
+    approval_ttl: Option<U64>,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct CodePublished {
+    code_hash: Base58CryptoHash,
+    code_version: u32,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct VaultCreated<'a> {
+    vault_id: &'a AccountId,
+    owner_id: &'a AccountId,
+    code_version: u32,
+}
 
 #[near]
 #[derive(BorshStorageKey)]
@@ -85,7 +111,10 @@ impl Factory {
         let encoded = Base58CryptoHash::from(hash);
         emit(
             "vault_code_published",
-            &json!({ "code_hash": encoded, "code_version": self.code_version }),
+            &CodePublished {
+                code_hash: encoded,
+                code_version: self.code_version,
+            },
         );
         encoded
     }
@@ -134,12 +163,13 @@ impl Factory {
             listed < MAX_VAULTS_PER_OWNER,
             "owner has the maximum number of vaults"
         );
-        let init_args = json!({
-            "owner": owner,
-            "accepted_tokens": accepted_tokens.unwrap_or_else(|| self.default_tokens.clone()),
-            "registry": registry.or_else(|| self.default_registry.clone()),
-            "approval_ttl": approval_ttl,
-        });
+        let init_args = serde_json::to_vec(&VaultInit {
+            owner: &owner,
+            accepted_tokens: accepted_tokens.unwrap_or_else(|| self.default_tokens.clone()),
+            registry: registry.or_else(|| self.default_registry.clone()),
+            approval_ttl,
+        })
+        .unwrap_or_else(|_| env::panic_str("cannot encode vault init arguments"));
 
         Promise::new(vault_id.clone())
             .create_account()
@@ -147,7 +177,7 @@ impl Factory {
             .use_global_contract(code_hash)
             .function_call(
                 "new".to_owned(),
-                init_args.to_string().into_bytes(),
+                init_args,
                 NearToken::from_yoctonear(0),
                 GAS_VAULT_INIT,
             )
@@ -181,7 +211,11 @@ impl Factory {
         self.vaults_by_owner.insert(owner.clone(), vaults);
         emit(
             "vault_created",
-            &json!({ "vault_id": vault_id, "owner_id": owner, "code_version": code_version }),
+            &VaultCreated {
+                vault_id: &vault_id,
+                owner_id: &owner,
+                code_version,
+            },
         );
         Some(vault_id)
     }

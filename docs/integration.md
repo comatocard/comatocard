@@ -53,7 +53,7 @@ Every view response is validated with the same Zod schemas the indexer uses. Imp
 
 ## Indexer
 Run it with `apps/indexer/README.md`. Endpoints are specified in `docs/specs/indexer-api.md`; the ones the apps need first:
-- `GET /vaults?owner=<account>`, `GET /vaults/<vault>`, `GET /vaults/<vault>/cards`
+- `GET /vaults?owner=<account>`, `GET /vaults/<vault>`, `GET /vaults/<vault>/cards`, `GET /cards?holder=<account>` for the cards an agent or person received as tokens
 - `GET /vaults/<vault>/payments?status=&card=&cursor=` for history including rejections and their reasons
 - `GET /vaults/<vault>/approvals` for the approvals inbox
 - `GET /vaults/<vault>/export.csv` for accountants

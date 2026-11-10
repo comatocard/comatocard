@@ -1,5 +1,20 @@
 import { accountId as accountIdSchema } from "@comatocard/sdk";
-import { and, asc, count, desc, eq, gte, inArray, lt, lte, sql, sum } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNull,
+  lt,
+  lte,
+  ne,
+  or,
+  sql,
+  sum,
+} from "drizzle-orm";
 import { Hono } from "hono";
 import type { UpgradeWebSocket } from "hono/ws";
 import { z } from "zod";
@@ -192,6 +207,23 @@ export function createApp(options: AppOptions) {
         reserved: b.reserved.toString(),
       })),
     });
+  });
+
+  // Card tokens held by an account across vaults; a card without a holder belongs to the owner.
+  app.get("/cards", async (c) => {
+    const holder = account.parse(c.req.query("holder"));
+    const rows = await db
+      .select({ card: cards })
+      .from(cards)
+      .innerJoin(vaults, eq(vaults.vaultId, cards.vaultId))
+      .where(
+        and(
+          ne(cards.status, "revoked"),
+          or(eq(cards.holderId, holder), and(isNull(cards.holderId), eq(vaults.ownerId, holder))),
+        ),
+      )
+      .orderBy(asc(cards.vaultId), asc(cards.cardId));
+    return c.json(rows.map((row) => cardView(row.card)));
   });
 
   app.get("/vaults/:vault/cards", async (c) => {

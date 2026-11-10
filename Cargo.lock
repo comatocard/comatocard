@@ -338,6 +338,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "comatocard-common"
+version = "0.1.0"
+dependencies = [
+ "near-sdk",
+]
+
+[[package]]
 name = "const-oid"
 version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3841,6 +3848,19 @@ name = "utf_types"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a3b425286980a367278453f3b6d28cdcb134b574e5a35824a6ff5eebad50bb6"
+
+[[package]]
+name = "vault"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "comatocard-common",
+ "near-api",
+ "near-sdk",
+ "serde_json",
+ "testkit",
+ "tokio",
+]
 
 [[package]]
 name = "vcpkg"

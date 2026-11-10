@@ -77,44 +77,26 @@ impl Env {
         Ok(account_id)
     }
 
-    /// Sends a function call signed by `signer_id` with `signer` and the maximum gas.
-    ///
-    /// # Errors
-    /// Fails when the transaction cannot be sent, for example when the access key does not allow
-    /// the method. Execution failures are returned inside the [`TransactionResult`].
-    pub async fn call(
-        &self,
-        signer_id: &AccountId,
-        signer: &Arc<Signer>,
-        contract: &AccountId,
-        method: &str,
-        args: Value,
-        deposit: NearToken,
-    ) -> Result<TransactionResult> {
-        Ok(near_api::Contract(contract.clone())
-            .call_function(method, args)
-            .transaction()
-            .deposit(deposit)
-            .gas(NearGas::from_tgas(300))
-            .with_signer(signer_id.clone(), signer.clone())
-            .send_to(&self.network)
-            .await?)
-    }
-
-    /// [`Env::call`] signed with the genesis key, which controls every account created here.
-    ///
-    /// # Errors
-    /// See [`Env::call`].
-    pub async fn call_as(
+    /// Starts a function call from `signer_id` to `contract`. By default it is signed with the
+    /// genesis key, which controls every account created here, attaches no deposit and the
+    /// maximum gas.
+    pub fn call(
         &self,
         signer_id: &AccountId,
         contract: &AccountId,
         method: &str,
         args: Value,
-        deposit: NearToken,
-    ) -> Result<TransactionResult> {
-        self.call(signer_id, &self.signer, contract, method, args, deposit)
-            .await
+    ) -> Call<'_> {
+        Call {
+            env: self,
+            signer_id: signer_id.clone(),
+            signer: self.signer.clone(),
+            contract: contract.clone(),
+            method: method.to_owned(),
+            args,
+            deposit: NearToken::from_yoctonear(0),
+            gas: NearGas::from_tgas(300),
+        }
     }
 
     /// Calls a view method and deserializes the result.
@@ -133,6 +115,53 @@ impl Env {
             .fetch_from(&self.network)
             .await?
             .data)
+    }
+}
+
+/// A function call under construction, see [`Env::call`].
+#[must_use = "a call does nothing until it is sent"]
+pub struct Call<'a> {
+    env: &'a Env,
+    signer_id: AccountId,
+    signer: Arc<Signer>,
+    contract: AccountId,
+    method: String,
+    args: Value,
+    deposit: NearToken,
+    gas: NearGas,
+}
+
+impl Call<'_> {
+    pub fn deposit(mut self, deposit: NearToken) -> Self {
+        self.deposit = deposit;
+        self
+    }
+
+    pub fn gas(mut self, gas: NearGas) -> Self {
+        self.gas = gas;
+        self
+    }
+
+    /// Signs with `signer` instead of the genesis key, for example with a card key.
+    pub fn signer(mut self, signer: Arc<Signer>) -> Self {
+        self.signer = signer;
+        self
+    }
+
+    /// Sends the transaction and waits for its final outcome.
+    ///
+    /// # Errors
+    /// Fails when the transaction is rejected before execution, for example when the access key
+    /// does not allow the method. Execution failures are returned inside the result.
+    pub async fn send(self) -> Result<TransactionResult> {
+        Ok(near_api::Contract(self.contract)
+            .call_function(&self.method, self.args)
+            .transaction()
+            .deposit(self.deposit)
+            .gas(self.gas)
+            .with_signer(self.signer_id, self.signer)
+            .send_to(&self.env.network)
+            .await?)
     }
 }
 

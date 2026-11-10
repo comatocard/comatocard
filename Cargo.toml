@@ -1,6 +1,11 @@
 [workspace]
 resolver = "3"
-members = ["contracts/mock-ft", "contracts/testkit"]
+members = [
+    "contracts/common",
+    "contracts/mock-ft",
+    "contracts/testkit",
+    "contracts/vault",
+]
 
 [workspace.package]
 version = "0.1.0"
@@ -18,6 +23,7 @@ tokio = { version = "1", features = ["full"] }
 serde = "1"
 serde_json = "1"
 testkit = { path = "contracts/testkit" }
+comatocard-common = { path = "contracts/common" }
 testresult = "0.4.2"
 anyhow = "1"
 

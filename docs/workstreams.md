@@ -17,6 +17,7 @@ Who builds what, in which order, and what "done" means. Each task becomes a GitH
 | Indexer with REST, CSV, risk and WebSocket | Done, PRs #18 #27 |
 | Testnet deployment and end-to-end check | Done, PR #24, see `docs/deployments.md` |
 | Integration guide for B and C | `docs/integration.md` |
+| Cards as NEP-171 tokens (stretch, `nfts`) | Done in code, issue #31; testnet republish pending |
 
 ## Interfaces between workstreams
 The specs are the contract. Agree on them first, then build in parallel against mocks.

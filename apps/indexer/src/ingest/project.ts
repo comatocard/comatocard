@@ -120,6 +120,19 @@ export async function project(tx: Tx, origin: EventOrigin, event: ComatocardEven
         .set({ publicKey: event.data.new_public_key, updatedAt: at })
         .where(and(eq(cards.vaultId, vaultId), eq(cards.cardId, event.data.card_id)));
       return;
+    case "card_transferred": {
+      // Mirrors the contract: a card handed back to the owner follows future ownership changes.
+      const [vault] = await tx
+        .select({ ownerId: vaults.ownerId })
+        .from(vaults)
+        .where(eq(vaults.vaultId, vaultId));
+      const holderId = event.data.new_holder === vault?.ownerId ? null : event.data.new_holder;
+      await tx
+        .update(cards)
+        .set({ holderId, publicKey: null, updatedAt: at })
+        .where(and(eq(cards.vaultId, vaultId), eq(cards.cardId, event.data.card_id)));
+      return;
+    }
     case "approver_set":
       if (event.data.max_amount === null) {
         await tx

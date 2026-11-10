@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { CARD_PAY_GAS, createVaultClient, ViewError, vaultCalls } from "../src/client.js";
+import {
+  CARD_PAY_GAS,
+  createVaultClient,
+  MIN_HOLDER_ALLOWANCE,
+  ViewError,
+  vaultCalls,
+} from "../src/client.js";
 
 const rpcUrl = "https://rpc.testnet.example";
 const vaultId = "alice.factory.testnet";
@@ -116,6 +122,16 @@ describe("vaultCalls", () => {
       card_id: 1,
       new_public_key: "ed25519:abc",
       gas_allowance: null,
+    });
+    expect(calls.transferCard(1, "agent.testnet")).toMatchObject({
+      methodName: "nft_transfer",
+      args: { receiver_id: "agent.testnet", token_id: "1", approval_id: null, memo: null },
+      deposit: "1",
+    });
+    expect(calls.setCardKey(1, "ed25519:abc")).toMatchObject({
+      methodName: "set_card_key",
+      args: { card_id: 1, public_key: "ed25519:abc" },
+      deposit: MIN_HOLDER_ALLOWANCE,
     });
     expect(calls.setApprover("council.testnet", null).args).toEqual({
       account_id: "council.testnet",

@@ -127,6 +127,30 @@ describe("indexBlock", () => {
       ["withdrawal", false],
     ]);
   });
+
+  it("tracks the card holder across token transfers", async () => {
+    await indexScenario();
+    const { eventLine, makeBlock } = await import("../support/blocks.js");
+    const [vault] = await db.select().from(schema.vaults);
+    const ownerId = vault?.ownerId ?? "";
+    const transfer = (height: number, from: string, to: string) =>
+      indexBlock(
+        { db, isTracked },
+        height,
+        makeBlock(height, [
+          {
+            executor: VAULT,
+            logs: [eventLine("card_transferred", { card_id: 0, old_holder: from, new_holder: to })],
+          },
+        ]),
+      );
+    await transfer(200, ownerId, "agent.testnet");
+    const [handed] = await db.select().from(schema.cards);
+    expect(handed).toMatchObject({ holderId: "agent.testnet", publicKey: null });
+    await transfer(201, "agent.testnet", ownerId);
+    const [returned] = await db.select().from(schema.cards);
+    expect(returned?.holderId).toBeNull();
+  });
 });
 
 describe("run", () => {

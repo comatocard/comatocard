@@ -76,6 +76,7 @@ function cardView(row: typeof cards.$inferSelect) {
     vault_id: row.vaultId,
     card_id: row.cardId,
     public_key: row.publicKey,
+    holder_id: row.holderId,
     label: row.label,
     kind: row.kind,
     status: row.status,

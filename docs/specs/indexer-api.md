@@ -21,7 +21,7 @@ All responses are JSON unless noted. Lists use cursor pagination (`?cursor=&limi
 | `GET /health` | Status, indexed height, chain head, lag |
 | `GET /vaults?owner=` | Vaults of an owner |
 | `GET /vaults/:vault` | Vault summary: owner, card count, `spent_today` (reserved and settled spend since 00:00 UTC) and `indexed_balances` per token derived from events (`available`, `reserved`); the contract view `get_balances` is authoritative |
-| `GET /vaults/:vault/cards` | Cards with status and policy; live spend counters come from the vault view `list_cards` |
+| `GET /vaults/:vault/cards` | Cards with status, policy, `public_key` (null after a token transfer until the holder sets a key) and `holder_id` (null means the vault owner); live spend counters come from the vault view `list_cards` |
 | `GET /vaults/:vault/cards/:card` | One card with recent payments |
 | `GET /vaults/:vault/payments?card=&status=&merchant=&from=&to=&cursor=&limit=` | `{ items, next_cursor }`, newest first, at most 100 per page; `from` and `to` are nanosecond timestamps |
 | `GET /vaults/:vault/payments/:id` | One payment with all its events and transaction links |

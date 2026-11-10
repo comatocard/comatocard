@@ -21,6 +21,7 @@ Amounts are strings in the token's smallest unit; tUSD has 6 decimals, so `"2500
 5. **Pay.** The holder signs a transaction with signer `<vault>`, receiver `<vault>`, method `pay`, 100 Tgas and no deposit (`vaultCalls(vault).pay(...)`). The result is `{ "status": "submitted" | "queued" | "rejected", ... }`.
 
 ## Rules every client must follow
+- **Cards are NEP-171 tokens.** `vaultCalls(vault).transferCard(cardId, receiver)` hands a card to another account and deletes its key; the new holder calls `setCardKey(cardId, publicKey)` with at least 1 NEAR attached, which becomes the key allowance. The owner keeps policy, freeze and revoke.
 - **Card payments are never relayed.** The vault identifies the card by `signer_account_pk`; a relayer would replace it with its own key. Sign card transactions directly with the card key.
 - **Attach 100 Tgas to `pay`.** The card key allowance (default 1 NEAR) is charged with the prepaid gas of every transaction, about 100 payments per key. Rotate the key with `rotate_card_key` when the allowance runs low.
 - **Call `preview_payment` before signing.** It runs the same checks as `pay` without the registry call and costs nothing; agents should not sign payments that are already known to be rejected.

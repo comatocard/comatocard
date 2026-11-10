@@ -16,14 +16,18 @@ const allLines = [
 describe("golden fixtures emitted by the contracts", () => {
   it.each(allLines)("parses %s", (line) => {
     const result = parseEventLog(line);
-    expect(result.ok, JSON.stringify(result)).toBe(true);
+    if (line.includes('"standard":"nep171"')) {
+      expect(result).toEqual({ ok: false, reason: "other_standard" });
+    } else {
+      expect(result.ok, JSON.stringify(result)).toBe(true);
+    }
   });
 
   it("covers every event the SDK knows", () => {
     const seen = new Set(
-      allLines.map((line) => {
+      allLines.flatMap((line) => {
         const result = parseEventLog(line);
-        return result.ok ? result.event.event : "";
+        return result.ok ? [result.event.event] : [];
       }),
     );
     expect([...seen].sort()).toEqual([...EVENT_NAMES].sort());

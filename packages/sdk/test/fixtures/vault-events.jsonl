@@ -4,6 +4,9 @@ EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"card_frozen","dat
 EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"card_unfrozen","data":[{"card_id":1}]}
 EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"card_revoked","data":[{"card_id":1}]}
 EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"card_key_rotated","data":[{"card_id":1,"old_public_key":"ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp","new_public_key":"ed25519:DcA2MzgpJbrUATQLLceocVckhhAqrkingax4oJ9kZ847"}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"card_key_rotated","data":[{"card_id":1,"old_public_key":null,"new_public_key":"ed25519:DcA2MzgpJbrUATQLLceocVckhhAqrkingax4oJ9kZ847"}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"card_transferred","data":[{"card_id":1,"old_holder":"owner.testnet","new_holder":"agent.testnet"}]}
+EVENT_JSON:{"standard":"nep171","version":"1.0.0","event":"nft_transfer","data":[{"old_owner_id":"owner.testnet","new_owner_id":"agent.testnet","token_ids":["1"]}]}
 EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"approver_set","data":[{"account_id":"council.testnet","max_amount":"80000000"}]}
 EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"approver_set","data":[{"account_id":"council.testnet","max_amount":null}]}
 EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"deposit","data":[{"token":"tusd.testnet","sender_id":"owner.testnet","amount":"500000000"}]}

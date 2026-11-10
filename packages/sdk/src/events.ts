@@ -45,8 +45,13 @@ export const eventData = {
   card_revoked: cardRef,
   card_key_rotated: z.strictObject({
     card_id: id,
-    old_public_key: publicKey,
+    old_public_key: publicKey.nullable(),
     new_public_key: publicKey,
+  }),
+  card_transferred: z.strictObject({
+    card_id: id,
+    old_holder: accountId,
+    new_holder: accountId,
   }),
   approver_set: z.strictObject({ account_id: accountId, max_amount: u128.nullable() }),
   deposit: z.strictObject({ token: accountId, sender_id: accountId, amount: u128 }),

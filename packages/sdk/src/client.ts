@@ -149,7 +149,12 @@ const call = (
   deposit = "0",
 ): FunctionCall => ({ receiverId, methodName, args, gas, deposit });
 
-/** Function call descriptors for every vault write. None attaches a deposit. */
+/** One yoctoNEAR, the deposit NEP-171 requires on `nft_transfer`. */
+export const ONE_YOCTO = "1";
+/** Smallest deposit for `set_card_key`, which becomes the key allowance: 1 NEAR. */
+export const MIN_HOLDER_ALLOWANCE = "1000000000000000000000000";
+
+/** Function call descriptors for every vault write. Only the token methods attach a deposit. */
 export function vaultCalls(vaultId: AccountId) {
   return {
     pay: (input: { merchant: AccountId; amount: U128; memo?: string; reference?: string }) =>
@@ -189,6 +194,24 @@ export function vaultCalls(vaultId: AccountId) {
         new_public_key: newPublicKey,
         gas_allowance: gasAllowance ?? null,
       }),
+    /** Hands the card token to `receiverId`; the current card key is deleted. */
+    transferCard: (cardId: number, receiverId: AccountId) =>
+      call(
+        vaultId,
+        "nft_transfer",
+        { receiver_id: receiverId, token_id: String(cardId), approval_id: null, memo: null },
+        OWNER_CALL_GAS,
+        ONE_YOCTO,
+      ),
+    /** Sets the key of a card the caller holds. `allowance` is the attached deposit in yoctoNEAR. */
+    setCardKey: (cardId: number, publicKey: PublicKey, allowance = MIN_HOLDER_ALLOWANCE) =>
+      call(
+        vaultId,
+        "set_card_key",
+        { card_id: cardId, public_key: publicKey },
+        OWNER_CALL_GAS,
+        allowance,
+      ),
     setApprover: (account: AccountId, maxAmount: U128 | null) =>
       call(vaultId, "set_approver", { account_id: account, max_amount: maxAmount }),
     approvePayment: (paymentId: number) =>

@@ -37,8 +37,16 @@ struct CardRef {
 #[serde(crate = "near_sdk::serde")]
 struct CardKeyRotated<'a> {
     card_id: CardId,
-    old_public_key: &'a PublicKey,
+    old_public_key: Option<&'a PublicKey>,
     new_public_key: &'a PublicKey,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct CardTransferred<'a> {
+    card_id: CardId,
+    old_holder: &'a AccountId,
+    new_holder: &'a AccountId,
 }
 
 #[derive(Serialize)]
@@ -161,13 +169,66 @@ pub fn card_status(event: &str, card_id: CardId) {
     emit(event, &CardRef { card_id });
 }
 
-pub fn card_key_rotated(card_id: CardId, old: &PublicKey, new: &PublicKey) {
+pub fn card_key_rotated(card_id: CardId, old: Option<&PublicKey>, new: &PublicKey) {
     emit(
         "card_key_rotated",
         &CardKeyRotated {
             card_id,
             old_public_key: old,
             new_public_key: new,
+        },
+    );
+}
+
+/// Records a token transfer in the Comatocard standard and in NEP-171.
+pub fn card_transferred(card_id: CardId, old_holder: &AccountId, new_holder: &AccountId) {
+    emit(
+        "card_transferred",
+        &CardTransferred {
+            card_id,
+            old_holder,
+            new_holder,
+        },
+    );
+    let token_ids = [card_id.to_string()];
+    nep171(
+        "nft_transfer",
+        &Nep171Transfer {
+            old_owner_id: old_holder,
+            new_owner_id: new_holder,
+            token_ids: &token_ids,
+        },
+    );
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct Nep171Owner<'a> {
+    owner_id: &'a AccountId,
+    token_ids: &'a [String],
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct Nep171Transfer<'a> {
+    old_owner_id: &'a AccountId,
+    new_owner_id: &'a AccountId,
+    token_ids: &'a [String],
+}
+
+fn nep171(event: &str, data: &impl Serialize) {
+    near_sdk::env::log_str(&comatocard_common::events::format_standard(
+        "nep171", "1.0.0", event, data,
+    ));
+}
+
+/// NEP-171 `nft_mint` or `nft_burn` for one card token.
+pub fn nep171_supply(event: &str, card_id: CardId, owner_id: &AccountId) {
+    nep171(
+        event,
+        &Nep171Owner {
+            owner_id,
+            token_ids: &[card_id.to_string()],
         },
     );
 }
@@ -356,7 +417,9 @@ mod tests {
         card_status("card_frozen", 1);
         card_status("card_unfrozen", 1);
         card_status("card_revoked", 1);
-        card_key_rotated(1, &key, &new_key);
+        card_key_rotated(1, Some(&key), &new_key);
+        card_key_rotated(1, None, &new_key);
+        card_transferred(1, &owner, &account("agent.testnet"));
         approver_set(&account("council.testnet"), Some(U128(80_000_000)));
         approver_set(&account("council.testnet"), None);
         deposit(&payment.token, &owner, U128(500_000_000));

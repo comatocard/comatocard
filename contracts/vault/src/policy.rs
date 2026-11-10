@@ -145,9 +145,12 @@ mod tests {
             id: 0,
             label: "agent".to_owned(),
             kind: CardKind::Agent,
-            public_key: "ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp"
-                .parse()
-                .unwrap(),
+            public_key: Some(
+                "ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp"
+                    .parse()
+                    .unwrap(),
+            ),
+            holder: None,
             status: CardStatus::Active,
             policy: Policy {
                 token: "usd.near".parse().unwrap(),

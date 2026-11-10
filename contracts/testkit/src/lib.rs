@@ -93,9 +93,24 @@ impl Env {
             signer: self.signer.clone(),
             contract: contract.clone(),
             method: method.to_owned(),
-            args,
+            args: Args::Json(args),
             deposit: NearToken::from_yoctonear(0),
             gas: NearGas::from_tgas(300),
+        }
+    }
+
+    /// Like [`Env::call`], but passes `input` as the raw call input instead of JSON, for methods
+    /// that read `env::input()` directly.
+    pub fn call_raw(
+        &self,
+        signer_id: &AccountId,
+        contract: &AccountId,
+        method: &str,
+        input: Vec<u8>,
+    ) -> Call<'_> {
+        Call {
+            args: Args::Raw(input),
+            ..self.call(signer_id, contract, method, Value::Null)
         }
     }
 
@@ -126,9 +141,14 @@ pub struct Call<'a> {
     signer: Arc<Signer>,
     contract: AccountId,
     method: String,
-    args: Value,
+    args: Args,
     deposit: NearToken,
     gas: NearGas,
+}
+
+enum Args {
+    Json(Value),
+    Raw(Vec<u8>),
 }
 
 impl Call<'_> {
@@ -154,8 +174,12 @@ impl Call<'_> {
     /// Fails when the transaction is rejected before execution, for example when the access key
     /// does not allow the method. Execution failures are returned inside the result.
     pub async fn send(self) -> Result<TransactionResult> {
-        Ok(near_api::Contract(self.contract)
-            .call_function(&self.method, self.args)
+        let contract = near_api::Contract(self.contract);
+        let builder = match self.args {
+            Args::Json(args) => contract.call_function(&self.method, args),
+            Args::Raw(input) => contract.call_function_raw(&self.method, input),
+        };
+        Ok(builder
             .transaction()
             .deposit(self.deposit)
             .gas(self.gas)

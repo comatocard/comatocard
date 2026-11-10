@@ -2,6 +2,7 @@
 resolver = "3"
 members = [
     "contracts/common",
+    "contracts/factory",
     "contracts/mock-ft",
     "contracts/registry",
     "contracts/testkit",

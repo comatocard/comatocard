@@ -890,6 +890,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "factory"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "comatocard-common",
+ "near-api",
+ "near-sdk",
+ "serde_json",
+ "testkit",
+ "tokio",
+]
+
+[[package]]
 name = "fastrand"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

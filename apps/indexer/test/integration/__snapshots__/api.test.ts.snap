@@ -165,6 +165,7 @@ exports[`REST API > serves cards and one card with its recent payments 1`] = `
   {
     "card_id": 0,
     "created_at": "1794000101000000000",
+    "holder_id": null,
     "kind": "agent",
     "label": "research agent",
     "policy": {

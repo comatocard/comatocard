@@ -76,7 +76,10 @@ export const cards = pgTable(
   {
     vaultId: text("vault_id").notNull(),
     cardId: integer("card_id").notNull(),
-    publicKey: text("public_key").notNull(),
+    /** Null after a token transfer until the new holder sets a key. */
+    publicKey: text("public_key"),
+    /** Holder of the card token; null means the vault owner. */
+    holderId: text("holder_id"),
     label: text("label").notNull(),
     kind: text("kind").notNull(),
     status: text("status").notNull(),

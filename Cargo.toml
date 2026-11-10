@@ -3,6 +3,7 @@ resolver = "3"
 members = [
     "contracts/common",
     "contracts/mock-ft",
+    "contracts/registry",
     "contracts/testkit",
     "contracts/vault",
 ]

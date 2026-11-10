@@ -1,14 +1,135 @@
-//! Vault events. The schema is documented in `docs/specs/events.md`.
+//! Vault events. The schema is documented in `docs/specs/events.md`. Payloads are typed structs
+//! whose field order is the JSON order; the golden fixtures shared with the SDK pin it.
 
+use comatocard_common::events::emit;
 use near_sdk::json_types::U128;
-use near_sdk::serde_json::json;
+use near_sdk::serde::Serialize;
 use near_sdk::{AccountId, PublicKey};
 
 use crate::types::{
     CardId, CardKind, FailureCause, Payment, PaymentId, Policy, QueueCause, RejectReason,
 };
 
-use comatocard_common::events::emit;
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct CardCreated<'a> {
+    card_id: CardId,
+    public_key: &'a PublicKey,
+    label: &'a str,
+    kind: CardKind,
+    policy: &'a Policy,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct CardPolicyUpdated<'a> {
+    card_id: CardId,
+    policy: &'a Policy,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct CardRef {
+    card_id: CardId,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct CardKeyRotated<'a> {
+    card_id: CardId,
+    old_public_key: &'a PublicKey,
+    new_public_key: &'a PublicKey,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct ApproverSet<'a> {
+    account_id: &'a AccountId,
+    max_amount: Option<U128>,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct Deposit<'a> {
+    token: &'a AccountId,
+    sender_id: &'a AccountId,
+    amount: U128,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct Withdrawal<'a> {
+    token: &'a AccountId,
+    receiver_id: &'a AccountId,
+    amount: U128,
+    success: bool,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct PaymentSubmitted<'a> {
+    payment_id: PaymentId,
+    card_id: CardId,
+    merchant: &'a AccountId,
+    token: &'a AccountId,
+    amount: U128,
+    memo: Option<&'a str>,
+    reference: Option<&'a str>,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct PaymentQueued<'a> {
+    payment_id: PaymentId,
+    card_id: CardId,
+    merchant: &'a AccountId,
+    token: &'a AccountId,
+    amount: U128,
+    memo: Option<&'a str>,
+    reference: Option<&'a str>,
+    cause: QueueCause,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct PaymentDecided<'a> {
+    payment_id: PaymentId,
+    approver_id: &'a AccountId,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct PaymentRef {
+    payment_id: PaymentId,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct PaymentSettled<'a> {
+    payment_id: PaymentId,
+    card_id: CardId,
+    merchant: &'a AccountId,
+    token: &'a AccountId,
+    amount: U128,
+    reference: Option<&'a str>,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct PaymentFailed<'a> {
+    payment_id: PaymentId,
+    card_id: CardId,
+    merchant: &'a AccountId,
+    token: &'a AccountId,
+    amount: U128,
+    cause: FailureCause,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct OwnerRef<'a> {
+    owner_id: &'a AccountId,
+}
 
 pub fn card_created(
     card_id: CardId,
@@ -19,130 +140,147 @@ pub fn card_created(
 ) {
     emit(
         "card_created",
-        &json!({
-            "card_id": card_id,
-            "public_key": public_key,
-            "label": label,
-            "kind": kind,
-            "policy": policy,
-        }),
+        &CardCreated {
+            card_id,
+            public_key,
+            label,
+            kind,
+            policy,
+        },
     );
 }
 
 pub fn card_policy_updated(card_id: CardId, policy: &Policy) {
     emit(
         "card_policy_updated",
-        &json!({ "card_id": card_id, "policy": policy }),
+        &CardPolicyUpdated { card_id, policy },
     );
 }
 
 pub fn card_status(event: &str, card_id: CardId) {
-    emit(event, &json!({ "card_id": card_id }));
+    emit(event, &CardRef { card_id });
 }
 
 pub fn card_key_rotated(card_id: CardId, old: &PublicKey, new: &PublicKey) {
     emit(
         "card_key_rotated",
-        &json!({ "card_id": card_id, "old_public_key": old, "new_public_key": new }),
+        &CardKeyRotated {
+            card_id,
+            old_public_key: old,
+            new_public_key: new,
+        },
     );
 }
 
 pub fn approver_set(account_id: &AccountId, max_amount: Option<U128>) {
     emit(
         "approver_set",
-        &json!({ "account_id": account_id, "max_amount": max_amount }),
+        &ApproverSet {
+            account_id,
+            max_amount,
+        },
     );
 }
 
 pub fn deposit(token: &AccountId, sender_id: &AccountId, amount: U128) {
     emit(
         "deposit",
-        &json!({ "token": token, "sender_id": sender_id, "amount": amount }),
+        &Deposit {
+            token,
+            sender_id,
+            amount,
+        },
     );
 }
 
 pub fn withdrawal(token: &AccountId, receiver_id: &AccountId, amount: U128, success: bool) {
     emit(
         "withdrawal",
-        &json!({
-            "token": token,
-            "receiver_id": receiver_id,
-            "amount": amount,
-            "success": success,
-        }),
+        &Withdrawal {
+            token,
+            receiver_id,
+            amount,
+            success,
+        },
     );
 }
 
 pub fn payment_submitted(payment: &Payment) {
     emit(
         "payment_submitted",
-        &json!({
-            "payment_id": payment.id,
-            "card_id": payment.card_id,
-            "merchant": payment.merchant,
-            "token": payment.token,
-            "amount": payment.amount,
-            "memo": payment.memo,
-            "reference": payment.reference,
-        }),
+        &PaymentSubmitted {
+            payment_id: payment.id,
+            card_id: payment.card_id,
+            merchant: &payment.merchant,
+            token: &payment.token,
+            amount: payment.amount,
+            memo: payment.memo.as_deref(),
+            reference: payment.reference.as_deref(),
+        },
     );
 }
 
 pub fn payment_queued(payment: &Payment, cause: QueueCause) {
     emit(
         "payment_queued",
-        &json!({
-            "payment_id": payment.id,
-            "card_id": payment.card_id,
-            "merchant": payment.merchant,
-            "token": payment.token,
-            "amount": payment.amount,
-            "memo": payment.memo,
-            "reference": payment.reference,
-            "cause": cause,
-        }),
+        &PaymentQueued {
+            payment_id: payment.id,
+            card_id: payment.card_id,
+            merchant: &payment.merchant,
+            token: &payment.token,
+            amount: payment.amount,
+            memo: payment.memo.as_deref(),
+            reference: payment.reference.as_deref(),
+            cause,
+        },
     );
 }
 
 pub fn payment_decided(event: &str, payment_id: PaymentId, approver_id: &AccountId) {
     emit(
         event,
-        &json!({ "payment_id": payment_id, "approver_id": approver_id }),
+        &PaymentDecided {
+            payment_id,
+            approver_id,
+        },
     );
 }
 
 pub fn payment_expired(payment_id: PaymentId) {
-    emit("payment_expired", &json!({ "payment_id": payment_id }));
+    emit("payment_expired", &PaymentRef { payment_id });
 }
 
 pub fn payment_settled(payment: &Payment) {
     emit(
         "payment_settled",
-        &json!({
-            "payment_id": payment.id,
-            "card_id": payment.card_id,
-            "merchant": payment.merchant,
-            "token": payment.token,
-            "amount": payment.amount,
-            "reference": payment.reference,
-        }),
+        &PaymentSettled {
+            payment_id: payment.id,
+            card_id: payment.card_id,
+            merchant: &payment.merchant,
+            token: &payment.token,
+            amount: payment.amount,
+            reference: payment.reference.as_deref(),
+        },
     );
 }
 
 pub fn payment_failed(payment: &Payment, cause: FailureCause) {
     emit(
         "payment_failed",
-        &json!({
-            "payment_id": payment.id,
-            "card_id": payment.card_id,
-            "merchant": payment.merchant,
-            "token": payment.token,
-            "amount": payment.amount,
-            "cause": cause,
-        }),
+        &PaymentFailed {
+            payment_id: payment.id,
+            card_id: payment.card_id,
+            merchant: &payment.merchant,
+            token: &payment.token,
+            amount: payment.amount,
+            cause,
+        },
     );
 }
 
+/// A recorded rejection; serialized as the `payment_rejected` payload.
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
 pub struct Rejection<'a> {
     pub card_id: CardId,
     pub merchant: &'a AccountId,
@@ -153,21 +291,11 @@ pub struct Rejection<'a> {
 }
 
 pub fn payment_rejected(rejection: &Rejection<'_>) {
-    emit(
-        "payment_rejected",
-        &json!({
-            "card_id": rejection.card_id,
-            "merchant": rejection.merchant,
-            "token": rejection.token,
-            "amount": rejection.amount,
-            "reason": rejection.reason,
-            "reference": rejection.reference,
-        }),
-    );
+    emit("payment_rejected", rejection);
 }
 
 pub fn owner_event(event: &str, owner_id: &AccountId) {
-    emit(event, &json!({ "owner_id": owner_id }));
+    emit(event, &OwnerRef { owner_id });
 }
 
 #[cfg(test)]

@@ -6,7 +6,7 @@
 
 use comatocard_common::events::emit;
 use near_sdk::json_types::U64;
-use near_sdk::serde_json::json;
+use near_sdk::serde::Serialize;
 use near_sdk::store::{IterableMap, IterableSet, LookupMap};
 use near_sdk::{
     AccountId, BorshStorageKey, NearToken, PanicOnDefault, Promise, env, near, require,
@@ -60,6 +60,25 @@ pub struct Record {
     pub curator_id: AccountId,
     pub report_ids: Vec<ReportId>,
     pub updated_at: U64,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct ReportSubmitted<'a> {
+    report_id: ReportId,
+    account_id: &'a AccountId,
+    reporter_id: &'a AccountId,
+    category: Category,
+    evidence_uri: &'a str,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct StatusChanged<'a> {
+    account_id: &'a AccountId,
+    status: Status,
+    curator_id: &'a AccountId,
+    report_ids: &'a [ReportId],
 }
 
 #[near]
@@ -152,13 +171,13 @@ impl Registry {
         };
         emit(
             "report_submitted",
-            &json!({
-                "report_id": id,
-                "account_id": report.account_id,
-                "reporter_id": report.reporter_id,
-                "category": report.category,
-                "evidence_uri": report.evidence_uri,
-            }),
+            &ReportSubmitted {
+                report_id: id,
+                account_id: &report.account_id,
+                reporter_id: &report.reporter_id,
+                category: report.category,
+                evidence_uri: &report.evidence_uri,
+            },
         );
         self.reports.insert(id, report);
         self.reports.flush();
@@ -202,12 +221,12 @@ impl Registry {
         }
         emit(
             "status_changed",
-            &json!({
-                "account_id": account_id,
-                "status": status,
-                "curator_id": curator_id,
-                "report_ids": report_ids,
-            }),
+            &StatusChanged {
+                account_id: &account_id,
+                status,
+                curator_id: &curator_id,
+                report_ids: &report_ids,
+            },
         );
         if status == Status::Clear && report_ids.is_empty() {
             self.records.remove(&account_id);

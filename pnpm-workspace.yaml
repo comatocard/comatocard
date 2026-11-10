@@ -4,6 +4,16 @@ packages:
   - contracts/*
 
 allowBuilds:
+  esbuild: true
   lefthook: true
+
+# drizzle-kit 0.31, the latest stable release, still depends on these loaders. Remove once
+# drizzle-kit 1.0 is stable and the indexer migrates to it.
+allowedDeprecatedVersions:
+  "@esbuild-kit/core-utils": "3"
+  "@esbuild-kit/esm-loader": "2"
+
+minimumReleaseAgeExclude:
+  - "@electric-sql/pglite@0.5.16"
 
 savePrefix: ""

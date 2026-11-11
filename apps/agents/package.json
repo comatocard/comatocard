@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "biome check .",
     "test": "vitest run --coverage",
-    "status": "node --env-file=.env dist/status.js"
+    "status": "node --env-file=.env dist/status.js",
+    "pay": "node --env-file=.env dist/pay.js"
   },
   "dependencies": {
     "@comatocard/sdk": "workspace:*",

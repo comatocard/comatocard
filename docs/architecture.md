@@ -56,7 +56,7 @@ apps/
   web/        Next.js app: owner dashboard, card management, approvals, merchant checkout
   merchant/   Demo merchant: HTTP 402 resource server and payment verification
   agents/     Spending agent, treasury agent, policy assistant, attack demo
-  indexer/    Block poller, event projections, REST and WebSocket API
+  indexer/    Rust: block poller, event projections, REST and WebSocket API
   relayer/    Meta transaction relayer for owner actions
 contracts/
   vault/      Vault contract (Rust, near-sdk)
@@ -81,7 +81,7 @@ docs/         Architecture, specs, workstreams, research
 9. **Funds are accounted in an internal ledger.** Deposits arrive through `ft_transfer_call`. A payment reserves funds and spend before the transfer and releases them in the callback if the transfer fails.
 10. **Counterparty checks are layered.** On-chain: the registry status (clear, flagged, blocked) checked by the vault according to the card's risk mode. Off-chain: indexer signals (merchant first seen, prior payments, contract code changes) used by the agent-side guard before signing.
 11. **Owner actions can be gasless.** The relayer sponsors meta transactions whose receiver is a vault created by our factory, with an allowlist of owner methods and zero attached deposit.
-12. **The indexer reads finalized blocks from neardata.** No reorg handling needed; ingestion is idempotent on `(receipt_id, log_index)`.
+12. **The indexer reads finalized blocks from neardata.** No reorg handling needed; ingestion is idempotent on `(receipt_id, log_index)`. It is written in Rust and parses events into the contract crates' own types, so the contracts and the indexer cannot drift apart.
 
 ## Payment flow
 ```

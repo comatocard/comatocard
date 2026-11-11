@@ -1,0 +1,47 @@
+# Supply-chain policy checked in CI with cargo-deny (advisories, bans, licenses, sources).
+
+[graph]
+all-features = false
+
+[advisories]
+# RustSec advisories fail the build; yanked crates too. Each ignore names where the crate comes
+# from and why it does not reach a deployed contract or the indexer's data path. Review them
+# whenever near-sdk, near-api or testcontainers is upgraded.
+yanked = "deny"
+ignore = [
+    { id = "RUSTSEC-2026-0387", reason = "crypto-bigint 0.5 via p256 in near-vm-runner, near-sdk's mocked VM for unit tests; contracts do no p256 arithmetic on-chain and no secret keys pass through it. Fixed upstream only in crypto-bigint 0.7, which elliptic-curve 0.13 does not accept" },
+    { id = "RUSTSEC-2022-0054", reason = "wee_alloc is near-sdk's default wasm allocator; unmaintained, no known vulnerability. Switching allocators changes contract code and needs a republish, tracked separately" },
+    { id = "RUSTSEC-2024-0449", reason = "unsafe-libyaml via serde_yaml in near-parameters, a near-sdk dependency that only parses NEAR's bundled protocol config, never external input" },
+    { id = "RUSTSEC-2026-0440", reason = "astral-tokio-tar via testcontainers, a dev-dependency of the indexer integration tests only" },
+]
+
+[licenses]
+confidence-threshold = 0.9
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "CC0-1.0",
+    "MPL-2.0",
+    "BSL-1.0",
+    "0BSD",
+    "OpenSSL",
+    "CDLA-Permissive-2.0",
+]
+
+[bans]
+multiple-versions = "allow"
+wildcards = "deny"
+# Workspace path dependencies of unpublished crates carry no version.
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

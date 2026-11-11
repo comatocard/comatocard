@@ -42,6 +42,10 @@ jobs:
       - name: Rust lint
         if: hashFiles('contracts/*/Cargo.toml') != ''
         run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Supply chain (cargo-deny)
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check advisories bans licenses sources
       - name: Lint, typecheck, unit tests, build
         run: pnpm turbo run lint typecheck test build
       - name: Integration tests

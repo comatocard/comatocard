@@ -220,6 +220,9 @@ export function vaultCalls(vaultId: AccountId) {
       call(vaultId, "decline_payment", { payment_id: paymentId }),
     expirePayment: (paymentId: number) =>
       call(vaultId, "expire_payment", { payment_id: paymentId }),
+    /** Releases a payment stuck in the registry check once the approval TTL passed. */
+    recoverPayment: (paymentId: number) =>
+      call(vaultId, "recover_payment", { payment_id: paymentId }),
     withdraw: (token: AccountId, amount: U128, receiverId: AccountId) =>
       call(vaultId, "withdraw", { token, amount, receiver_id: receiverId }, OWNER_ASYNC_CALL_GAS),
   };

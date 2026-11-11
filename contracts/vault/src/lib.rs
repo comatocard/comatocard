@@ -27,7 +27,7 @@ mod views;
 use types::{Card, CardId, Payment, PaymentId, TokenBalance};
 
 /// Version reported by `get_config`, bumped with every state or interface change.
-pub const CONTRACT_VERSION: &str = "0.3.0";
+pub const CONTRACT_VERSION: &str = "0.4.0";
 
 /// Default time a queued payment waits before anyone may expire it: 24 hours.
 pub const DEFAULT_APPROVAL_TTL_NS: u64 = 24 * 60 * 60 * 1_000_000_000;
@@ -44,6 +44,13 @@ pub const CARD_TX_GAS_TGAS: u64 = 100;
 pub(crate) const GAS_FT_TRANSFER: Gas = Gas::from_tgas(10);
 pub(crate) const GAS_REGISTRY_CHECK: Gas = Gas::from_tgas(5);
 pub(crate) const GAS_CALLBACK: Gas = Gas::from_tgas(25);
+/// The registry callback starts the token transfer and its callback itself, so it needs their
+/// gas plus its own: 10 + 25 + 15 Tgas.
+pub(crate) const GAS_REGISTRY_CALLBACK: Gas = Gas::from_tgas(50);
+/// Smallest prepaid gas `pay` and `approve_payment` accept. It covers the longest path (registry
+/// check, registry callback, transfer, transfer callback) so no callback can run out of gas and
+/// strand a reservation.
+pub const MIN_PAYMENT_GAS: Gas = Gas::from_tgas(80);
 
 #[near]
 #[derive(BorshStorageKey)]
@@ -53,6 +60,7 @@ enum StorageKey {
     Approvers,
     Balances,
     Payments,
+    Queued,
 }
 
 #[near(contract_state)]
@@ -70,6 +78,8 @@ pub struct Vault {
     approvers: IterableMap<AccountId, u128>,
     balances: IterableMap<AccountId, TokenBalance>,
     payments: IterableMap<PaymentId, Payment>,
+    /// Ids of the queued payments of each card, at most [`types::MAX_QUEUED_PER_CARD`].
+    queued: LookupMap<CardId, Vec<PaymentId>>,
 }
 
 #[near]
@@ -98,6 +108,7 @@ impl Vault {
             approvers: IterableMap::new(StorageKey::Approvers),
             balances: IterableMap::new(StorageKey::Balances),
             payments: IterableMap::new(StorageKey::Payments),
+            queued: LookupMap::new(StorageKey::Queued),
         };
         require!(vault.approval_ttl > 0, "approval_ttl must be positive");
         for token in accepted_tokens {

@@ -77,7 +77,7 @@ docs/         Architecture, specs, workstreams, research
 5. **Limits are hard ceilings, the approval threshold is soft.** A payment above a limit is rejected. A payment within limits but above the approval threshold is queued until the owner or an approver decides.
 6. **Approvals are stored requests, not yield and resume.** Yield and resume time out after 200 blocks, too short for a human decision. Queued requests expire after a configurable time.
 7. **Tiered approvals map onto DAOs.** Small payments settle automatically, mid-size payments need one approver, large payments need the owner. When the owner is a Sputnik DAO, the owner decision is a `FunctionCall` proposal.
-8. **One vault per owner, created by a factory from global contract code.** Isolation per owner, cheap creation, single upgrade path through the publisher account.
+8. **One vault per owner, created by a factory from global contract code.** Isolation per owner and cheap creation. Code is pinned by hash, so a vault keeps the rules it was created with; see the upgrade section of `docs/specs/vault-contract.md`.
 9. **Funds are accounted in an internal ledger.** Deposits arrive through `ft_transfer_call`. A payment reserves funds and spend before the transfer and releases them in the callback if the transfer fails.
 10. **Counterparty checks are layered.** On-chain: the registry status (clear, flagged, blocked) checked by the vault according to the card's risk mode. Off-chain: indexer signals (merchant first seen, prior payments, contract code changes) used by the agent-side guard before signing.
 11. **Owner actions can be gasless.** The relayer sponsors meta transactions whose receiver is a vault created by our factory, with an allowlist of owner methods and zero attached deposit.

@@ -34,6 +34,7 @@ payloads! {
     CardRef { card_id: u64 }
     CardKeyRotated { card_id: u64, old_public_key: Option<PublicKey>, new_public_key: PublicKey }
     CardTransferred { card_id: u64, old_holder: AccountId, new_holder: AccountId }
+    CardKeyRejected { card_id: u64, public_key: PublicKey }
     ApproverSet { account_id: AccountId, max_amount: Option<U128> }
     Deposit { token: AccountId, sender_id: AccountId, amount: U128 }
     Withdrawal { token: AccountId, receiver_id: AccountId, amount: U128, success: bool }
@@ -82,6 +83,7 @@ pub enum EventData {
     CardRevoked(CardRef),
     CardKeyRotated(CardKeyRotated),
     CardTransferred(CardTransferred),
+    CardKeyRejected(CardKeyRejected),
     ApproverSet(ApproverSet),
     Deposit(Deposit),
     Withdrawal(Withdrawal),
@@ -100,7 +102,7 @@ pub enum EventData {
 }
 
 /// Every event name the indexer accepts, in `docs/specs/events.md` order.
-pub const EVENT_NAMES: [&str; 24] = [
+pub const EVENT_NAMES: [&str; 25] = [
     "vault_code_published",
     "vault_created",
     "card_created",
@@ -110,6 +112,7 @@ pub const EVENT_NAMES: [&str; 24] = [
     "card_revoked",
     "card_key_rotated",
     "card_transferred",
+    "card_key_rejected",
     "approver_set",
     "deposit",
     "withdrawal",
@@ -197,6 +200,7 @@ fn payload(event: &str, data: &Value) -> Result<EventData, ParseError> {
         "card_revoked" => E::CardRevoked(typed(event, data)?),
         "card_key_rotated" => E::CardKeyRotated(typed(event, data)?),
         "card_transferred" => E::CardTransferred(typed(event, data)?),
+        "card_key_rejected" => E::CardKeyRejected(typed(event, data)?),
         "approver_set" => E::ApproverSet(typed(event, data)?),
         "deposit" => E::Deposit(typed(event, data)?),
         "withdrawal" => E::Withdrawal(typed(event, data)?),

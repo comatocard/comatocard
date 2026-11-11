@@ -366,3 +366,28 @@ async fn applies_the_remaining_lifecycle_events() {
         .unwrap();
     assert_eq!(vaults, 1, "vault_code_published has no projection");
 }
+
+#[tokio::test]
+async fn a_rejected_card_key_is_cleared() {
+    let pool = support::database().await;
+    index_scenario(&pool).await;
+    let key = "ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp";
+    let block = make_block(
+        200,
+        &[outcome(
+            VAULT,
+            vec![event_line(
+                "card_key_rejected",
+                json!({ "card_id": 0, "public_key": key }),
+            )],
+        )],
+    );
+    index_block(&pool, &tracked(), 200, Some(&block))
+        .await
+        .unwrap();
+    let card: (Option<String>,) = sqlx::query_as("select public_key from cards")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(card.0, None);
+}

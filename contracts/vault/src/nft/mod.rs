@@ -81,7 +81,13 @@ impl Vault {
     /// Moves a card from `from` to `to`: deletes the card key, declines the queued payments of
     /// the card and records the new holder. The owner is stored as `None` so the card follows
     /// future ownership changes.
-    fn hand_over(&mut self, card_id: CardId, from: &AccountId, to: &AccountId, memo: Option<&str>) {
+    pub(crate) fn hand_over(
+        &mut self,
+        card_id: CardId,
+        from: &AccountId,
+        to: &AccountId,
+        memo: Option<&str>,
+    ) {
         let holder = (*to != self.owner).then(|| to.clone());
         let card = self.card_mut(card_id);
         card.holder = holder;

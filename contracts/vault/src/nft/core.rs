@@ -11,8 +11,10 @@ use near_sdk::{AccountId, Gas, PromiseOrValue, assert_one_yocto, env, near, serd
 use super::card_id;
 use crate::{Vault, VaultExt};
 
-/// Gas reserved for `nft_resolve_transfer`, the value `near-contract-standards` uses.
-const GAS_FOR_RESOLVE_TRANSFER: Gas = Gas::from_tgas(5);
+/// Gas reserved for `nft_resolve_transfer`. A revert is a full handover that declines up to
+/// [`crate::types::MAX_QUEUED_PER_CARD`] payments, so it needs more than the 5 Tgas of
+/// `near-contract-standards`.
+const GAS_FOR_RESOLVE_TRANSFER: Gas = Gas::from_tgas(20);
 
 #[near]
 impl NonFungibleTokenCore for Vault {

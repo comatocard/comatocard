@@ -48,6 +48,16 @@ Vault `rio74936.factory.comatocard.testnet`, code version 2, card 0 with a 20 tU
 | `pnpm pay comatocard-shop.testnet 25000000 e2e-limit` | none | preview `rejected` with `per_tx_limit`, refused before signing |
 | `pnpm pay comatocard-shop.testnet 15000000 e2e-queue` | `GbHQjy9NHVKaQR1UZ4Phc34qcMMt6jEUaSn5812n5wc2` | preview `needs_approval`, `queued` with `threshold`, listed in `/vaults/<vault>/approvals` |
 
+### Agent guard check on 2026-11-11
+Same vault and card, indexer from `apps/indexer` serving `/risk` on `INDEXER_URL`. The registry has no blocked account on testnet yet, so `block` is covered by unit tests.
+
+| Command | Verdict | Guard decision |
+|-|-|-|
+| `pnpm pay comatocard-shop.testnet 2000000 guard-allow` | `allow` (info: `first_payment`, `never_paid`) | signed, `submitted`, tx `BasH4fUbKwyc7Nnt5VALntqUJNohFeAB3eKJS9SQ8GMk` |
+| `pnpm pay nobody-rio-guard.testnet 1000000 guard-warn`, no terminal | `warn` (`account_missing`) | refused by `human`, nothing signed |
+| same, on a terminal, answer `n` or Ctrl+D | `warn` | prompt lists the reasons, refused by `human` |
+| `pnpm pay comatocard-shop.testnet 1000000 guard-down`, indexer stopped | none | refused by `risk_unavailable`, nothing signed |
+
 Explorer: `https://testnet.nearblocks.io/txns/<transaction>`.
 
 ### Get test funds

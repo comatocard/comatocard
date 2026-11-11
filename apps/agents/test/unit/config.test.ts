@@ -11,6 +11,7 @@ describe("loadConfig", () => {
     expect(config.network).toBe("testnet");
     expect(config.rpcUrl).toBe("https://rpc.testnet.near.org");
     expect(config.logLevel).toBe("info");
+    expect(config.indexerUrl).toBe("http://localhost:4000");
     expect(config.cardKey.getPublicKey().toString()).toBe(key.getPublicKey().toString());
   });
 

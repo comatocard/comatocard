@@ -32,6 +32,7 @@ workspace = true
 [dev-dependencies]
 futures-util = "0.3.34"
 http-body-util = "0.1.5"
+reqwest = { version = "0.13.5", default-features = false, features = ["json"] }
 testcontainers-modules = { version = "0.15.0", features = ["postgres", "blocking"] }
 tokio = { workspace = true, features = ["full", "test-util"] }
 tokio-tungstenite = "0.30.0"

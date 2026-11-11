@@ -43,6 +43,11 @@ fn server() -> &'static (Container<Postgres>, String) {
     })
 }
 
+/// Base URL of the shared Postgres server, without a database name.
+pub fn server_url() -> String {
+    server().1.clone()
+}
+
 /// A fresh database with the production migrations applied.
 pub async fn database() -> PgPool {
     static NEXT: AtomicU32 = AtomicU32::new(0);
@@ -91,6 +96,11 @@ pub fn outcome(executor: &str, logs: Vec<String>) -> Outcome {
 
 /// A neardata-shaped block with the given receipt outcomes in one shard.
 pub fn make_block(height: u64, outcomes: &[Outcome]) -> Block {
+    serde_json::from_value(block_json(height, outcomes)).expect("block")
+}
+
+/// The neardata JSON of [`make_block`], for mock HTTP servers.
+pub fn block_json(height: u64, outcomes: &[Outcome]) -> Value {
     let receipts: Vec<Value> = outcomes
         .iter()
         .enumerate()
@@ -109,11 +119,10 @@ pub fn make_block(height: u64, outcomes: &[Outcome]) -> Block {
             })
         })
         .collect();
-    serde_json::from_value(json!({
+    json!({
         "block": { "header": { "height": height, "timestamp_nanosec": timestamp_of(height), "hash": format!("block-{height}") } },
         "shards": [{ "shard_id": 0, "receipt_execution_outcomes": receipts }],
-    }))
-    .expect("block")
+    })
 }
 
 /// A NEP-297 log line in the Comatocard envelope.

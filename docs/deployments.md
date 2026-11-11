@@ -6,7 +6,7 @@ Deployed with `ROOT_ACCOUNT=comatocard.testnet scripts/deploy-testnet.sh` on 202
 | Contract | Account | Code |
 |-|-|-|
 | Test stablecoin (tUSD, 6 decimals, public faucet) | `tusd.comatocard.testnet` | `contracts/mock-ft` |
-| Counterparty registry, curator `comatocard.testnet` | `registry.comatocard.testnet` | `contracts/registry` |
+| Counterparty registry, curator `comatocard.testnet`, redeployed 2026-11-11 with sanctions reports (PR #74) | `registry.comatocard.testnet` | `contracts/registry` |
 | Factory, default token tUSD, default registry above | `factory.comatocard.testnet` | `contracts/factory` |
 | Vault global contract (by hash), code version 3, contract 0.4.0 with the audit fixes (PR #65) | `6b8ijoAK9QhACv5y8s4UdRwvBNpeUVsX1bBCDLRNC9Ms` | `contracts/vault` |
 | Vault global contract (by hash), code version 2, contract 0.2.0 with card tokens (PR #32) | `HedzS3czoNHwASMvGiwbugSBCoFzvGtCPFDB2MQ94Q2N` | `contracts/vault` |
@@ -69,6 +69,9 @@ Vault `audit.factory.comatocard.testnet`, code version 3, published from main at
 | Owner issues a card checked by the registry | `DzMAdcAnGSPMNYtU92X1gqu2nTpCPciC5j6ghs8JTnF1` | Card key confirmed, no `card_key_rejected` |
 | Card pays 2 tUSD with 50 Tgas | refused before execution | `attach at least 80 Tgas`, nothing reserved (#58) |
 | Card pays 2 tUSD with 100 Tgas | `EYcoFo6RHbcvsjuZZSXzkhLgVovqefWvufKAvnssSzpi` | Registry check, `payment_settled`, `reserved` back to 0 |
+
+### Registry sanctions check on 2026-11-11
+Registry code from PR #74 deployed in place (`G9jRNm24QCbkxP9mir2AxFPyWdeW2SDCYZJSjiWUs8ji`). Existing state reads back unchanged: `list_curators` returns `comatocard.testnet` and statuses still resolve. A curator `sanctions` report with evidence `ipfs://not-a-list` is refused with `sanctions evidence must be sanctions:<LIST>:<YYYY-MM-DD>[:<reference>]`, and the same report with valid evidence from a non-curator is refused with `only curators file sanctions reports`. No sanctions report was filed on testnet, so no account carries a false sanctions record.
 
 Explorer: `https://testnet.nearblocks.io/txns/<transaction>`.
 

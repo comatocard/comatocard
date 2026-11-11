@@ -1032,3 +1032,53 @@ fn issue_60_a_strict_requeue_into_a_full_queue_fails_the_payment() {
             .any(|log| log.contains("\"cause\":\"queue_full\""))
     );
 }
+
+#[test]
+fn issue_61_risk_mode_without_a_registry_fails_closed() {
+    let mut harness = with_risk_mode(RiskMode::BlockOnly);
+    harness.vault.set_registry(None);
+    harness.pay(10);
+    assert!(harness.vault.get_payment(0).is_none());
+    assert!(
+        get_logs()
+            .iter()
+            .any(|log| log.contains("\"cause\":\"registry_unavailable\""))
+    );
+    assert_eq!((harness.available(), harness.reserved()), (1_000, 0));
+}
+
+fn queued_payment() -> Harness {
+    let mut harness = Harness::new();
+    assert!(matches!(harness.pay(60), PaymentDecision::Queued { .. }));
+    harness.as_account(owner());
+    harness
+}
+
+#[test]
+#[should_panic(expected = "approval time ran out, expire the payment instead")]
+fn issue_63_approval_respects_the_ttl() {
+    let mut harness = queued_payment();
+    harness.at(NOW + crate::DEFAULT_APPROVAL_TTL_NS);
+    harness.vault.approve_payment(0);
+}
+
+#[test]
+#[should_panic(expected = "card is outside its validity window")]
+fn issue_63_approval_respects_the_validity_window() {
+    let mut harness = queued_payment();
+    let mut expiring = policy();
+    expiring.expires_at = Some(U64(NOW + 1));
+    harness.vault.update_policy(0, expiring);
+    harness.at(NOW + 1);
+    harness.vault.approve_payment(0);
+}
+
+#[test]
+#[should_panic(expected = "merchant is no longer allowed")]
+fn issue_63_approval_respects_the_merchant_rule() {
+    let mut harness = queued_payment();
+    let mut deny = policy();
+    deny.merchants = MerchantRule::Deny(vec![shop()]);
+    harness.vault.update_policy(0, deny);
+    harness.vault.approve_payment(0);
+}

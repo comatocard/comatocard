@@ -7,8 +7,16 @@ export interface ComplianceWarning {
   message: string;
 }
 
+/** `local@domain.tld` within one whitespace-separated word; no regex, so no backtracking. */
+function hasEmail(text: string): boolean {
+  return text.split(/\s+/).some((word) => {
+    const at = word.indexOf("@");
+    const dot = word.lastIndexOf(".");
+    return at > 0 && dot > at + 1 && dot < word.length - 1;
+  });
+}
+
 const PATTERNS: [RegExp, string][] = [
-  [/[^\s@]+@[^\s@]+\.[^\s@]+/, "an email address"],
   [/(?:\+62|\b0)8\d{7,11}\b/, "an Indonesian phone number"],
   [/\+\d{9,15}\b/, "a phone number"],
   [/\b\d{16}\b/, "a 16 digit number such as an Indonesian national id (NIK)"],
@@ -25,12 +33,14 @@ export function publicTextWarnings(
   const warnings: ComplianceWarning[] = [];
   for (const [field, text] of Object.entries(fields)) {
     if (!text) continue;
-    const hit = PATTERNS.find(([pattern]) => pattern.test(text));
-    if (hit) {
+    const kind = hasEmail(text)
+      ? "an email address"
+      : PATTERNS.find(([pattern]) => pattern.test(text))?.[1];
+    if (kind) {
       warnings.push({
         field,
         code: "personal_data",
-        message: `${field} looks like it contains ${hit[1]}; on-chain text is public and cannot be erased`,
+        message: `${field} looks like it contains ${kind}; on-chain text is public and cannot be erased`,
       });
     }
   }

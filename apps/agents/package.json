@@ -1,0 +1,28 @@
+{
+  "name": "@comatocard/agents",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Comatocard agents that hold card keys",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "biome check .",
+    "test": "vitest run --coverage",
+    "status": "node --env-file=.env dist/status.js"
+  },
+  "dependencies": {
+    "@comatocard/sdk": "workspace:*",
+    "near-api-js": "7.4.0",
+    "pino": "10.4.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@comatocard/config": "workspace:*",
+    "@types/node": "26.6.6",
+    "@vitest/coverage-v8": "5.1.0",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  }
+}

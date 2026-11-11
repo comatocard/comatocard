@@ -10,7 +10,6 @@ all-features = false
 yanked = "deny"
 ignore = [
     { id = "RUSTSEC-2026-0387", reason = "crypto-bigint 0.5 via p256 in near-vm-runner, near-sdk's mocked VM for unit tests; contracts do no p256 arithmetic on-chain and no secret keys pass through it. Fixed upstream only in crypto-bigint 0.7, which elliptic-curve 0.13 does not accept" },
-    { id = "RUSTSEC-2022-0054", reason = "wee_alloc is near-sdk's default wasm allocator; unmaintained, no known vulnerability. Switching allocators changes contract code and needs a republish, tracked separately" },
     { id = "RUSTSEC-2024-0449", reason = "unsafe-libyaml via serde_yaml in near-parameters, a near-sdk dependency that only parses NEAR's bundled protocol config, never external input" },
     { id = "RUSTSEC-2026-0440", reason = "astral-tokio-tar via testcontainers, a dev-dependency of the indexer integration tests only" },
 ]

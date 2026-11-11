@@ -2,6 +2,11 @@
 //! configuration, migrations, the HTTP transport (redirected head, 429 with `Retry-After`, empty
 //! heights), ingestion, the API and graceful shutdown on SIGTERM.
 
+#![expect(
+    clippy::unwrap_used,
+    reason = "test helpers fail loudly instead of returning errors"
+)]
+
 mod support;
 
 use std::collections::HashMap;

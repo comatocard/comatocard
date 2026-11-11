@@ -1,6 +1,11 @@
 //! The NEAR RPC reader against a local JSON-RPC server: account facts, token decimals and the
 //! decimals cache.
 
+#![expect(
+    clippy::unwrap_used,
+    reason = "test helpers fail loudly instead of returning errors"
+)]
+
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 

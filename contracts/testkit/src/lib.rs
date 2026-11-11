@@ -218,11 +218,8 @@ impl Call<'_> {
 }
 
 fn workspace_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .ancestors()
-        .nth(2)
-        .expect("testkit lives in contracts/testkit")
-        .to_path_buf()
+    // testkit lives in contracts/testkit.
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
 
 /// Reads the wasm of `contracts/<name>` built by `cargo near build`.

@@ -1,5 +1,11 @@
 //! Ingestion against a real Postgres: projections, idempotency, the cursor and the runner loop.
 
+#![expect(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    reason = "test helpers fail loudly instead of returning errors"
+)]
+
 mod support;
 
 use std::sync::Arc;

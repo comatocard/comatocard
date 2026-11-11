@@ -16,6 +16,9 @@ Rules for every coding agent (Claude Code, Codex, others) and every human contri
 - Zero warnings and zero errors: rustc, clippy, rustfmt, Biome, tsc, tests and install output stay clean. CI treats warnings as errors.
 - Root commands: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:integration`, `pnpm build`. Each workspace exposes the same script names.
 
+## Rust
+The rules are enforced by tooling, not prose: workspace lints in `Cargo.toml` (clippy `all` denied, `pedantic` warned, `#[expect(..., reason)]` instead of `#[allow]`, no `unwrap` or `expect` outside tests), `rustfmt.toml`, and `cargo deny check` (`deny.toml`) in CI. Keep modules single-purpose: one file per concern, `mod.rs` as the entry point that wires them. Prefer `near-sdk` and `near-contract-standards` types and interfaces over hand-written ones. The Rustacean synthesis (https://github.com/AgriciDaniel/rustacean, edition 2024) is the reference for idioms.
+
 ## Testing
 Every behaviour change ships with tests in the right layer.
 - Unit: next to the code (`#[cfg(test)] mod tests` in Rust, `*.test.ts` beside the module). No network, no chain, no database server.

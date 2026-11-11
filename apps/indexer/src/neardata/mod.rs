@@ -2,9 +2,11 @@
 
 mod client;
 mod extract;
+mod transport;
 
 pub use client::{BlockSource, FREE_TIER_INTERVAL, Neardata, NeardataOptions, retry_after};
 pub use extract::{ReceiptLog, Tracked, extract_logs};
+pub use transport::{Response, Transport};
 
 use serde::Deserialize;
 use serde_json::{Map, Value};

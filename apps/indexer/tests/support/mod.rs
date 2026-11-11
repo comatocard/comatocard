@@ -1,6 +1,11 @@
 //! Test support: a real Postgres in a container, neardata-shaped blocks and the scenario the
 //! TypeScript indexer was tested with, so its API snapshots stay the regression baseline.
 
+#![expect(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    reason = "test helpers fail loudly instead of returning errors"
+)]
 #![allow(dead_code, reason = "each test binary uses a different subset")]
 
 use std::collections::HashMap;
@@ -152,7 +157,7 @@ fn payment(id: u64, merchant: &str, amount: &str, extra: Value) -> Value {
 /// A realistic history: vault creation, a card, a deposit, a settled payment, a queued payment
 /// that is approved and settles, a rejection, a failed transfer, a registry block, plus noise the
 /// indexer must ignore (another contract, a failed receipt, an invalid event).
-#[allow(
+#[expect(
     clippy::too_many_lines,
     reason = "the scenario reads as one recorded history"
 )]

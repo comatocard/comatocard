@@ -1,7 +1,9 @@
 import { accountId, createVaultClient, u128 } from "@comatocard/sdk";
 import { z } from "zod";
+import { terminalApproval } from "./approve.js";
 import { loadConfig } from "./config.js";
 import { createLogger } from "./logger.js";
+import { indexerRisk } from "./risk.js";
 import { spend } from "./spend.js";
 import { cardSubmitter } from "./submit.js";
 
@@ -20,15 +22,18 @@ const outcome = await spend(
   {
     client: createVaultClient({ rpcUrl: config.rpcUrl, vaultId: config.vaultId }),
     publicKey: config.cardKey.getPublicKey().toString(),
+    risk: indexerRisk({ indexerUrl: config.indexerUrl, vaultId: config.vaultId }),
+    approve: terminalApproval,
     submit: cardSubmitter(config),
+    logger,
   },
   { merchant, amount, ...(reference === undefined ? {} : { reference }) },
 );
 const context = { vaultId: config.vaultId, merchant, amount, reference };
 if (outcome.kind === "refused") {
-  logger.warn({ ...context, preview: outcome.preview }, "payment refused before signing");
   process.exitCode = 1;
 } else {
-  logger.info({ ...context, ...outcome }, `payment ${outcome.decision.status}`);
+  const { decision, txHash } = outcome;
+  logger.info({ ...context, decision, txHash }, `payment ${decision.status}`);
   if (outcome.decision.status === "rejected") process.exitCode = 1;
 }

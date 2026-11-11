@@ -13,6 +13,7 @@ const schema = z.object({
   NETWORK: z.enum(["testnet", "mainnet"]).default("testnet"),
   RPC_URL: z.preprocess(emptyToUndefined, z.url().optional()),
   VAULT_ID: accountId,
+  INDEXER_URL: z.url().default("http://localhost:4000"),
   CARD_PRIVATE_KEY: z.string().startsWith("ed25519:", "must be an ed25519:<base58> secret key"),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 });
@@ -21,6 +22,8 @@ export interface Config {
   network: "testnet" | "mainnet";
   rpcUrl: string;
   vaultId: string;
+  /** Indexer the guard asks for counterparty risk. */
+  indexerUrl: string;
   /** Holds the secret; never pass it to a logger. */
   cardKey: KeyPair;
   logLevel: z.infer<typeof schema>["LOG_LEVEL"];
@@ -44,6 +47,7 @@ export function loadConfig(env: Record<string, string | undefined>): Config {
     network: value.NETWORK,
     rpcUrl: value.RPC_URL ?? RPC_URLS[value.NETWORK],
     vaultId: value.VAULT_ID,
+    indexerUrl: value.INDEXER_URL,
     cardKey,
     logLevel: value.LOG_LEVEL,
   };

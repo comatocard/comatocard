@@ -8,12 +8,14 @@ Deployed with `ROOT_ACCOUNT=comatocard.testnet scripts/deploy-testnet.sh` on 202
 | Test stablecoin (tUSD, 6 decimals, public faucet) | `tusd.comatocard.testnet` | `contracts/mock-ft` |
 | Counterparty registry, curator `comatocard.testnet`, redeployed 2026-11-11 with sanctions reports (PR #74) | `registry.comatocard.testnet` | `contracts/registry` |
 | Factory, default token tUSD, default registry above | `factory.comatocard.testnet` | `contracts/factory` |
+| Vault global contract (by hash), code version 4, contract 0.4.0 built without wee_alloc (PRs #79 #80) | `CQn2sAQtZ87h2v1akv4wnCiLdH4wLHKfCeEXyh1edRED` | `contracts/vault` |
 | Vault global contract (by hash), code version 3, contract 0.4.0 with the audit fixes (PR #65) | `6b8ijoAK9QhACv5y8s4UdRwvBNpeUVsX1bBCDLRNC9Ms` | `contracts/vault` |
 | Vault global contract (by hash), code version 2, contract 0.2.0 with card tokens (PR #32) | `HedzS3czoNHwASMvGiwbugSBCoFzvGtCPFDB2MQ94Q2N` | `contracts/vault` |
 | Vault global contract (by hash), code version 1, contract 0.1.0 | `2ePovqGVC4vaATS7nLshj93MRTiWkSrR2afjwTxGDfsU` | `contracts/vault` |
 | Demo vault owned by `comatocard.testnet`, code version 1 | `demo.factory.comatocard.testnet` | global vault code |
 | Card token demo vault owned by `comatocard.testnet`, code version 2 | `nft.factory.comatocard.testnet` | global vault code |
 | Audited demo vault owned by `comatocard.testnet`, code version 3, card risk mode `block_only` | `audit.factory.comatocard.testnet` | global vault code |
+| Current demo vault owned by `comatocard.testnet`, code version 4, card risk mode `block_only` | `v4.factory.comatocard.testnet` | global vault code |
 
 Demo accounts: `comatocard-shop.testnet` (merchant), `comatocard-council.testnet` (DAO council member), `comatocard-agent.testnet` (agent operator).
 
@@ -72,6 +74,14 @@ Vault `audit.factory.comatocard.testnet`, code version 3, published from main at
 
 ### Registry sanctions check on 2026-11-11
 Registry code from PR #74 deployed in place (`G9jRNm24QCbkxP9mir2AxFPyWdeW2SDCYZJSjiWUs8ji`). Existing state reads back unchanged: `list_curators` returns `comatocard.testnet` and statuses still resolve. A curator `sanctions` report with evidence `ipfs://not-a-list` is refused with `sanctions evidence must be sanctions:<LIST>:<YYYY-MM-DD>[:<reference>]`, and the same report with valid evidence from a non-curator is refused with `only curators file sanctions reports`. No sanctions report was filed on testnet, so no account carries a false sanctions record.
+
+### Republish without wee_alloc on 2026-11-11
+Testnet matches main after PRs #79 and #80. Registry, factory and tUSD code were deployed in place (`ESAmR8pMbx8D6PmPSC4D7i12N9NPxiC1jz1i1Ps7Ws3g`, `P37D8uVC56hnD3FVeVx7pCcFixHDBcbALHAfzeZMJ88`, `5fwW7dEr1wis4WY5ZgdYvbSJpov9zMjo74nLncmJjBwb`); their state reads back unchanged (factory config, registry curators, tUSD balances, vaults on older code versions). The vault code is global contract version 4.
+
+| Step | Transaction | Result |
+|-|-|-|
+| Owner issues a card checked by the registry on `v4.factory.comatocard.testnet` | `8Ax8CggqyebA3ujP9qmHjyYMppXgtvNHoymwPBzoaTaQ` | Card key confirmed |
+| Card pays 1 tUSD with 100 Tgas | `2He3J1YWUs8Vkk2VA9PDYa4yavySHjbRn9sJRwqZcZrA` | Registry check, `payment_submitted`, `payment_settled` |
 
 Explorer: `https://testnet.nearblocks.io/txns/<transaction>`.
 

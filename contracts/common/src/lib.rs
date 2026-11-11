@@ -16,7 +16,9 @@ pub mod golden {
     pub fn assert_matches(path: &Path, lines: &[String]) {
         let content = format!("{}\n", lines.join("\n"));
         if std::env::var_os("UPDATE_FIXTURES").is_some() {
-            std::fs::write(path, &content).expect("write fixture");
+            if let Err(error) = std::fs::write(path, &content) {
+                panic!("cannot write {}: {error}", path.display());
+            }
             return;
         }
         let expected = std::fs::read_to_string(path).unwrap_or_default();

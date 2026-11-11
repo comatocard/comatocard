@@ -13,7 +13,7 @@ members = [
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.95"
+rust-version = "1.96"
 license = "MIT"
 repository = "https://github.com/comatocard/comatocard"
 
@@ -38,6 +38,12 @@ unexpected_cfgs = { level = "warn", check-cfg = ["cfg(near)"] }
 all = { level = "deny", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 module_name_repetitions = "allow"
+# Rustacean hygiene, enforced instead of written down: every exception states its reason, and
+# production code returns errors instead of panicking on them (tests may unwrap, see clippy.toml).
+allow_attributes = "deny"
+allow_attributes_without_reason = "deny"
+unwrap_used = "deny"
+expect_used = "deny"
 must_use_candidate = "allow"
 needless_pass_by_value = "allow"
 

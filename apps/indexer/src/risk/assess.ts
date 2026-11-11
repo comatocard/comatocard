@@ -1,4 +1,10 @@
-import type { RegistryStatus } from "@comatocard/sdk";
+import type {
+  RegistryStatus,
+  RiskAssessment,
+  RiskLevel,
+  RiskReason,
+  RiskVerdict,
+} from "@comatocard/sdk";
 
 /** Facts about a counterparty that the verdict is derived from. */
 export interface RiskSignals {
@@ -15,30 +21,6 @@ export interface RiskSignals {
   /** First settled payment to this account by any indexed vault. */
   firstPaidAt: bigint | null;
   now: bigint;
-}
-
-export type RiskLevel = "info" | "warn" | "block";
-export type Verdict = "allow" | "warn" | "block";
-
-export interface RiskReason {
-  code: string;
-  level: RiskLevel;
-  detail: string;
-}
-
-export interface RiskAssessment {
-  account_id: string;
-  verdict: Verdict;
-  reasons: RiskReason[];
-  signals: {
-    registry_status: RegistryStatus;
-    report_count: number;
-    exists: boolean | null;
-    is_contract: boolean | null;
-    code_changed_at: string | null;
-    prior_payments: number | null;
-    first_paid_at: string | null;
-  };
 }
 
 /** A contract whose code changed within this window is treated with caution. */
@@ -77,7 +59,7 @@ export function assessRisk(signals: RiskSignals): RiskAssessment {
     add("never_paid", "info", "no indexed vault has paid this account before");
   }
 
-  const verdict: Verdict = reasons.some((r) => r.level === "block")
+  const verdict: RiskVerdict = reasons.some((r) => r.level === "block")
     ? "block"
     : reasons.some((r) => r.level === "warn")
       ? "warn"

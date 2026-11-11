@@ -1,3 +1,4 @@
+import { riskAssessment } from "@comatocard/sdk";
 import { serve, upgradeWebSocket, type WebSocketServerLike } from "@hono/node-server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { WebSocketServer } from "ws";
@@ -127,9 +128,14 @@ describe("REST API", () => {
   });
 
   it("assesses counterparty risk", async () => {
-    expect((await get(`/risk/scam.testnet?vault=${VAULT}`)).body).toMatchSnapshot();
-    expect((await get(`/risk/shop.testnet?vault=${VAULT}`)).body.verdict).toBe("allow");
-    expect((await get("/risk/missing.testnet")).body.verdict).toBe("warn");
+    const scam = (await get(`/risk/scam.testnet?vault=${VAULT}`)).body;
+    expect(scam).toMatchSnapshot();
+    const shop = (await get(`/risk/shop.testnet?vault=${VAULT}`)).body;
+    expect(shop.verdict).toBe("allow");
+    const missing = (await get("/risk/missing.testnet")).body;
+    expect(missing.verdict).toBe("warn");
+    // Agents parse this response with the SDK schema.
+    for (const body of [scam, shop, missing]) riskAssessment.parse(body);
   });
 
   it("warns when a contract's code changes after it was first observed", async () => {

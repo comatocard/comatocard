@@ -33,7 +33,8 @@
     "treasury": "node --env-file=.env dist/treasury-cli.js",
     "policy": "node --env-file=.env dist/policy-cli.js",
     "mcp": "node --env-file=.env dist/mcp.js",
-    "keeper": "node --env-file=.env dist/keeper-cli.js"
+    "keeper": "node --env-file=.env dist/keeper-cli.js",
+    "attack": "node --env-file=.env dist/attack.js"
   },
   "dependencies": {
     "@comatocard/sdk": "workspace:*",

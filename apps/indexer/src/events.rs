@@ -342,6 +342,21 @@ mod tests {
             ),
             envelope(
                 "1.0.0",
+                "vault_code_published",
+                r#"{"code_hash":"short","code_version":2}"#,
+            ),
+            envelope(
+                "1.0.0",
+                "report_submitted",
+                r#"{"report_id":0,"account_id":"a.testnet","reporter_id":"b.testnet","category":"scam","evidence_uri":""}"#,
+            ),
+            envelope(
+                "1.0.0",
+                "card_policy_updated",
+                r#"{"card_id":0,"policy":{"token":"t.testnet"}}"#,
+            ),
+            envelope(
+                "1.0.0",
                 "deposit",
                 r#"{"token":"NOT VALID","sender_id":"a.testnet","amount":"1"}"#,
             ),

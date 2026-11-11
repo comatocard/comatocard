@@ -21,3 +21,6 @@ submission*.json
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Coverage profiles
+*.profraw

@@ -270,6 +270,13 @@ async fn finds_merchant_payments_by_reference() {
             .len(),
         2
     );
+    let long = "x".repeat(65);
+    for bad in [
+        format!("/merchants/shop.testnet/payments?reference={long}"),
+        "/merchants/shop.testnet/payments?reference=".to_owned(),
+    ] {
+        assert_eq!(api.get(&bad).await.0, StatusCode::BAD_REQUEST, "{bad}");
+    }
 }
 
 #[tokio::test]
@@ -351,4 +358,60 @@ async fn streams_matching_events_to_subscribers() {
     assert_eq!(received["contract_id"], VAULT);
     assert_eq!(received["data"], json!({ "payment_id": 4 }));
     server.abort();
+}
+
+#[tokio::test]
+async fn database_failures_answer_500_without_details() {
+    let pool = support::database().await;
+    index_scenario(&pool).await;
+    sqlx::query("drop table payments")
+        .execute(&pool)
+        .await
+        .unwrap();
+    let api = api_with(pool, EventBus::default());
+    assert_eq!(
+        api.get(&format!("/vaults/{VAULT}/payments")).await,
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            json!({ "error": "internal error" })
+        )
+    );
+}
+
+#[tokio::test]
+async fn summary_counts_withdrawals_reservations_and_every_token() {
+    let pool = support::database().await;
+    index_scenario(&pool).await;
+    let block = support::make_block(
+        200,
+        &[support::outcome(
+            VAULT,
+            vec![
+                support::event_line(
+                    "withdrawal",
+                    json!({ "token": support::TOKEN, "receiver_id": "alice.testnet", "amount": "50000000", "success": true }),
+                ),
+                support::event_line(
+                    "deposit",
+                    json!({ "token": "usdc.testnet", "sender_id": "alice.testnet", "amount": "7" }),
+                ),
+                support::event_line(
+                    "payment_queued",
+                    json!({ "payment_id": 5, "card_id": 0, "merchant": "travel.testnet", "token": support::TOKEN, "amount": "60000000", "memo": null, "reference": null, "cause": "threshold" }),
+                ),
+            ],
+        )],
+    );
+    comatocard_indexer::ingest::index_block(&pool, &support::tracked(), 200, Some(&block))
+        .await
+        .unwrap();
+    let api = api_with(pool, EventBus::default());
+    let summary = api.ok(&format!("/vaults/{VAULT}")).await;
+    assert_eq!(
+        summary["indexed_balances"],
+        json!([
+            { "token": support::TOKEN, "available": "290000000", "reserved": "60000000" },
+            { "token": "usdc.testnet", "available": "7", "reserved": "0" },
+        ])
+    );
 }

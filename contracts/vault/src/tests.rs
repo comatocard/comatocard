@@ -935,3 +935,100 @@ fn issue_59_a_late_failure_for_a_replaced_key_changes_nothing() {
         .on_card_key_added(0, card_key(), Err(PromiseError::Failed));
     assert_eq!(harness.vault.get_card_by_key(other_key()).unwrap().id, 0);
 }
+
+/// A harness whose card queues every payment above 1 unit.
+fn queueing() -> Harness {
+    let mut harness = Harness::new();
+    let mut eager = policy();
+    eager.approval_threshold = Some(U128(1));
+    eager.daily_limit = U128(1_000);
+    harness.vault.update_policy(0, eager);
+    harness
+}
+
+#[test]
+fn issue_60_a_card_queues_at_most_ten_payments() {
+    let mut harness = queueing();
+    for _ in 0..crate::types::MAX_QUEUED_PER_CARD {
+        assert!(matches!(harness.pay(2), PaymentDecision::Queued { .. }));
+    }
+    assert_eq!(
+        harness.pay(2),
+        PaymentDecision::Rejected {
+            reason: RejectReason::QueueFull
+        }
+    );
+    assert_eq!(
+        harness.reserved(),
+        20,
+        "the rejected payment reserved nothing"
+    );
+    // Settling the queue frees a slot.
+    harness.as_account(owner());
+    harness.vault.decline_payment(0);
+    assert!(matches!(harness.pay(2), PaymentDecision::Queued { .. }));
+}
+
+#[test]
+fn issue_60_every_way_out_of_the_queue_frees_its_slot() {
+    let mut harness = queueing();
+    for _ in 0..3 {
+        harness.pay(2);
+    }
+    harness.as_account(owner());
+    harness.vault.approve_payment(0);
+    harness.vault.decline_payment(1);
+    harness.at(NOW + crate::DEFAULT_APPROVAL_TTL_NS);
+    harness.vault.expire_payment(2);
+    for _ in 0..crate::types::MAX_QUEUED_PER_CARD {
+        assert!(matches!(harness.pay(2), PaymentDecision::Queued { .. }));
+    }
+}
+
+#[test]
+fn issue_60_a_handover_declines_only_this_cards_queue() {
+    let mut harness = queueing();
+    harness.vault.create_card(
+        other_key(),
+        "second".to_owned(),
+        CardKind::Agent,
+        policy(),
+        None,
+    );
+    harness.pay(2);
+    harness.as_card(other_key());
+    let PaymentDecision::Queued {
+        payment_id: other, ..
+    } = harness.vault.pay(shop(), U128(60), None, None)
+    else {
+        panic!("second card queues above its threshold");
+    };
+    harness.transfer(owner(), agent());
+    assert!(harness.vault.get_payment(0).is_none());
+    assert!(harness.vault.get_payment(other).is_some());
+}
+
+#[test]
+fn issue_60_a_strict_requeue_into_a_full_queue_fails_the_payment() {
+    let mut harness = queueing();
+    let mut strict = harness.vault.get_card(0).unwrap().policy;
+    strict.risk_mode = RiskMode::Strict;
+    strict.approval_threshold = Some(U128(5));
+    harness.vault.update_policy(0, strict);
+    for _ in 0..crate::types::MAX_QUEUED_PER_CARD {
+        harness.pay(6);
+    }
+    let PaymentDecision::Submitted { payment_id } = harness.pay(3) else {
+        panic!("a small payment goes to the registry");
+    };
+    harness.as_account(vault_id());
+    harness
+        .vault
+        .on_registry_checked(payment_id, false, Ok(RegistryStatus::Flagged));
+    assert!(harness.vault.get_payment(payment_id).is_none());
+    assert!(
+        get_logs()
+            .iter()
+            .any(|log| log.contains("\"cause\":\"queue_full\""))
+    );
+}

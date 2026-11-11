@@ -60,6 +60,7 @@ enum StorageKey {
     Approvers,
     Balances,
     Payments,
+    Queued,
 }
 
 #[near(contract_state)]
@@ -77,6 +78,8 @@ pub struct Vault {
     approvers: IterableMap<AccountId, u128>,
     balances: IterableMap<AccountId, TokenBalance>,
     payments: IterableMap<PaymentId, Payment>,
+    /// Ids of the queued payments of each card, at most [`types::MAX_QUEUED_PER_CARD`].
+    queued: LookupMap<CardId, Vec<PaymentId>>,
 }
 
 #[near]
@@ -105,6 +108,7 @@ impl Vault {
             approvers: IterableMap::new(StorageKey::Approvers),
             balances: IterableMap::new(StorageKey::Balances),
             payments: IterableMap::new(StorageKey::Payments),
+            queued: LookupMap::new(StorageKey::Queued),
         };
         require!(vault.approval_ttl > 0, "approval_ttl must be positive");
         for token in accepted_tokens {

@@ -9,8 +9,9 @@ use near_sdk::{AccountId, NearToken, PromiseError, env, near, require};
 use crate::ext::{ext_ft, ext_registry};
 use crate::policy::{self, Context, Verdict};
 use crate::types::{
-    CardId, CardStatus, FailureCause, MAX_MEMO_LEN, MAX_REFERENCE_LEN, Payment, PaymentDecision,
-    PaymentId, PaymentStatus, QueueCause, RegistryStatus, RiskMode,
+    CardId, CardStatus, FailureCause, MAX_MEMO_LEN, MAX_QUEUED_PER_CARD, MAX_REFERENCE_LEN,
+    Payment, PaymentDecision, PaymentId, PaymentStatus, QueueCause, RegistryStatus, RejectReason,
+    RiskMode,
 };
 use crate::{
     GAS_CALLBACK, GAS_FT_TRANSFER, GAS_REGISTRY_CALLBACK, GAS_REGISTRY_CHECK, MIN_PAYMENT_GAS,
@@ -67,6 +68,12 @@ impl Vault {
                 available: balance.available.0,
             },
         );
+        let verdict = verdict.and_then(|verdict| match verdict {
+            Verdict::Queue(_) if self.queue_len(card_id) >= MAX_QUEUED_PER_CARD => {
+                Err(RejectReason::QueueFull)
+            }
+            other => Ok(other),
+        });
         let verdict = match verdict {
             Ok(verdict) => verdict,
             Err(reason) => {
@@ -113,6 +120,7 @@ impl Vault {
             "card is not active, decline the payment instead"
         );
         let mut payment = payment;
+        self.unqueue(&payment);
         payment.approved_by = Some(approver.clone());
         events::payment_decided("payment_approved", payment_id, &approver);
         self.dispatch(payment, true);
@@ -123,6 +131,7 @@ impl Vault {
         let approver = env::predecessor_account_id();
         let payment = self.queued_payment(payment_id);
         self.assert_can_decide(&approver, payment.amount.0);
+        self.unqueue(&payment);
         self.release(&payment);
         self.payments.remove(&payment_id);
         events::payment_decided("payment_declined", payment_id, &approver);
@@ -135,6 +144,7 @@ impl Vault {
             env::block_timestamp() >= payment.created_at.0.saturating_add(self.approval_ttl),
             "approval time has not run out yet"
         );
+        self.unqueue(&payment);
         self.release(&payment);
         self.payments.remove(&payment_id);
         events::payment_expired(payment_id);
@@ -175,7 +185,11 @@ impl Vault {
             Ok(RegistryStatus::Flagged)
                 if !approved && self.risk_mode(&payment) == RiskMode::Strict =>
             {
-                self.queue(payment, QueueCause::RiskFlagged);
+                if self.queue_len(payment.card_id) >= MAX_QUEUED_PER_CARD {
+                    self.fail(&payment, FailureCause::QueueFull);
+                } else {
+                    self.queue(payment, QueueCause::RiskFlagged);
+                }
             }
             Ok(_) => self.transfer(payment),
         }
@@ -247,16 +261,24 @@ impl Vault {
     /// Declines every queued payment of a card on behalf of `by`, for example when its token
     /// changes hands. Payments in the registry check or the transfer keep going.
     pub(crate) fn decline_queued(&mut self, card_id: CardId, by: &AccountId) {
-        let queued: Vec<Payment> = self
-            .payments
-            .values()
-            .filter(|p| p.card_id == card_id && p.status == PaymentStatus::Queued)
-            .cloned()
-            .collect();
-        for payment in queued {
-            self.release(&payment);
-            self.payments.remove(&payment.id);
-            events::payment_decided("payment_declined", payment.id, by);
+        for payment_id in self.queued.remove(&card_id).unwrap_or_default() {
+            if let Some(payment) = self.payments.remove(&payment_id) {
+                self.release(&payment);
+                events::payment_decided("payment_declined", payment_id, by);
+            }
+        }
+    }
+
+    fn queue_len(&self, card_id: CardId) -> usize {
+        self.queued.get(&card_id).map_or(0, Vec::len)
+    }
+
+    fn unqueue(&mut self, payment: &Payment) {
+        if let Some(ids) = self.queued.get_mut(&payment.card_id) {
+            ids.retain(|id| *id != payment.id);
+            if ids.is_empty() {
+                self.queued.remove(&payment.card_id);
+            }
         }
     }
 
@@ -274,6 +296,10 @@ impl Vault {
         payment.status = PaymentStatus::Queued;
         payment.queue_cause = Some(cause);
         events::payment_queued(&payment, cause);
+        self.queued
+            .entry(payment.card_id)
+            .or_default()
+            .push(payment.id);
         self.payments.insert(payment.id, payment);
     }
 

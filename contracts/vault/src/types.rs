@@ -15,6 +15,9 @@ pub const MAX_LABEL_LEN: usize = 64;
 pub const MAX_MEMO_LEN: usize = 256;
 /// Maximum byte length of a payment reference.
 pub const MAX_REFERENCE_LEN: usize = 64;
+/// Payments one card may have waiting for approval. Bounds the storage a holder can make the
+/// vault pay and the work of a handover.
+pub const MAX_QUEUED_PER_CARD: usize = 10;
 /// Maximum number of accounts in a merchant allow or deny list.
 pub const MAX_MERCHANT_RULE_LEN: usize = 50;
 
@@ -192,6 +195,8 @@ pub enum RejectReason {
     DailyLimit,
     MonthlyLimit,
     InsufficientBalance,
+    /// The card already has [`MAX_QUEUED_PER_CARD`] payments waiting for approval.
+    QueueFull,
 }
 
 /// Why a payment waits for approval.
@@ -211,6 +216,8 @@ pub enum FailureCause {
     TransferFailed,
     MerchantBlocked,
     RegistryUnavailable,
+    /// A strict mode re-queue found the card's approval queue full.
+    QueueFull,
 }
 
 #[near(serializers = [borsh, json])]

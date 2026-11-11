@@ -9,8 +9,8 @@ use near_sdk::{AccountId, NearToken, PromiseError, env, near, require};
 use crate::ext::{ext_ft, ext_registry};
 use crate::policy::{self, Context, Verdict};
 use crate::types::{
-    CardStatus, FailureCause, MAX_MEMO_LEN, MAX_REFERENCE_LEN, Payment, PaymentDecision, PaymentId,
-    PaymentStatus, QueueCause, RegistryStatus, RiskMode,
+    CardId, CardStatus, FailureCause, MAX_MEMO_LEN, MAX_REFERENCE_LEN, Payment, PaymentDecision,
+    PaymentId, PaymentStatus, QueueCause, RegistryStatus, RiskMode,
 };
 use crate::{
     GAS_CALLBACK, GAS_FT_TRANSFER, GAS_REGISTRY_CHECK, Vault, VaultExt, events, events::Rejection,
@@ -212,6 +212,22 @@ impl Vault {
             created_at: now.into(),
             day: policy::day_index(now),
             period: policy::period_index(now),
+        }
+    }
+
+    /// Declines every queued payment of a card on behalf of `by`, for example when its token
+    /// changes hands. Payments in the registry check or the transfer keep going.
+    pub(crate) fn decline_queued(&mut self, card_id: CardId, by: &AccountId) {
+        let queued: Vec<Payment> = self
+            .payments
+            .values()
+            .filter(|p| p.card_id == card_id && p.status == PaymentStatus::Queued)
+            .cloned()
+            .collect();
+        for payment in queued {
+            self.release(&payment);
+            self.payments.remove(&payment.id);
+            events::payment_decided("payment_declined", payment.id, by);
         }
     }
 

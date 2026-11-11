@@ -1,6 +1,6 @@
 # Vault contract specification
 
-Status: v1, contract version 0.2.0. Owner: contracts workstream. This file is the interface the indexer, agents and web app build against; change it through a PR first.
+Status: v1, contract version 0.2.1. Owner: contracts workstream. This file is the interface the indexer, agents and web app build against; change it through a PR first.
 
 ## Conventions
 - Amounts are `U128` strings in the token's smallest unit.
@@ -107,7 +107,7 @@ Every card that is not revoked is a NEP-171 token whose `token_id` is the card i
 
 | Method | Effect |
 |-|-|
-| `nft_transfer(receiver_id, token_id, approval_id, memo)` | Holder only, 1 yoctoNEAR attached, `approval_id` must be null. Moves the token and deletes the card key, so the previous holder can no longer pay. A card transferred to the vault owner follows future ownership changes |
+| `nft_transfer(receiver_id, token_id, approval_id, memo)` | Holder only, 1 yoctoNEAR attached, `approval_id` must be null. Moves the token, deletes the card key and declines the queued payments of the card (`payment_declined` with the previous holder as `approver_id`), so the previous holder can no longer pay and nothing it queued can be approved later. Payments in the registry check or the transfer complete normally. A card transferred to the vault owner follows future ownership changes |
 | `set_card_key(card_id, public_key)` | Holder other than the owner, at least 1 NEAR attached. Adds the key with the deposit as its gas allowance and deletes the previous key, so a holder funds its own payments |
 | `nft_token(token_id)`, `nft_metadata()` | Token with NEP-177 metadata (`title` is the label), contract metadata with symbol `CARD` |
 | `nft_total_supply()`, `nft_tokens(from_index, limit)`, `nft_supply_for_owner(account_id)`, `nft_tokens_for_owner(account_id, from_index, limit)` | NEP-181 enumeration over cards that are not revoked |

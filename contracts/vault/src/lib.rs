@@ -27,7 +27,7 @@ mod views;
 use types::{Card, CardId, Payment, PaymentId, TokenBalance};
 
 /// Version reported by `get_config`, bumped with every state or interface change.
-pub const CONTRACT_VERSION: &str = "0.2.0";
+pub const CONTRACT_VERSION: &str = "0.2.1";
 
 /// Default time a queued payment waits before anyone may expire it: 24 hours.
 pub const DEFAULT_APPROVAL_TTL_NS: u64 = 24 * 60 * 60 * 1_000_000_000;

@@ -8,10 +8,12 @@ Deployed with `ROOT_ACCOUNT=comatocard.testnet scripts/deploy-testnet.sh` on 202
 | Test stablecoin (tUSD, 6 decimals, public faucet) | `tusd.comatocard.testnet` | `contracts/mock-ft` |
 | Counterparty registry, curator `comatocard.testnet` | `registry.comatocard.testnet` | `contracts/registry` |
 | Factory, default token tUSD, default registry above | `factory.comatocard.testnet` | `contracts/factory` |
+| Vault global contract (by hash), code version 3, contract 0.4.0 with the audit fixes (PR #65) | `6b8ijoAK9QhACv5y8s4UdRwvBNpeUVsX1bBCDLRNC9Ms` | `contracts/vault` |
 | Vault global contract (by hash), code version 2, contract 0.2.0 with card tokens (PR #32) | `HedzS3czoNHwASMvGiwbugSBCoFzvGtCPFDB2MQ94Q2N` | `contracts/vault` |
 | Vault global contract (by hash), code version 1, contract 0.1.0 | `2ePovqGVC4vaATS7nLshj93MRTiWkSrR2afjwTxGDfsU` | `contracts/vault` |
 | Demo vault owned by `comatocard.testnet`, code version 1 | `demo.factory.comatocard.testnet` | global vault code |
 | Card token demo vault owned by `comatocard.testnet`, code version 2 | `nft.factory.comatocard.testnet` | global vault code |
+| Audited demo vault owned by `comatocard.testnet`, code version 3, card risk mode `block_only` | `audit.factory.comatocard.testnet` | global vault code |
 
 Demo accounts: `comatocard-shop.testnet` (merchant), `comatocard-council.testnet` (DAO council member), `comatocard-agent.testnet` (agent operator).
 
@@ -57,6 +59,16 @@ Same vault and card, indexer from `apps/indexer` serving `/risk` on `INDEXER_URL
 | `pnpm pay nobody-rio-guard.testnet 1000000 guard-warn`, no terminal | `warn` (`account_missing`) | refused by `human`, nothing signed |
 | same, on a terminal, answer `n` or Ctrl+D | `warn` | prompt lists the reasons, refused by `human` |
 | `pnpm pay comatocard-shop.testnet 1000000 guard-down`, indexer stopped | none | refused by `risk_unavailable`, nothing signed |
+
+### Audit fix check on 2026-11-11
+Vault `audit.factory.comatocard.testnet`, code version 3, published from main at PR #65.
+
+| Step | Transaction | Result |
+|-|-|-|
+| Factory creates the vault | `C4Bm2c9oXCsKCwuRm6amTax6gUdZE4Hv631NRT3Tyzvs` | `vault_created` with `code_version` 3, `get_config` reports 0.4.0 |
+| Owner issues a card checked by the registry | `DzMAdcAnGSPMNYtU92X1gqu2nTpCPciC5j6ghs8JTnF1` | Card key confirmed, no `card_key_rejected` |
+| Card pays 2 tUSD with 50 Tgas | refused before execution | `attach at least 80 Tgas`, nothing reserved (#58) |
+| Card pays 2 tUSD with 100 Tgas | `EYcoFo6RHbcvsjuZZSXzkhLgVovqefWvufKAvnssSzpi` | Registry check, `payment_settled`, `reserved` back to 0 |
 
 Explorer: `https://testnet.nearblocks.io/txns/<transaction>`.
 

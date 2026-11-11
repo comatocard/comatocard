@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
+use near_api::types::Reference;
 use near_api::types::transaction::result::TransactionResult;
 use near_api::{AccountId, NearGas, NearToken, NetworkConfig, Signer};
 use near_sandbox::Sandbox;
@@ -62,14 +63,15 @@ impl Env {
         Ok(account_id)
     }
 
-    /// Waits until the genesis key of `account_id` is visible to the queries near-api uses for
-    /// nonces. Accounts are created through a state patch, which the final block may not include
-    /// yet when the next transaction is signed.
+    /// Waits until the genesis key of `account_id` is visible at the final block, where near-api
+    /// reads transaction nonces. Accounts are created through a state patch, which the final block
+    /// may not include yet when the next transaction is signed (#26, #39).
     async fn wait_for_key(&self, account_id: &AccountId) -> Result<()> {
         let public_key: near_api::PublicKey = DEFAULT_GENESIS_ACCOUNT_PUBLIC_KEY.parse()?;
         for _ in 0..100 {
             let visible = near_api::Account(account_id.clone())
                 .access_key(public_key)
+                .at(Reference::Final)
                 .fetch_from(&self.network)
                 .await
                 .is_ok();

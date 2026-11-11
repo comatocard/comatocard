@@ -1,10 +1,6 @@
-//! Counterparty risk verdicts for `GET /risk/:account`. The response shape is the SDK schema
-//! `riskAssessment` that agents validate.
+//! Verdict rules. Pure, so every rule is unit tested.
 
 use serde::Serialize;
-use sqlx::PgPool;
-
-use crate::rpc::Chain;
 
 /// A contract whose code changed within this window is treated with caution.
 pub const CODE_CHANGE_WINDOW_NS: u128 = 7 * 24 * 3_600 * 1_000_000_000;
@@ -24,6 +20,8 @@ pub struct Signals {
     pub prior_payments: Option<i64>,
     /// First settled payment to this account by any indexed vault.
     pub first_paid_at: Option<u128>,
+    /// Sanctions lists that curators cited for this account, as `LIST (YYYY-MM-DD)`.
+    pub sanctions: Vec<String>,
     pub now: u128,
 }
 
@@ -43,6 +41,7 @@ pub struct SignalsView {
     pub code_changed_at: Option<String>,
     pub prior_payments: Option<i64>,
     pub first_paid_at: Option<String>,
+    pub sanctions_lists: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -63,6 +62,13 @@ pub fn assess(s: &Signals) -> Assessment {
             detail,
         });
     };
+    if !s.sanctions.is_empty() {
+        add(
+            "sanctions_listed",
+            "block",
+            format!("listed on {}", s.sanctions.join(", ")),
+        );
+    }
     match s.registry_status.as_str() {
         "blocked" => add(
             "registry_blocked",
@@ -137,100 +143,9 @@ pub fn assess(s: &Signals) -> Assessment {
             code_changed_at: s.code_changed_at.map(|v| v.to_string()),
             prior_payments: s.prior_payments,
             first_paid_at: s.first_paid_at.map(|v| v.to_string()),
+            sanctions_lists: s.sanctions.clone(),
         },
     }
-}
-
-/// Collects the signals for a counterparty from the database and the chain.
-///
-/// # Errors
-/// Fails when the database cannot be read.
-pub async fn assess_account<C: Chain>(
-    pool: &PgPool,
-    chain: &C,
-    registry_id: Option<&str>,
-    account_id: &str,
-    vault_id: Option<&str>,
-    now: u128,
-) -> sqlx::Result<Assessment> {
-    let status: Option<String> =
-        match registry_id {
-            Some(registry) => sqlx::query_scalar(
-                "select status from registry_statuses where registry_id = $1 and account_id = $2",
-            )
-            .bind(registry)
-            .bind(account_id)
-            .fetch_optional(pool)
-            .await?,
-            None => None,
-        };
-    let report_count: i64 =
-        sqlx::query_scalar("select count(*) from registry_reports where account_id = $1")
-            .bind(account_id)
-            .fetch_one(pool)
-            .await?;
-    let prior_payments: Option<i64> = match vault_id {
-        Some(vault) => Some(
-            sqlx::query_scalar(
-                "select count(*) from payments where merchant = $1 and status = 'settled' and vault_id = $2",
-            )
-            .bind(account_id)
-            .bind(vault)
-            .fetch_one(pool)
-            .await?,
-        ),
-        None => None,
-    };
-    let first_paid_at: Option<String> = sqlx::query_scalar(
-        "select min(created_at)::text from payments where merchant = $1 and status = 'settled'",
-    )
-    .bind(account_id)
-    .fetch_one(pool)
-    .await?;
-
-    let account = chain.account(account_id).await;
-    let code_changed_at = match account.as_ref().and_then(|a| a.code_hash.as_deref()) {
-        Some(hash) => code_changed_at(pool, account_id, hash, now).await?,
-        None => None,
-    };
-    Ok(assess(&Signals {
-        account_id: account_id.to_owned(),
-        registry_status: status.unwrap_or_else(|| "clear".to_owned()),
-        report_count,
-        exists: account.as_ref().map(|a| a.exists),
-        is_contract: account.as_ref().map(|a| a.code_hash.is_some()),
-        code_changed_at,
-        prior_payments,
-        first_paid_at: first_paid_at.and_then(|v| v.parse().ok()),
-        now,
-    }))
-}
-
-/// Records the observed code hash and returns when it was first seen, if another hash was seen
-/// before it.
-async fn code_changed_at(
-    pool: &PgPool,
-    account_id: &str,
-    code_hash: &str,
-    now: u128,
-) -> sqlx::Result<Option<u128>> {
-    sqlx::query(
-        "insert into account_code (account_id, code_hash, first_seen_at) values ($1, $2, $3::numeric) on conflict do nothing",
-    )
-    .bind(account_id)
-    .bind(code_hash)
-    .bind(now.to_string())
-    .execute(pool)
-    .await?;
-    let (first_seen, others): (String, i64) = sqlx::query_as(
-        "select (select first_seen_at::text from account_code where account_id = $1 and code_hash = $2), \
-         (select count(*) from account_code where account_id = $1 and code_hash <> $2)",
-    )
-    .bind(account_id)
-    .bind(code_hash)
-    .fetch_one(pool)
-    .await?;
-    Ok((others > 0).then(|| first_seen.parse().ok()).flatten())
 }
 
 #[cfg(test)]
@@ -249,6 +164,7 @@ mod tests {
             code_changed_at: None,
             prior_payments: Some(3),
             first_paid_at: Some(NOW - 1),
+            sanctions: Vec::new(),
             now: NOW,
         }
     }
@@ -262,6 +178,19 @@ mod tests {
         let result = assess(&clean());
         assert_eq!(result.verdict, "allow");
         assert!(result.reasons.is_empty());
+    }
+
+    #[test]
+    fn issue_71_sanctions_block_and_name_the_list() {
+        let listed = Signals {
+            sanctions: vec!["OFAC-SDN (2026-03-21)".into()],
+            ..clean()
+        };
+        let result = assess(&listed);
+        assert_eq!(result.verdict, "block");
+        assert_eq!(result.reasons[0].code, "sanctions_listed");
+        assert_eq!(result.reasons[0].detail, "listed on OFAC-SDN (2026-03-21)");
+        assert_eq!(result.signals.sanctions_lists, ["OFAC-SDN (2026-03-21)"]);
     }
 
     #[test]

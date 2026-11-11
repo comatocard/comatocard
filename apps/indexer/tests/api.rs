@@ -415,3 +415,68 @@ async fn summary_counts_withdrawals_reservations_and_every_token() {
         ])
     );
 }
+
+#[tokio::test]
+async fn issue_71_a_sanctions_report_blocks_and_names_the_list() {
+    let pool = support::database().await;
+    index_scenario(&pool).await;
+    let block = support::make_block(
+        200,
+        &[support::outcome(
+            REGISTRY,
+            vec![support::event_line(
+                "report_submitted",
+                json!({ "report_id": 1, "account_id": "listed.testnet", "reporter_id": "curator.testnet", "category": "sanctions", "evidence_uri": "sanctions:OFAC-SDN:2026-03-21:SDN-1" }),
+            )],
+        )],
+    );
+    comatocard_indexer::ingest::index_block(&pool, &support::tracked(), 200, Some(&block))
+        .await
+        .unwrap();
+    let api = api_with(pool, EventBus::default());
+    let verdict = api.ok("/risk/listed.testnet").await;
+    assert_eq!(verdict["verdict"], "block");
+    assert_eq!(verdict["reasons"][0]["code"], "sanctions_listed");
+    assert_eq!(
+        verdict["signals"]["sanctions_lists"],
+        json!(["OFAC-SDN (2026-03-21)"])
+    );
+}
+
+#[tokio::test]
+async fn issue_72_values_the_export_at_an_operator_rate() {
+    let api = api().await;
+    let path = format!(
+        "/vaults/{VAULT}/export.csv?fiat=IDR&rate=16250.5&rate_source=BI-JISDOR&rate_at=2026-11-06"
+    );
+    let (status, _, body) = api.raw(&path).await;
+    assert_eq!(status, StatusCode::OK);
+    let mut lines = body.lines();
+    assert!(
+        lines
+            .next()
+            .unwrap()
+            .ends_with(",fiat_currency,fiat_amount,fiat_rate,rate_source,rate_at")
+    );
+    assert!(
+        lines
+            .next()
+            .unwrap()
+            .ends_with(",IDR,650020.00,16250.5,BI-JISDOR,2026-11-06"),
+        "40 tUSD at 16,250.5"
+    );
+    for bad in [
+        "fiat=IDR",
+        "fiat=idr&rate=1&rate_source=x&rate_at=y",
+        "fiat=IDR&rate=0&rate_source=x&rate_at=y",
+        "fiat=IDR&rate=abc&rate_source=x&rate_at=y",
+    ] {
+        assert_eq!(
+            api.raw(&format!("/vaults/{VAULT}/export.csv?{bad}"))
+                .await
+                .0,
+            StatusCode::BAD_REQUEST,
+            "{bad}"
+        );
+    }
+}

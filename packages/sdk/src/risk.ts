@@ -25,6 +25,8 @@ export const riskAssessment = z.strictObject({
     code_changed_at: z.string().nullable(),
     prior_payments: z.number().int().nonnegative().nullable(),
     first_paid_at: z.string().nullable(),
+    /** Sanctions lists cited by registry curators, as `LIST (YYYY-MM-DD)`. */
+    sanctions_lists: z.array(z.string()).optional(),
   }),
 });
 

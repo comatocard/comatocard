@@ -57,6 +57,28 @@ pub fn format_units(amount: &str, decimals: u32) -> String {
     }
 }
 
+/// `amount` (smallest token unit, `decimals` places) times `rate` (a positive decimal), rounded
+/// half up to two decimals. Exact integer arithmetic; `None` when the rate is malformed or the
+/// product overflows.
+pub fn fiat_value(amount: &str, decimals: u32, rate: &str) -> Option<String> {
+    let (whole, fraction) = rate.split_once('.').unwrap_or((rate, ""));
+    let valid = |part: &str| part.bytes().all(|b| b.is_ascii_digit());
+    if whole.is_empty() || !valid(whole) || !valid(fraction) || fraction.len() > 18 {
+        return None;
+    }
+    let mantissa: u128 = format!("{whole}{fraction}").parse().ok()?;
+    let raw: u128 = amount.parse().ok()?;
+    let product = raw.checked_mul(mantissa)?;
+    let scale = decimals.checked_add(u32::try_from(fraction.len()).ok()?)?;
+    let cents = if scale >= 2 {
+        let divisor = 10u128.checked_pow(scale - 2)?;
+        product.checked_add(divisor / 2)? / divisor
+    } else {
+        product.checked_mul(10u128.pow(2 - scale))?
+    };
+    Some(format!("{}.{:02}", cents / 100, cents % 100))
+}
+
 fn escape_cell(value: &str) -> String {
     // Prefix formula triggers so spreadsheets show the value instead of evaluating it.
     let safe = if value.starts_with(['=', '+', '-', '@', '\t', '\r']) {
@@ -145,6 +167,26 @@ mod tests {
         assert_eq!(format_units("1500000", 6), "1.5");
         assert_eq!(format_units("5", 6), "0.000005");
         assert_eq!(format_units("12", 0), "12");
+    }
+
+    #[test]
+    fn issue_72_values_amounts_in_fiat_exactly() {
+        assert_eq!(
+            fiat_value("40000000", 6, "16250").as_deref(),
+            Some("650000.00")
+        );
+        assert_eq!(fiat_value("1500000", 6, "0.92").as_deref(), Some("1.38"));
+        assert_eq!(fiat_value("5", 6, "1.005").as_deref(), Some("0.00"));
+        assert_eq!(fiat_value("12345", 2, "1").as_deref(), Some("123.45"));
+        assert_eq!(
+            fiat_value("1", 0, "0.005").as_deref(),
+            Some("0.01"),
+            "rounds half up"
+        );
+        for bad in ["", "-1", "1.2.3", "1e3", ".5"] {
+            assert_eq!(fiat_value("1", 6, bad), None, "{bad}");
+        }
+        assert_eq!(fiat_value(&u128::MAX.to_string(), 6, "2"), None, "overflow");
     }
 
     #[test]

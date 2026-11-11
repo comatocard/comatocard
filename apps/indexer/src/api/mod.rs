@@ -1,8 +1,9 @@
 //! REST and WebSocket API, specified in `docs/specs/indexer-api.md`.
 
+mod analytics;
+mod export;
 mod format;
 mod payments;
-mod reports;
 mod stream;
 mod vaults;
 
@@ -169,8 +170,8 @@ pub fn router<C: Chain + 'static>(state: AppState<C>) -> Router {
         .route("/vaults/{vault}/payments", get(payments::list::<C>))
         .route("/vaults/{vault}/payments/{id}", get(payments::detail::<C>))
         .route("/vaults/{vault}/approvals", get(payments::approvals::<C>))
-        .route("/vaults/{vault}/export.csv", get(reports::export_csv::<C>))
-        .route("/analytics/{vault}", get(reports::analytics::<C>))
+        .route("/vaults/{vault}/export.csv", get(export::export_csv::<C>))
+        .route("/analytics/{vault}", get(analytics::analytics::<C>))
         .route("/risk/{account}", get(risk::<C>))
         .route(
             "/merchants/{merchant}/payments",

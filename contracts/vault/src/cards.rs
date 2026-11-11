@@ -2,7 +2,7 @@
 //! only call `pay`.
 
 use near_sdk::json_types::U128;
-use near_sdk::{NearToken, Promise, PublicKey, env, near, require};
+use near_sdk::{Gas, NearToken, Promise, PromiseError, PublicKey, env, near, require};
 
 use crate::types::{Card, CardId, CardKind, CardStatus, MAX_LABEL_LEN, Policy, Spend};
 use crate::{DEFAULT_CARD_ALLOWANCE, Vault, VaultExt, events};
@@ -15,12 +15,22 @@ fn allowance(gas_allowance: Option<U128>) -> NearToken {
     })
 }
 
-pub(crate) fn add_card_key(public_key: PublicKey, amount: NearToken) {
+const GAS_KEY_CALLBACK: Gas = Gas::from_tgas(5);
+
+/// Adds the card key and confirms it in `on_card_key_added`. `AddKey` fails when the key already
+/// exists on the vault account, for example a full-access key; the callback then drops the
+/// mapping so a later rotation or transfer never deletes a key the vault did not add.
+fn add_card_key(card_id: CardId, public_key: PublicKey, amount: NearToken) {
     let vault = env::current_account_id();
     let allowance = near_sdk::Allowance::limited(amount)
         .unwrap_or_else(|| env::panic_str("gas_allowance must be positive"));
     Promise::new(vault.clone())
-        .add_access_key_allowance(public_key, allowance, vault, PAY_METHOD)
+        .add_access_key_allowance(public_key.clone(), allowance, vault.clone(), PAY_METHOD)
+        .then(
+            Vault::ext(vault)
+                .with_static_gas(GAS_KEY_CALLBACK)
+                .on_card_key_added(card_id, public_key),
+        )
         .detach();
 }
 
@@ -72,7 +82,7 @@ impl Vault {
         events::card_minted(id, &self.owner);
         self.cards.insert(id, card);
         self.card_keys.insert(public_key.clone(), id);
-        add_card_key(public_key, allowance(gas_allowance));
+        add_card_key(id, public_key, allowance(gas_allowance));
         id
     }
 
@@ -125,6 +135,26 @@ impl Vault {
         events::card_burned(card_id, &holder);
     }
 
+    /// Confirms a card key. When `AddKey` failed, the key is unmapped and the card waits for a new
+    /// key; the key itself is left alone because the vault never added it.
+    #[private]
+    pub fn on_card_key_added(
+        &mut self,
+        card_id: CardId,
+        public_key: PublicKey,
+        #[callback_result] result: Result<(), PromiseError>,
+    ) {
+        if result.is_ok() || self.card_keys.get(&public_key) != Some(&card_id) {
+            return;
+        }
+        self.card_keys.remove(&public_key);
+        let card = self.card_mut(card_id);
+        if card.public_key.as_ref() == Some(&public_key) {
+            card.public_key = None;
+        }
+        events::card_key_rejected(card_id, &public_key);
+    }
+
     /// Replaces the key of a card, for example after a leak or when the allowance ran out.
     pub fn rotate_card_key(
         &mut self,
@@ -157,7 +187,7 @@ impl Vault {
             delete_card_key(old.clone());
         }
         self.card_keys.insert(new_public_key.clone(), card_id);
-        add_card_key(new_public_key.clone(), allowance);
+        add_card_key(card_id, new_public_key.clone(), allowance);
         events::card_key_rotated(card_id, old_public_key.as_ref(), &new_public_key);
     }
 }

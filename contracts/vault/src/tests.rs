@@ -892,3 +892,46 @@ fn issue_58_a_transfer_in_flight_is_never_recovered() {
     harness.at(NOW + crate::DEFAULT_APPROVAL_TTL_NS);
     harness.vault.recover_payment(0);
 }
+
+#[test]
+fn issue_59_a_key_the_account_already_has_is_unmapped_and_kept() {
+    let mut harness = Harness::new();
+    harness.as_account(vault_id());
+    harness
+        .vault
+        .on_card_key_added(0, card_key(), Err(PromiseError::Failed));
+    assert!(has_event("card_key_rejected"));
+    assert!(harness.vault.get_card_by_key(card_key()).is_none());
+    assert_eq!(harness.vault.get_card(0).unwrap().public_key, None);
+    // A later rotation must not delete the key the vault never added.
+    harness.as_account(owner());
+    harness.vault.rotate_card_key(0, other_key(), None);
+    assert_eq!(
+        near_sdk::test_utils::get_created_receipts()
+            .iter()
+            .flat_map(|r| r.actions.iter())
+            .filter(|a| matches!(a, near_sdk::mock::MockAction::DeleteKey { .. }))
+            .count(),
+        0
+    );
+}
+
+#[test]
+fn issue_59_a_confirmed_key_stays_mapped() {
+    let mut harness = Harness::new();
+    harness.as_account(vault_id());
+    harness.vault.on_card_key_added(0, card_key(), Ok(()));
+    assert!(!has_event("card_key_rejected"));
+    assert_eq!(harness.vault.get_card_by_key(card_key()).unwrap().id, 0);
+}
+
+#[test]
+fn issue_59_a_late_failure_for_a_replaced_key_changes_nothing() {
+    let mut harness = Harness::new();
+    harness.vault.rotate_card_key(0, other_key(), None);
+    harness.as_account(vault_id());
+    harness
+        .vault
+        .on_card_key_added(0, card_key(), Err(PromiseError::Failed));
+    assert_eq!(harness.vault.get_card_by_key(other_key()).unwrap().id, 0);
+}

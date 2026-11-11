@@ -230,6 +230,24 @@ pub fn card_burned(card_id: CardId, owner_id: &AccountId) {
     .emit();
 }
 
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+struct CardKeyRejected<'a> {
+    card_id: CardId,
+    public_key: &'a PublicKey,
+}
+
+/// `AddKey` failed for a card key, so the card has no key until a new one is set.
+pub fn card_key_rejected(card_id: CardId, public_key: &PublicKey) {
+    emit(
+        "card_key_rejected",
+        &CardKeyRejected {
+            card_id,
+            public_key,
+        },
+    );
+}
+
 pub fn approver_set(account_id: &AccountId, max_amount: Option<U128>) {
     emit(
         "approver_set",
@@ -416,6 +434,7 @@ mod tests {
         card_status("card_revoked", 1);
         card_key_rotated(1, Some(&key), &new_key);
         card_key_rotated(1, None, &new_key);
+        card_key_rejected(1, &new_key);
         card_transferred(1, &owner, &account("agent.testnet"), Some("handover"));
         approver_set(&account("council.testnet"), Some(U128(80_000_000)));
         approver_set(&account("council.testnet"), None);

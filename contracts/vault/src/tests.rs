@@ -1082,3 +1082,46 @@ fn issue_63_approval_respects_the_merchant_rule() {
     harness.vault.update_policy(0, deny);
     harness.vault.approve_payment(0);
 }
+
+#[test]
+fn issue_62_a_new_owner_inherits_no_keys_queues_or_approvers() {
+    let mut harness = Harness::new();
+    harness
+        .vault
+        .set_approver(id("council.near"), Some(U128(80)));
+    harness.vault.create_card(
+        other_key(),
+        "handed".to_owned(),
+        CardKind::Agent,
+        policy(),
+        None,
+    );
+    assert!(matches!(harness.pay(60), PaymentDecision::Queued { .. }));
+    // Card 1 goes to an agent before the ownership change and keeps its holder.
+    harness.with_deposit(owner(), NearToken::from_yoctonear(1));
+    harness
+        .vault
+        .nft_transfer(agent(), "1".to_owned(), None, None);
+    harness.with_deposit(agent(), MIN_HOLDER_ALLOWANCE);
+    harness.vault.set_card_key(1, other_key());
+
+    harness.with_deposit(owner(), NearToken::from_yoctonear(0));
+    harness.vault.propose_owner(id("dao.near"));
+    harness.as_account(id("dao.near"));
+    harness.vault.accept_owner();
+
+    let owner_card = harness.vault.get_card(0).unwrap();
+    assert_eq!((owner_card.holder, owner_card.public_key), (None, None));
+    assert!(
+        harness.vault.get_payment(0).is_none(),
+        "the old queue is declined"
+    );
+    assert!(harness.vault.list_approvers().is_empty());
+    assert_eq!(
+        harness.vault.nft_token("0".to_owned()).unwrap().owner_id,
+        id("dao.near")
+    );
+    let agent_card = harness.vault.get_card(1).unwrap();
+    assert_eq!(agent_card.holder, Some(agent()));
+    assert_eq!(agent_card.public_key, Some(other_key()));
+}

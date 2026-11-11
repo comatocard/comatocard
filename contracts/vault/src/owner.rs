@@ -3,7 +3,7 @@
 use near_sdk::json_types::{U64, U128};
 use near_sdk::{AccountId, env, near, require};
 
-use crate::types::TokenBalance;
+use crate::types::{CardId, CardStatus, TokenBalance};
 use crate::{Vault, VaultExt, events};
 
 #[near]
@@ -62,7 +62,9 @@ impl Vault {
         self.pending_owner = Some(new_owner);
     }
 
-    /// Second step of an ownership transfer, called by the proposed owner.
+    /// Second step of an ownership transfer, called by the proposed owner. Nothing the previous
+    /// owner set up keeps acting: every card it held is handed over (key deleted, queued payments
+    /// declined) and every approver is removed. The new owner issues keys and approvers afresh.
     pub fn accept_owner(&mut self) {
         let caller = env::predecessor_account_id();
         require!(
@@ -70,8 +72,21 @@ impl Vault {
             "only the proposed owner may accept"
         );
         self.pending_owner = None;
-        self.approvers.remove(&caller);
+        let previous = std::mem::replace(&mut self.owner, caller.clone());
         events::owner_event("owner_changed", &caller);
-        self.owner = caller;
+        let owner_held: Vec<CardId> = self
+            .cards
+            .values()
+            .filter(|card| card.holder.is_none() && card.status != CardStatus::Revoked)
+            .map(|card| card.id)
+            .collect();
+        for card_id in owner_held {
+            self.hand_over(card_id, &previous, &caller, None);
+        }
+        let approvers: Vec<AccountId> = self.approvers.keys().cloned().collect();
+        self.approvers.clear();
+        for approver in approvers {
+            events::approver_set(&approver, None);
+        }
     }
 }

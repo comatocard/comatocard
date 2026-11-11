@@ -24,7 +24,8 @@
     "is_contract": false,
     "prior_payments": 0,
     "registry_status": "blocked",
-    "report_count": 1
+    "report_count": 1,
+    "sanctions_lists": []
   },
   "verdict": "block"
 }

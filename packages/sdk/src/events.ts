@@ -92,7 +92,7 @@ export const eventData = {
     report_id: id,
     account_id: accountId,
     reporter_id: accountId,
-    category: z.enum(["scam", "phishing", "drainer", "impersonation", "other"]),
+    category: z.enum(["scam", "phishing", "drainer", "impersonation", "other", "sanctions"]),
     evidence_uri: z.string().min(1),
   }),
   status_changed: z.strictObject({

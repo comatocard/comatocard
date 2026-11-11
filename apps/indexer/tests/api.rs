@@ -415,3 +415,30 @@ async fn summary_counts_withdrawals_reservations_and_every_token() {
         ])
     );
 }
+
+#[tokio::test]
+async fn issue_71_a_sanctions_report_blocks_and_names_the_list() {
+    let pool = support::database().await;
+    index_scenario(&pool).await;
+    let block = support::make_block(
+        200,
+        &[support::outcome(
+            REGISTRY,
+            vec![support::event_line(
+                "report_submitted",
+                json!({ "report_id": 1, "account_id": "listed.testnet", "reporter_id": "curator.testnet", "category": "sanctions", "evidence_uri": "sanctions:OFAC-SDN:2026-03-21:SDN-1" }),
+            )],
+        )],
+    );
+    comatocard_indexer::ingest::index_block(&pool, &support::tracked(), 200, Some(&block))
+        .await
+        .unwrap();
+    let api = api_with(pool, EventBus::default());
+    let verdict = api.ok("/risk/listed.testnet").await;
+    assert_eq!(verdict["verdict"], "block");
+    assert_eq!(verdict["reasons"][0]["code"], "sanctions_listed");
+    assert_eq!(
+        verdict["signals"]["sanctions_lists"],
+        json!(["OFAC-SDN (2026-03-21)"])
+    );
+}

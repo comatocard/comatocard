@@ -3883,6 +3883,7 @@ dependencies = [
  "anyhow",
  "comatocard-common",
  "near-api",
+ "near-contract-standards",
  "near-sdk",
  "serde_json",
  "testkit",

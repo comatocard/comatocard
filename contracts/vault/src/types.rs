@@ -28,6 +28,17 @@ pub enum CardKind {
     Treasury,
 }
 
+impl CardKind {
+    /// The snake case name used in JSON.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Human => "human",
+            Self::Agent => "agent",
+            Self::Treasury => "treasury",
+        }
+    }
+}
+
 #[near(serializers = [borsh, json])]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]

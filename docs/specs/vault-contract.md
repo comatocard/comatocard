@@ -1,6 +1,6 @@
 # Vault contract specification
 
-Status: v1, contract version 0.2.1. Owner: contracts workstream. This file is the interface the indexer, agents and web app build against; change it through a PR first.
+Status: v1, contract version 0.3.0. Owner: contracts workstream. This file is the interface the indexer, agents and web app build against; change it through a PR first.
 
 ## Conventions
 - Amounts are `U128` strings in the token's smallest unit.
@@ -112,7 +112,9 @@ Every card that is not revoked is a NEP-171 token whose `token_id` is the card i
 | `nft_token(token_id)`, `nft_metadata()` | Token with NEP-177 metadata (`title` is the label), contract metadata with symbol `CARD` |
 | `nft_total_supply()`, `nft_tokens(from_index, limit)`, `nft_supply_for_owner(account_id)`, `nft_tokens_for_owner(account_id, from_index, limit)` | NEP-181 enumeration over cards that are not revoked |
 
-`create_card` emits NEP-171 `nft_mint`, `nft_transfer` emits `nft_transfer`, `revoke_card` emits `nft_burn`. `nft_transfer_call` and approvals (NEP-178) are not offered.
+| `nft_transfer_call(receiver_id, token_id, approval_id, memo, msg)` | Same transfer, then calls `nft_on_transfer` on the receiver. When the receiver returns `true` or fails, `nft_resolve_transfer` gives the token back to the previous holder as a full handover: any key the receiver set is deleted and its queued payments are declined |
+
+The methods implement the `near-contract-standards` traits `NonFungibleTokenCore`, `NonFungibleTokenResolver`, `NonFungibleTokenMetadataProvider` and `NonFungibleTokenEnumeration` and return its `Token` and metadata types; the events are its `NftMint`, `NftTransfer` and `NftBurn`. `create_card` emits `nft_mint`, every transfer emits `nft_transfer` with the memo, `revoke_card` emits `nft_burn`. Approvals (NEP-178) are not offered: `approval_id` must be null. Enumeration pages hold at most 100 tokens.
 
 ## Public methods
 | Method | Effect |

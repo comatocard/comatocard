@@ -1,7 +1,9 @@
 import {
+  type ComatocardEvent,
   type FunctionCall,
   type PaymentDecision,
   type PaymentPreview,
+  parseEventLog,
   paymentDecision,
   type RiskAssessment,
   type VaultClient,
@@ -19,8 +21,20 @@ export interface PaymentRequest {
   reference?: string;
 }
 
-/** Signs and sends a call with the card key; returns the transaction hash and the call result. */
-export type Submit = (call: FunctionCall) => Promise<{ txHash: string; result: unknown }>;
+/**
+ * Signs and sends a call with the card key and waits for every receipt; returns the transaction
+ * hash, the call result and the logs of all receipts.
+ */
+export type Submit = (
+  call: FunctionCall,
+) => Promise<{ txHash: string; result: unknown; logs: string[] }>;
+
+/** What the vault decided and the Comatocard events the transaction emitted. */
+export interface Sent {
+  decision: PaymentDecision;
+  events: ComatocardEvent[];
+  txHash: string;
+}
 
 export type Refusal =
   | { by: "preview"; preview: Extract<PaymentPreview, { status: "rejected" }> }
@@ -30,14 +44,12 @@ export type Refusal =
 
 export type SpendOutcome =
   | ({ kind: "refused" } & Refusal)
-  | {
+  | ({
       kind: "sent";
       preview: PaymentPreview;
       risk: RiskAssessment;
       approvedByHuman: boolean;
-      decision: PaymentDecision;
-      txHash: string;
-    };
+    } & Sent);
 
 export interface SpendDeps {
   client: Pick<VaultClient, "vaultId" | "previewPayment">;
@@ -83,17 +95,31 @@ export async function spend(deps: SpendDeps, request: PaymentRequest): Promise<S
     "guard decision",
   );
 
-  const call = vaultCalls(deps.client.vaultId).pay({
+  const sent = await sendPayment(deps.client.vaultId, deps.submit, request);
+  return { kind: "sent", preview, risk, approvedByHuman, ...sent };
+}
+
+/** Signs `pay` without any check. The guard calls it last; the attack demo calls it directly. */
+export async function sendPayment(
+  vaultId: string,
+  submit: Submit,
+  request: PaymentRequest,
+): Promise<Sent> {
+  const call = vaultCalls(vaultId).pay({
     merchant: request.merchant,
     amount: request.amount,
     ...(request.reference === undefined ? {} : { reference: request.reference }),
   });
-  const { txHash, result } = await deps.submit(call);
+  const { txHash, result, logs } = await submit(call);
   const decision = paymentDecision.safeParse(result);
   if (!decision.success) {
     throw new Error(`pay ${txHash}: unexpected result\n${z.prettifyError(decision.error)}`);
   }
-  return { kind: "sent", preview, risk, approvedByHuman, decision: decision.data, txHash };
+  const events = logs.flatMap((line) => {
+    const parsed = parseEventLog(line);
+    return parsed.ok ? [parsed.event] : [];
+  });
+  return { decision: decision.data, events, txHash };
 }
 
 function guardFields(input: {

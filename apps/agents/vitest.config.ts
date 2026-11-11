@@ -12,6 +12,7 @@ export default defineConfig({
         "src/submit.ts",
         "src/treasury-cli.ts",
         "src/policy-cli.ts",
+        "src/attack.ts",
       ],
       reporter: ["text", "lcov"],
     },

@@ -17,7 +17,14 @@ export function cardSubmitter(config: Config): Submit {
       args: call.args,
       gas: call.gas,
       deposit: call.deposit,
+      // Wait for every receipt, so the logs include asynchronous outcomes such as the registry
+      // check and the token transfer.
+      waitUntil: "FINAL",
     });
-    return { txHash: response.transaction.hash, result: getTransactionLastResult(response) };
+    return {
+      txHash: response.transaction.hash,
+      result: getTransactionLastResult(response),
+      logs: response.receipts_outcome.flatMap((receipt) => receipt.outcome.logs),
+    };
   };
 }

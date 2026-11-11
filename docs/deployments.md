@@ -39,6 +39,15 @@ Vault `nft.factory.comatocard.testnet`, code version 2, published from main at P
 
 A payment signed with the previous key cannot be sent: the RPC reports that the access key does not exist. `nft_token({"token_id":"0"})` returns owner `comatocard-agent.testnet`.
 
+### Spending agent check on 2026-11-11
+Vault `rio74936.factory.comatocard.testnet`, code version 2, card 0 with a 20 tUSD per-transaction limit, a 10 tUSD approval threshold and risk mode `block_only`. Commands from `apps/agents/README.md`.
+
+| Command | Transaction | Result |
+|-|-|-|
+| `pnpm pay comatocard-shop.testnet 5000000 e2e-ok-1` | `GZVeJ99E5r9RbsCirnK8YQbEw5CtbtducdnhZq1aKvrq` | preview `allowed`, `submitted`, indexer row `settled` |
+| `pnpm pay comatocard-shop.testnet 25000000 e2e-limit` | none | preview `rejected` with `per_tx_limit`, refused before signing |
+| `pnpm pay comatocard-shop.testnet 15000000 e2e-queue` | `GbHQjy9NHVKaQR1UZ4Phc34qcMMt6jEUaSn5812n5wc2` | preview `needs_approval`, `queued` with `threshold`, listed in `/vaults/<vault>/approvals` |
+
 Explorer: `https://testnet.nearblocks.io/txns/<transaction>`.
 
 ### Get test funds

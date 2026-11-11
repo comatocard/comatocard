@@ -1,8 +1,6 @@
 # packages/config
 
-Shared tsconfig and tool presets for the workspace.
+`@comatocard/config`: shared configuration for the TypeScript workspaces.
 
-Workstream C.
-
-## ESLint with SonarJS
-`eslint.config.js` exports the SonarJS rule set that SonarQube applies to TypeScript, so every workspace runs it locally and in CI without a Sonar token: add `export { default } from "@comatocard/config/eslint";` and run `eslint . --max-warnings 0` after `biome check .`. The parser uses TypeScript 6 from this package, since TypeScript 7 has no JavaScript API.
+- `tsconfig.base.json`: strict compiler options every workspace extends.
+- `eslint.config.js`: the SonarJS rule set that SonarQube applies to TypeScript, so it runs locally and in CI without a Sonar token. Enable it with `export { default } from "@comatocard/config/eslint";` and run `eslint . --max-warnings 0` after `biome check .`. The parser uses TypeScript 6 from this package, since TypeScript 7 has no JavaScript API.

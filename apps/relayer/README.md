@@ -1,5 +1,5 @@
 # apps/relayer
 
-Meta transaction relayer for owner actions. Sponsors only delegate actions whose receiver is a vault created by our factory, with an allowlist of owner methods and zero attached deposit. Card payments never go through the relayer.
+Meta transaction relayer for owner actions. It sponsors only delegate actions whose receiver is a vault created by the factory, with an allowlist of owner methods and no attached deposit. Card payments never go through the relayer, and it holds no vault keys.
 
-Workstream B. Background: [research notes](../../docs/research.md).
+Workstream B. Status: planned. Rules it must follow: [integration guide](../../docs/integration.md) and [compliance](../../docs/compliance.md).

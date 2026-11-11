@@ -1,47 +1,53 @@
 # Comatocard
 
-Programmable payment cards for humans and AI agents, enforced by smart contracts on NEAR.
+Programmable payment cards for people and AI agents, enforced by smart contracts on NEAR.
 
-A Comatocard vault holds stablecoins and issues cards. Each card is a revocable NEAR access key with its own spending policy: limits per transaction, day and period, merchant rules, an approval threshold and counterparty checks. The vault contract enforces the policy on every payment and records each approval, queue and rejection on-chain with a reason. An AI agent can spend on its own, inside limits it cannot change.
+[Website](https://comatocard.xyz) · [App](https://app.comatocard.xyz) · [Docs](docs/) · [Testnet deployment](docs/deployments.md)
+
+The hosted site and app are being deployed; until then everything below runs against NEAR testnet and locally.
+
+## What it is
+A Comatocard vault is a self-custodial NEAR account that holds stablecoins and issues cards. A card is a NEAR access key that can call only `pay`, with its own spending policy: limits per payment, day and 30-day period, merchant allow or deny lists, an approval threshold, a validity window and counterparty checks. The vault enforces the policy on every payment and records every attempt, including rejections and their reasons, as an on-chain event. An AI agent can spend on its own, inside limits it cannot change.
+
+- **Cards for agents.** Give an agent a card, not a wallet. It pays APIs and merchants within its policy; anything above the threshold waits for a human or a DAO vote.
+- **Cards as tokens.** Every card is a NEP-171 token. Transferring it hands the card to someone else and deletes the old key.
+- **Counterparty checks.** A registry of evidence-backed reports and curator statuses, including sanctions listings, is checked on-chain before paying.
+- **Books that reconcile.** A Rust indexer serves the history, approvals, risk verdicts and an accountant CSV with optional fiat valuation.
 
 ## Security first, compliance ready
-- **The contract is the control.** Limits, merchant rules, approvals and counterparty checks run on-chain on every payment. A card key can call only `pay`, so a compromised agent cannot raise its own limits or withdraw.
-- **Fails closed, recovers cleanly.** Registry errors, missing checks and full queues end in a recorded rejection, never a silent payment. Freeze, revoke and rotate take effect at once.
-- **Audited.** An independent contract review found three high issues; all are fixed in vault 0.4.0 with regression tests and run on testnet. See [Security model](docs/security.md).
-- **Built for the rules where it runs.** Sanctions reports name their official list, the accountant CSV values payments at a named fiat rate, and the SDK warns before personal data goes on-chain. Comatocard is not offered for paying Indonesian merchants in stablecoins for domestic sales, as the Currency Law requires rupiah. See [Compliance research](docs/compliance-research.md).
-- **Audit trail by default.** Every attempt, including rejections and their reasons, is an on-chain event with a transaction hash. Approvals name the approver, DAOs can own vaults, and the indexer exports an accountant-ready CSV. See [Compliance readiness](docs/compliance.md).
+- **The contract is the control.** Policies are enforced on-chain; a card key cannot withdraw, change limits or approve.
+- **Fails closed.** Registry errors, missing checks and full queues end in a recorded rejection, never a silent payment.
+- **Audited.** An independent review found three high issues; all are fixed in vault 0.4.0 with regression tests. See [Security model](docs/security.md).
+- **Built for the rules where it runs.** Sanctions reports name their official list, approvals name their approver, and the docs map each control to local and global rules. Comatocard is not offered for paying Indonesian merchants in stablecoins for domestic sales, as the Currency Law requires rupiah. See [Compliance readiness](docs/compliance.md) and [Compliance research](docs/compliance-research.md).
 
-Status: in development for NEAR HACKATHON (tracks `realworld`, `security`, `agents`, `social`). Setup and a judge walkthrough will be added with the first runnable milestone.
+## Try it
+Requirements: Node 24 with pnpm, Rust from `rust-toolchain.toml` with [cargo-near](https://github.com/near/cargo-near), Docker.
 
-## Repository layout
+1. **Build and test everything.** `pnpm install && pnpm build && pnpm test` builds the contracts and apps and runs the unit tests. `pnpm test:integration` runs the near-sandbox and Postgres tests.
+2. **See a vault on testnet.** `near contract call-function as-read-only v4.factory.comatocard.testnet get_config json-args '{}' network-config testnet now` returns the owner, the registry and `contract_version` `0.4.0`.
+3. **See a payment that settled.** Open `https://testnet.nearblocks.io/txns/2He3J1YWUs8Vkk2VA9PDYa4yavySHjbRn9sJRwqZcZrA`: a card paid 1 tUSD after an on-chain registry check (`payment_submitted`, `payment_settled`).
+4. **Index it yourself.** `docker compose -f apps/indexer/docker-compose.yml up --build` starts Postgres and the indexer on testnet; `curl localhost:4000/health` shows the indexed height and the lag. Events from then on appear under `/vaults/<vault>/payments` and in `/vaults/<vault>/export.csv`.
+5. **Pay from an agent.** `apps/agents` holds a card key and pays through its guard (preview, risk verdict, human confirmation on warn). See [apps/agents](apps/agents/README.md).
+
+Every transaction of the testnet checks, including a rejection, an approval and a card handover, is listed in [docs/deployments.md](docs/deployments.md).
+
+## Repository
 | Path | Purpose |
 |-|-|
-| `apps/web` | Owner dashboard, card management, approvals, merchant checkout |
-| `apps/merchant` | Demo merchant with an HTTP 402 resource |
-| `apps/agents` | Spending agent, treasury agent, policy assistant, attack demo |
-| `apps/indexer` | Event indexer in Rust with REST and WebSocket API |
-| `apps/relayer` | Meta transaction relayer for owner actions |
-| `contracts/vault` | Vault contract |
-| `contracts/factory` | Vault factory using global contract code |
-| `contracts/registry` | Counterparty registry |
-| `contracts/mock-ft` | Test stablecoin for testnet |
-| `packages/sdk` | Shared types, event schemas, vault client |
-| `packages/config` | Shared tool configuration |
+| [`contracts/vault`](contracts/vault) | Vault: cards, policies, approvals, payments, card tokens |
+| [`contracts/factory`](contracts/factory) | Creates vaults from the published global vault code |
+| [`contracts/registry`](contracts/registry) | Counterparty registry with reports, curators and sanctions listings |
+| [`contracts/mock-ft`](contracts/mock-ft) | tUSD, the testnet stablecoin |
+| [`apps/indexer`](apps/indexer) | Rust indexer: REST, WebSocket, risk verdicts, CSV export |
+| [`apps/agents`](apps/agents) | Spending agent with its guard |
+| [`apps/web`](apps/web), [`apps/merchant`](apps/merchant), [`apps/relayer`](apps/relayer) | Owner app, demo merchant, owner meta transaction relayer |
+| [`packages/sdk`](packages/sdk) | Types, event schemas, vault client and compliance helpers |
+| [`packages/config`](packages/config) | Shared TypeScript and lint configuration |
 
 ## Documentation
-- [Architecture](docs/architecture.md)
-- [Security model](docs/security.md)
-- [Compliance readiness](docs/compliance.md)
-- [Compliance research, local and global](docs/compliance-research.md)
-- [Vault contract specification](docs/specs/vault-contract.md)
-- [Event schema](docs/specs/events.md)
-- [Indexer API](docs/specs/indexer-api.md)
-- [Integration guide](docs/integration.md)
-- [Deployments](docs/deployments.md)
-- [Workstreams and milestones](docs/workstreams.md)
-- [Research notes](docs/research.md)
-- [Hackathon rules checklist](docs/hackathon.md)
-- [Contributor and agent rules](AGENTS.md)
+[Architecture](docs/architecture.md) · [Vault contract](docs/specs/vault-contract.md) · [Events](docs/specs/events.md) · [Indexer API](docs/specs/indexer-api.md) · [Integration guide](docs/integration.md) · [Security](docs/security.md) · [Compliance](docs/compliance.md) · [Deployments](docs/deployments.md) · [Contributing](AGENTS.md)
+
+Built for NEAR HACKATHON, tracks `realworld`, `security`, `agents` and `social`.
 
 ## License
 [MIT](LICENSE)

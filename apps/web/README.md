@@ -1,5 +1,5 @@
 # apps/web
 
-Next.js app for vault owners and merchants: wallet login, vault creation, card management, approvals inbox, live payment feed, treasury and policy assistant panels, merchant checkout.
+Owner app at [app.comatocard.xyz](https://app.comatocard.xyz): wallet login, vault creation, card management, approvals inbox, live payment feed and merchant checkout.
 
-Workstream C. Consumes `packages/sdk` and the [indexer API](../../docs/specs/indexer-api.md).
+Workstream C. Status: planned. It consumes `@comatocard/sdk` and the [indexer API](../../docs/specs/indexer-api.md); see [integration guide](../../docs/integration.md).

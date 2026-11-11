@@ -87,12 +87,17 @@ async fn wait_for_signal() {
     let interrupt = tokio::signal::ctrl_c();
     #[cfg(unix)]
     {
-        let mut terminate =
-            tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-                .expect("install the SIGTERM handler");
-        tokio::select! {
-            _ = interrupt => {}
-            _ = terminate.recv() => {}
+        match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
+            Ok(mut terminate) => {
+                tokio::select! {
+                    _ = interrupt => {}
+                    _ = terminate.recv() => {}
+                }
+            }
+            Err(error) => {
+                tracing::warn!(%error, "SIGTERM handler unavailable, stopping on Ctrl-C only");
+                let _ = interrupt.await;
+            }
         }
     }
     #[cfg(not(unix))]

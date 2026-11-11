@@ -2,6 +2,11 @@
 //! `tests/snapshots` were recorded by the TypeScript indexer, so passing them proves the rewrite
 //! kept the API that agents and the web app consume.
 
+#![expect(
+    clippy::unwrap_used,
+    reason = "test helpers fail loudly instead of returning errors"
+)]
+
 mod support;
 
 use std::sync::Arc;

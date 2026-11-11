@@ -18,7 +18,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "biome check .",
+    "lint": "biome check . && eslint . --max-warnings 0",
     "test": "vitest run --coverage"
   },
   "dependencies": {
@@ -28,6 +28,7 @@
     "@comatocard/config": "workspace:*",
     "@types/node": "26.6.6",
     "@vitest/coverage-v8": "5.1.0",
+    "eslint": "10.14.0",
     "typescript": "7.0.2",
     "vitest": "5.1.0"
   }

@@ -7,12 +7,14 @@ const vaultId = "alice.factory.comatocard.testnet";
 const publicKey = "ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp";
 const request = { merchant: "shop.testnet", amount: "5000000", reference: "inv-1" };
 
+const registryStatus = { allow: "clear", warn: "flagged", block: "blocked" } as const;
+
 const verdict = (v: RiskAssessment["verdict"]): RiskAssessment => ({
   account_id: "shop.testnet",
   verdict: v,
   reasons: v === "allow" ? [] : [{ code: `registry_${v}`, level: v, detail: "curated" }],
   signals: {
-    registry_status: v === "allow" ? "clear" : v === "warn" ? "flagged" : "blocked",
+    registry_status: registryStatus[v],
     report_count: 1,
     exists: true,
     is_contract: false,

@@ -13,7 +13,7 @@ Rules for every coding agent (Claude Code, Codex, others) and every human contri
 - Ask for explicit approval before starting any harness feature that spawns many subagents at once.
 
 ## Quality gates
-- Zero warnings and zero errors: rustc, clippy, rustfmt, Biome, tsc, tests and install output stay clean. CI treats warnings as errors.
+- Zero warnings and zero errors: rustc, clippy, rustfmt, cargo-deny, Biome, the SonarJS rules (ESLint with `@comatocard/config/eslint`), tsc, tests and install output stay clean. CI treats warnings as errors.
 - Root commands: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:integration`, `pnpm build`. Each workspace exposes the same script names.
 
 ## Rust

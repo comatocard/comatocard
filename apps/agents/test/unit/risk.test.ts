@@ -35,13 +35,13 @@ describe("indexerRisk", () => {
 
   it("throws on an HTTP error or an unexpected body", async () => {
     const down = indexerRisk({
-      indexerUrl: "http://x",
+      indexerUrl: "https://x",
       vaultId: "v.testnet",
       fetch: responding({}, 503),
     });
     await expect(down("shop.testnet")).rejects.toThrow("indexer responded 503");
     const odd = indexerRisk({
-      indexerUrl: "http://x",
+      indexerUrl: "https://x",
       vaultId: "v.testnet",
       fetch: responding({ ...assessment, verdict: "fine" }),
     });

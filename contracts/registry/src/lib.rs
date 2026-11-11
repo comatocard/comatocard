@@ -12,6 +12,10 @@ use near_sdk::{
     AccountId, BorshStorageKey, NearToken, PanicOnDefault, Promise, env, near, require,
 };
 
+pub mod sanctions;
+
+pub use sanctions::{SANCTIONS_LISTS, is_sanctions_evidence};
+
 /// Maximum byte length of an evidence URI.
 pub const MAX_EVIDENCE_URI_LEN: usize = 256;
 /// Maximum number of reports kept per account.
@@ -39,6 +43,9 @@ pub enum Category {
     Drainer,
     Impersonation,
     Other,
+    /// The account is on an official sanctions list. Only curators file these, with evidence in
+    /// the form `sanctions:<LIST>:<YYYY-MM-DD>[:<reference>]`, see [`SANCTIONS_LISTS`].
+    Sanctions,
 }
 
 #[near(serializers = [borsh, json])]
@@ -146,6 +153,16 @@ impl Registry {
         );
         let reporter_id = env::predecessor_account_id();
         require!(reporter_id != account_id, "an account cannot report itself");
+        if category == Category::Sanctions {
+            require!(
+                self.curators.contains(&reporter_id),
+                "only curators file sanctions reports"
+            );
+            require!(
+                is_sanctions_evidence(&evidence_uri),
+                "sanctions evidence must be sanctions:<LIST>:<YYYY-MM-DD>[:<reference>]"
+            );
+        }
         let storage_before = env::storage_usage();
 
         let mut ids = self
@@ -349,6 +366,13 @@ mod tests {
             .registry
             .set_status(id("bad.testnet"), Status::Blocked, vec![report_id]);
         events.extend(get_logs());
+        harness.as_account("curator.near", NearToken::from_millinear(10));
+        harness.registry.report(
+            id("listed.testnet"),
+            Category::Sanctions,
+            "sanctions:OFAC-SDN:2026-03-21:SDN-12345".to_owned(),
+        );
+        events.extend(get_logs());
         events.retain(|line| line.starts_with("EVENT_JSON:"));
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../packages/sdk/test/fixtures/registry-events.jsonl");
@@ -465,5 +489,47 @@ mod tests {
         let mut harness = Harness::new();
         harness.as_account("alice.near", NearToken::from_yoctonear(0));
         harness.registry.add_curator(id("alice.near"));
+    }
+
+    #[test]
+    fn issue_71_curators_file_sanctions_reports() {
+        let mut harness = Harness::new();
+        harness.as_account("curator.near", NearToken::from_millinear(10));
+        let report_id = harness.registry.report(
+            id("listed.testnet"),
+            Category::Sanctions,
+            "sanctions:UN:2026-01-05".to_owned(),
+        );
+        assert_eq!(
+            harness
+                .registry
+                .list_reports(id("listed.testnet"), None, None)[0]
+                .id,
+            report_id
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "only curators file sanctions reports")]
+    fn issue_71_others_cannot_file_sanctions_reports() {
+        let mut harness = Harness::new();
+        harness.as_account("alice.near", NearToken::from_millinear(10));
+        harness.registry.report(
+            id("listed.testnet"),
+            Category::Sanctions,
+            "sanctions:UN:2026-01-05".to_owned(),
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "sanctions evidence must be")]
+    fn issue_71_sanctions_reports_need_list_evidence() {
+        let mut harness = Harness::new();
+        harness.as_account("curator.near", NearToken::from_millinear(10));
+        harness.registry.report(
+            id("listed.testnet"),
+            Category::Sanctions,
+            "ipfs://evidence".to_owned(),
+        );
     }
 }

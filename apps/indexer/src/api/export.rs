@@ -1,14 +1,14 @@
-//! Accountant CSV export and spend analytics.
+//! Accountant CSV export, with optional fiat valuation at an operator-supplied rate.
 
 use std::collections::BTreeMap;
 
-use axum::Json;
 use axum::extract::{Path, Query, State};
 use axum::http::header;
 use axum::response::IntoResponse;
-use serde_json::{Value, json};
 
-use super::{ApiResult, Params, Shared, account, format, nanos};
+use std::collections::HashMap;
+
+use super::{ApiError, ApiResult, Params, Shared, account, format, nanos};
 use crate::rpc::Chain;
 
 const CSV_HEADER: [&str; 14] = [
@@ -27,6 +27,53 @@ const CSV_HEADER: [&str; 14] = [
     "payment_id",
     "transaction_hash",
 ];
+
+/// Columns added when the export is valued in a fiat currency.
+const FIAT_HEADER: [&str; 5] = [
+    "fiat_currency",
+    "fiat_amount",
+    "fiat_rate",
+    "rate_source",
+    "rate_at",
+];
+
+/// An operator-supplied exchange rate. The export never fetches a rate itself, so every value
+/// can be traced to the source the operator named (for tax, for example Bank Indonesia JISDOR).
+struct Valuation {
+    currency: String,
+    rate: String,
+    source: String,
+    at: String,
+}
+
+/// Reads `fiat`, `rate`, `rate_source` and `rate_at`; all four or none.
+fn valuation(params: &HashMap<String, String>) -> ApiResult<Option<Valuation>> {
+    let keys = ["fiat", "rate", "rate_source", "rate_at"];
+    let given: Vec<Option<&String>> = keys.iter().map(|k| params.get(*k)).collect();
+    if given.iter().all(Option::is_none) {
+        return Ok(None);
+    }
+    let bad = |message: &str| ApiError::BadRequest(message.to_owned());
+    let [Some(currency), Some(rate), Some(source), Some(at)] = given[..] else {
+        return Err(bad("fiat, rate, rate_source and rate_at go together"));
+    };
+    if currency.len() != 3 || !currency.bytes().all(|b| b.is_ascii_uppercase()) {
+        return Err(bad("fiat: expected an ISO 4217 code such as IDR"));
+    }
+    let positive = rate.bytes().any(|b| (b'1'..=b'9').contains(&b));
+    if format::fiat_value("1", 0, rate).is_none() || !positive {
+        return Err(bad("rate: expected a positive decimal"));
+    }
+    if source.is_empty() || source.len() > 64 || at.is_empty() || at.len() > 32 {
+        return Err(bad("rate_source: 1 to 64 bytes, rate_at: 1 to 32 bytes"));
+    }
+    Ok(Some(Valuation {
+        currency: currency.clone(),
+        rate: rate.clone(),
+        source: source.clone(),
+        at: at.clone(),
+    }))
+}
 
 #[derive(sqlx::FromRow)]
 struct ExportRow {
@@ -51,6 +98,7 @@ pub async fn export_csv<C: Chain>(
     Query(params): Params,
 ) -> ApiResult<impl IntoResponse> {
     let vault_id = account(&vault, "vault")?;
+    let fiat = valuation(&params)?;
     let from = nanos(&params, "from")?;
     let to = nanos(&params, "to")?;
     let rows: Vec<ExportRow> = sqlx::query_as(
@@ -75,12 +123,18 @@ pub async fn export_csv<C: Chain>(
     let cells: Vec<Vec<Option<String>>> = rows
         .into_iter()
         .map(|r| {
-            let units = decimals
-                .get(&r.token)
-                .copied()
-                .flatten()
-                .map(|d| format::format_units(&r.amount, d));
-            vec![
+            let token_decimals = decimals.get(&r.token).copied().flatten();
+            let units = token_decimals.map(|d| format::format_units(&r.amount, d));
+            let fiat_cells = fiat.as_ref().map(|v| {
+                vec![
+                    Some(v.currency.clone()),
+                    token_decimals.and_then(|d| format::fiat_value(&r.amount, d, &v.rate)),
+                    Some(v.rate.clone()),
+                    Some(v.source.clone()),
+                    Some(v.at.clone()),
+                ]
+            });
+            let mut row = vec![
                 Some(format::iso_from_nanos(&r.created_at)),
                 Some(r.card_id.to_string()),
                 r.label,
@@ -95,70 +149,21 @@ pub async fn export_csv<C: Chain>(
                 r.memo,
                 r.payment_id.map(|id| id.to_string()),
                 r.tx_hash,
-            ]
+            ];
+            row.extend(fiat_cells.into_iter().flatten());
+            row
         })
         .collect();
+    let mut header: Vec<&str> = CSV_HEADER.to_vec();
+    if fiat.is_some() {
+        header.extend(FIAT_HEADER);
+    }
     let disposition = format!("attachment; filename=\"{vault_id}-payments.csv\"");
     Ok((
         [
             (header::CONTENT_TYPE, "text/csv; charset=utf-8".to_owned()),
             (header::CONTENT_DISPOSITION, disposition),
         ],
-        format::to_csv(&CSV_HEADER, &cells),
+        format::to_csv(&header, &cells),
     ))
-}
-
-pub async fn analytics<C: Chain>(
-    State(state): Shared<C>,
-    Path(vault): Path<String>,
-    Query(params): Params,
-) -> ApiResult<Json<Value>> {
-    let vault_id = account(&vault, "vault")?;
-    let from = nanos(&params, "from")?;
-    let to = nanos(&params, "to")?;
-    macro_rules! settled {
-        () => {
-            "vault_id = $1 and status = 'settled' and ($2::numeric is null or created_at >= $2::numeric) \
-             and ($3::numeric is null or created_at <= $3::numeric)"
-        };
-    }
-    let by_card: Vec<(i32, String, String)> = sqlx::query_as(concat!(
-        "select card_id, token, sum(amount)::text from payments where ",
-        settled!(),
-        " group by card_id, token order by card_id, token"
-    ))
-    .bind(&vault_id)
-    .bind(&from)
-    .bind(&to)
-    .fetch_all(&state.pool)
-    .await?;
-    let by_merchant: Vec<(String, String, String)> = sqlx::query_as(concat!(
-        "select merchant, token, sum(amount)::text from payments where ",
-        settled!(),
-        " group by merchant, token order by merchant, token"
-    ))
-    .bind(&vault_id)
-    .bind(&from)
-    .bind(&to)
-    .fetch_all(&state.pool)
-    .await?;
-    let by_day: Vec<(i64, String, String)> = sqlx::query_as(concat!("select div(created_at, 86400000000000)::bigint as day, token, sum(amount)::text from payments \
-         where ", settled!(), " group by day, token order by day, token"))
-    .bind(&vault_id)
-    .bind(&from)
-    .bind(&to)
-    .fetch_all(&state.pool)
-    .await?;
-    let rejections: Vec<(Option<String>, i64)> = sqlx::query_as(
-        "select reason, count(*) from payments where vault_id = $1 and status = 'rejected' group by reason order by reason",
-    )
-    .bind(&vault_id)
-    .fetch_all(&state.pool)
-    .await?;
-    Ok(Json(json!({
-        "by_card": by_card.into_iter().map(|(card_id, token, total)| json!({ "card_id": card_id, "token": token, "total": total })).collect::<Vec<_>>(),
-        "by_merchant": by_merchant.into_iter().map(|(merchant, token, total)| json!({ "merchant": merchant, "token": token, "total": total })).collect::<Vec<_>>(),
-        "by_day": by_day.into_iter().map(|(day, token, total)| json!({ "date": format::date_of_day(day), "token": token, "total": total })).collect::<Vec<_>>(),
-        "rejections": rejections.into_iter().map(|(reason, count)| json!({ "reason": reason, "count": count })).collect::<Vec<_>>(),
-    })))
 }

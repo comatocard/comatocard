@@ -442,3 +442,41 @@ async fn issue_71_a_sanctions_report_blocks_and_names_the_list() {
         json!(["OFAC-SDN (2026-03-21)"])
     );
 }
+
+#[tokio::test]
+async fn issue_72_values_the_export_at_an_operator_rate() {
+    let api = api().await;
+    let path = format!(
+        "/vaults/{VAULT}/export.csv?fiat=IDR&rate=16250.5&rate_source=BI-JISDOR&rate_at=2026-11-06"
+    );
+    let (status, _, body) = api.raw(&path).await;
+    assert_eq!(status, StatusCode::OK);
+    let mut lines = body.lines();
+    assert!(
+        lines
+            .next()
+            .unwrap()
+            .ends_with(",fiat_currency,fiat_amount,fiat_rate,rate_source,rate_at")
+    );
+    assert!(
+        lines
+            .next()
+            .unwrap()
+            .ends_with(",IDR,650020.00,16250.5,BI-JISDOR,2026-11-06"),
+        "40 tUSD at 16,250.5"
+    );
+    for bad in [
+        "fiat=IDR",
+        "fiat=idr&rate=1&rate_source=x&rate_at=y",
+        "fiat=IDR&rate=0&rate_source=x&rate_at=y",
+        "fiat=IDR&rate=abc&rate_source=x&rate_at=y",
+    ] {
+        assert_eq!(
+            api.raw(&format!("/vaults/{VAULT}/export.csv?{bad}"))
+                .await
+                .0,
+            StatusCode::BAD_REQUEST,
+            "{bad}"
+        );
+    }
+}

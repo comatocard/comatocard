@@ -33,6 +33,7 @@ Events follow NEP-297 and are logged as `EVENT_JSON:{...}`.
 | `card_frozen`, `card_unfrozen`, `card_revoked` | `card_id` |
 | `card_key_rotated` | `card_id`, `old_public_key` (null when the card had no key), `new_public_key` |
 | `card_transferred` | `card_id`, `old_holder`, `new_holder`; the card key is deleted |
+| `card_key_rejected` | `card_id`, `public_key`; AddKey failed, so the card has no key until a new one is set |
 | `approver_set` | `account_id`, `max_amount` (null means removed) |
 | `deposit` | `token`, `sender_id`, `amount` |
 | `withdrawal` | `token`, `receiver_id`, `amount`, `success` |
@@ -42,7 +43,7 @@ Events follow NEP-297 and are logged as `EVENT_JSON:{...}`.
 | `payment_declined` | `payment_id`, `approver_id` |
 | `payment_expired` | `payment_id` |
 | `payment_settled` | `payment_id`, `card_id`, `merchant`, `token`, `amount`, `reference` |
-| `payment_failed` | `payment_id`, `card_id`, `merchant`, `token`, `amount`, `cause` (`transfer_failed`, `merchant_blocked` or `registry_unavailable`) |
+| `payment_failed` | `payment_id`, `card_id`, `merchant`, `token`, `amount`, `cause` (`transfer_failed`, `merchant_blocked`, `registry_unavailable` or `queue_full`) |
 | `payment_rejected` | `card_id`, `merchant`, `token`, `amount`, `reason` (a `RejectReason` in snake case), `reference` |
 | `owner_proposed`, `owner_changed` | `owner_id` |
 

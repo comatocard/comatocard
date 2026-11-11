@@ -1,6 +1,6 @@
 # Vault contract specification
 
-Status: v1, contract version 0.3.0. Owner: contracts workstream. This file is the interface the indexer, agents and web app build against; change it through a PR first.
+Status: v1, contract version 0.4.0. Owner: contracts workstream. This file is the interface the indexer, agents and web app build against; change it through a PR first.
 
 ## Conventions
 - Amounts are `U128` strings in the token's smallest unit.
@@ -47,8 +47,7 @@ pub struct Card {
     pub holder: Option<AccountId>,        // token holder, None means the vault owner
     pub status: CardStatus,
     pub policy: Policy,
-    pub spent_day: U128,
-    pub spent_month: U128,
+    pub spend: Spend,                     // { day, day_spent, period, period_spent }, normalized by the views
     pub created_at: U64,
 }
 
@@ -75,19 +74,19 @@ Caller must be the owner. Owner methods never require an attached deposit, so th
 
 | Method | Effect |
 |-|-|
-| `create_card(public_key, label, kind, policy, gas_allowance: Option<U128>) -> CardId` | Adds a function-call key on the vault (receiver: vault, methods: `["pay"]`, allowance in yoctoNEAR, default 1 NEAR) and stores the card |
+| `create_card(public_key, label, kind, policy, gas_allowance: Option<U128>) -> CardId` | Adds a function-call key on the vault (receiver: vault, methods: `["pay"]`, allowance in yoctoNEAR, default 1 NEAR) and stores the card. The key is confirmed in a callback: when AddKey fails, for example because the key already exists on the account, the mapping is dropped and `card_key_rejected` is emitted |
 | `update_policy(card_id, policy)` | Replaces the policy; spend counters are kept |
 | `freeze_card(card_id)`, `unfreeze_card(card_id)` | Status change; frozen cards are rejected with `CardFrozen` |
 | `revoke_card(card_id)` | Deletes the access key, status becomes `Revoked`, final |
 | `rotate_card_key(card_id, new_public_key, gas_allowance)` | Deletes the old key and adds the new one; refills the allowance |
 | `set_approver(account_id, max_amount: Option<U128>)` | Adds, updates or removes (None) an approver |
-| `approve_payment(payment_id)` | Owner, or an approver whose limit covers the amount |
+| `approve_payment(payment_id)` | Owner, or an approver whose limit covers the amount. At least 80 Tgas. Refused after the approval TTL, outside the card validity window, when the card is not active or when the merchant rule no longer permits the merchant |
 | `decline_payment(payment_id)` | Owner, or an approver whose limit covers the amount |
 | `withdraw(token, amount, receiver_id)` | Transfers from the ledger; reverted in the callback on failure |
 | `set_accepted_token(token, accepted: bool)` | Manages accepted tokens |
 | `set_registry(registry: Option<AccountId>)` | Sets the counterparty registry |
 | `set_approval_ttl(ttl: U64)` | How long a queued payment waits before it can be expired |
-| `propose_owner(new_owner)`, `accept_owner()` | Two-step owner transfer; `accept_owner` is called by the new owner |
+| `propose_owner(new_owner)`, `accept_owner()` | Two-step owner transfer; `accept_owner` is called by the new owner. Nothing the previous owner set up keeps acting: every owner-held card is handed over to the new owner (key deleted, queued payments declined, `card_transferred`) and every approver is removed (`approver_set` with null). The new owner issues keys and approvers afresh |
 
 ## Card method
 `pay(merchant: AccountId, amount: U128, memo: Option<String>, reference: Option<String>) -> PaymentDecision`
@@ -98,8 +97,9 @@ Caller must be the owner. Owner methods never require an attached deposit, so th
 - `memo` max 256 bytes, `reference` max 64 bytes (an invoice id or an HTTP 402 challenge id; the merchant matches it against events).
 - Checks, in order: card status, validity window, token accepted, amount positive, merchant rule, per transaction limit, daily limit, monthly limit, balance, approval threshold, registry (when risk mode is not `Off`).
 - Funds and spend are reserved before any cross-contract call and released if the registry check or the transfer fails.
-- Card transactions attach 100 Tgas. The card key allowance (default 1 NEAR) is charged with the prepaid gas of every transaction, so a key covers about 100 payments at the minimum gas price before it must be rotated. The vault account pays this gas.
-- A registry error fails the payment closed with cause `registry_unavailable`.
+- `pay` requires at least 80 Tgas, enough for the longest path (registry check 5, registry callback 50, which starts the 10 Tgas transfer and its 25 Tgas callback), so no callback can run out of gas and strand a reservation. Card transactions attach 100 Tgas. The card key allowance (default 1 NEAR) is charged with the prepaid gas of every transaction, so a key covers about 100 payments at the minimum gas price before it must be rotated. The vault account pays this gas.
+- A registry error fails the payment closed with cause `registry_unavailable`, and so does a card with risk mode `block_only` or `strict` on a vault without a registry.
+- A card has at most 10 payments waiting for approval. A payment that would queue beyond that is rejected with `queue_full`; a strict mode re-queue into a full queue fails with cause `queue_full`.
 - In `strict` risk mode a flagged merchant moves a submitted payment back to the queue (`payment_submitted`, then `payment_queued` with cause `risk_flagged`). An approved payment is not queued again.
 
 ## Card tokens (NEP-171)
@@ -121,6 +121,7 @@ The methods implement the `near-contract-standards` traits `NonFungibleTokenCore
 |-|-|
 | `ft_on_transfer(sender_id, amount, msg) -> U128` | Credits the ledger for accepted tokens, returns the full amount for others |
 | `expire_payment(payment_id)` | Callable by anyone after the approval TTL; closes the request and emits `payment_expired` |
+| `recover_payment(payment_id)` | Callable by anyone after the approval TTL for a payment still waiting for the registry check; releases it with `payment_failed` and cause `registry_unavailable`. A payment whose transfer started is never recovered, since its tokens may have moved |
 
 ## View methods
 | Method | Returns |
@@ -128,7 +129,7 @@ The methods implement the `near-contract-standards` traits `NonFungibleTokenCore
 | `get_config()` | Owner, pending owner, accepted tokens, registry, factory, contract version |
 | `get_balances()` | Per token: available and reserved |
 | `list_cards(from_index, limit)`, `get_card(card_id)`, `get_card_by_key(public_key)` | Cards with current spend |
-| `list_payments(status, from_index, limit)`, `get_payment(payment_id)` | Queued and in-flight payments |
+| `list_payments(from_index, limit)`, `get_payment(payment_id)` | Queued and in-flight payments |
 | `list_approvers()` | Approvers and their limits |
 | `preview_payment(public_key, merchant, amount) -> PaymentPreview` | Dry run of the checks without the registry call, used by agents before signing: `{"status":"allowed"}`, `{"status":"needs_approval","cause":"threshold"}` or `{"status":"rejected","reason":"..."}` |
 
@@ -141,7 +142,7 @@ The methods implement the `near-contract-standards` traits `NonFungibleTokenCore
 The vault account pays for its own storage. The factory funds the initial balance; the dashboard warns when the vault NEAR balance cannot cover storage and gas for its cards.
 
 ## Upgrades
-Vaults use global contract code by publisher account. State migrations are versioned with `contract_version` in `get_config()`.
+Vaults use global contract code by hash: each vault keeps the code it was created with, and a new code version applies only to vaults created after it is published. Vaults created by the factory have no full-access key, so nobody can change their code. Updating by publisher account would push new code onto existing state, which breaks as soon as a stored type changes (the card layout changed between 0.1 and 0.3), and it would let the publisher change the rules of every vault. A future upgrade path needs versioned state migrations and the owner's consent per vault. `contract_version` in `get_config()` reports the code a vault runs.
 
 ## Test plan
 - Unit tests for every reject reason and every owner method's access control.

@@ -277,3 +277,92 @@ async fn keeps_running_after_a_source_failure() {
         .store(1, std::sync::atomic::Ordering::Relaxed);
     run_until(&pool, source, Some(100), EventBus::default(), 108).await;
 }
+
+#[tokio::test]
+async fn applies_the_remaining_lifecycle_events() {
+    let pool = support::database().await;
+    index_scenario(&pool).await;
+    let mut strict = support::policy();
+    strict["risk_mode"] = json!("strict");
+    let payment = |id: u64| json!({ "payment_id": id, "card_id": 0, "merchant": "flagged.testnet", "token": support::TOKEN, "amount": "70000000", "memo": null, "reference": null });
+    let mut queued = payment(3);
+    queued["cause"] = json!("risk_flagged");
+    let block = make_block(
+        200,
+        &[
+            outcome(
+                support::FACTORY,
+                vec![event_line(
+                    "vault_code_published",
+                    json!({ "code_hash": "HedzS3czoNHwASMvGiwbugSBCoFzvGtCPFDB2MQ94Q2N", "code_version": 2 }),
+                )],
+            ),
+            outcome(
+                VAULT,
+                vec![
+                    event_line("card_frozen", json!({ "card_id": 0 })),
+                    event_line("card_unfrozen", json!({ "card_id": 0 })),
+                    event_line(
+                        "card_policy_updated",
+                        json!({ "card_id": 0, "policy": strict }),
+                    ),
+                    event_line(
+                        "approver_set",
+                        json!({ "account_id": "council.testnet", "max_amount": "90000000" }),
+                    ),
+                    event_line("payment_submitted", payment(3)),
+                    event_line("payment_queued", queued),
+                    event_line(
+                        "payment_declined",
+                        json!({ "payment_id": 3, "approver_id": "council.testnet" }),
+                    ),
+                    event_line("payment_queued", {
+                        let mut p = payment(4);
+                        p["cause"] = json!("threshold");
+                        p
+                    }),
+                    event_line("payment_expired", json!({ "payment_id": 4 })),
+                    event_line("card_revoked", json!({ "card_id": 0 })),
+                ],
+            ),
+        ],
+    );
+    let (result, _) = index_block(&pool, &tracked(), 200, Some(&block))
+        .await
+        .unwrap();
+    assert_eq!((result.indexed, result.dead_letters), (11, 0));
+    let card: (String, String) = sqlx::query_as("select status, policy->>'risk_mode' from cards")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(card, ("revoked".to_owned(), "strict".to_owned()));
+    let max: String = sqlx::query_scalar("select max_amount::text from approvers")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(max, "90000000");
+    let later: Vec<(i64, String, Option<String>, Option<String>)> = sqlx::query_as(
+        "select payment_id, status, queue_cause, approver_id from payments where payment_id >= 3 order by payment_id",
+    )
+    .fetch_all(&pool)
+    .await
+    .unwrap();
+    assert_eq!(
+        later,
+        [
+            (
+                3,
+                "declined".into(),
+                Some("risk_flagged".into()),
+                Some("council.testnet".into())
+            ),
+            (4, "expired".into(), Some("threshold".into()), None),
+        ],
+        "a strict re-queue updates the stored payment instead of adding a row"
+    );
+    let vaults: i64 = sqlx::query_scalar("select count(*) from vaults")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(vaults, 1, "vault_code_published has no projection");
+}

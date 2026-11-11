@@ -1,0 +1,11 @@
+{
+  "name": "@comatocard/indexer",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "lint": "cargo clippy -p comatocard-indexer --all-targets -- -D warnings && cargo fmt -p comatocard-indexer -- --check",
+    "test": "cargo test -p comatocard-indexer --lib",
+    "test:integration": "cargo test -p comatocard-indexer --tests",
+    "build": "cargo build -p comatocard-indexer --locked"
+  }
+}

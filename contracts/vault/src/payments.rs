@@ -13,7 +13,8 @@ use crate::types::{
     PaymentId, PaymentStatus, QueueCause, RegistryStatus, RiskMode,
 };
 use crate::{
-    GAS_CALLBACK, GAS_FT_TRANSFER, GAS_REGISTRY_CHECK, Vault, VaultExt, events, events::Rejection,
+    GAS_CALLBACK, GAS_FT_TRANSFER, GAS_REGISTRY_CALLBACK, GAS_REGISTRY_CHECK, MIN_PAYMENT_GAS,
+    Vault, VaultExt, events, events::Rejection,
 };
 
 #[near]
@@ -33,6 +34,7 @@ impl Vault {
             env::predecessor_account_id() == env::current_account_id(),
             "pay must be signed with a card key"
         );
+        assert_payment_gas();
         require!(
             memo.as_ref().is_none_or(|m| m.len() <= MAX_MEMO_LEN),
             "memo is too long"
@@ -98,6 +100,7 @@ impl Vault {
     /// Approves a queued payment. Callable by the owner or by an approver whose limit covers the
     /// amount. The card must still be active.
     pub fn approve_payment(&mut self, payment_id: PaymentId) {
+        assert_payment_gas();
         let approver = env::predecessor_account_id();
         let payment = self.queued_payment(payment_id);
         self.assert_can_decide(&approver, payment.amount.0);
@@ -135,6 +138,25 @@ impl Vault {
         self.release(&payment);
         self.payments.remove(&payment_id);
         events::payment_expired(payment_id);
+    }
+
+    /// Releases a payment whose registry check never completed, once the approval TTL passed.
+    /// Callable by anyone. No transfer was started, so the funds are free to return.
+    pub fn recover_payment(&mut self, payment_id: PaymentId) {
+        let payment = self
+            .payments
+            .get(&payment_id)
+            .cloned()
+            .unwrap_or_else(|| env::panic_str("payment not found"));
+        require!(
+            payment.status == PaymentStatus::Checking,
+            "only a payment stuck in the registry check can be recovered"
+        );
+        require!(
+            env::block_timestamp() >= payment.created_at.0.saturating_add(self.approval_ttl),
+            "approval time has not run out yet"
+        );
+        self.fail(&payment, FailureCause::RegistryUnavailable);
     }
 
     #[private]
@@ -177,6 +199,13 @@ impl Vault {
             self.fail(&payment, FailureCause::TransferFailed);
         }
     }
+}
+
+fn assert_payment_gas() {
+    require!(
+        env::prepaid_gas() >= MIN_PAYMENT_GAS,
+        "attach at least 80 Tgas so the settlement callbacks cannot run out of gas"
+    );
 }
 
 impl Vault {
@@ -272,7 +301,7 @@ impl Vault {
                     .get_status(payment.merchant.clone())
                     .then(
                         Self::ext(env::current_account_id())
-                            .with_static_gas(GAS_CALLBACK)
+                            .with_static_gas(GAS_REGISTRY_CALLBACK)
                             .on_registry_checked(payment_id, approved),
                     )
                     .detach();

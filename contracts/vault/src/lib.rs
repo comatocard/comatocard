@@ -44,6 +44,13 @@ pub const CARD_TX_GAS_TGAS: u64 = 100;
 pub(crate) const GAS_FT_TRANSFER: Gas = Gas::from_tgas(10);
 pub(crate) const GAS_REGISTRY_CHECK: Gas = Gas::from_tgas(5);
 pub(crate) const GAS_CALLBACK: Gas = Gas::from_tgas(25);
+/// The registry callback starts the token transfer and its callback itself, so it needs their
+/// gas plus its own: 10 + 25 + 15 Tgas.
+pub(crate) const GAS_REGISTRY_CALLBACK: Gas = Gas::from_tgas(50);
+/// Smallest prepaid gas `pay` and `approve_payment` accept. It covers the longest path (registry
+/// check, registry callback, transfer, transfer callback) so no callback can run out of gas and
+/// strand a reservation.
+pub const MIN_PAYMENT_GAS: Gas = Gas::from_tgas(80);
 
 #[near]
 #[derive(BorshStorageKey)]

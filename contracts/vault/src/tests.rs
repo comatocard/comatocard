@@ -847,3 +847,48 @@ fn metadata_follows_nep_177() {
     let token = harness.vault.nft_token("0".to_owned()).unwrap();
     token.metadata.unwrap().assert_valid();
 }
+
+#[test]
+#[should_panic(expected = "attach at least 80 Tgas")]
+fn issue_58_pay_requires_gas_for_every_callback() {
+    let mut harness = with_risk_mode(RiskMode::BlockOnly);
+    testing_env!(
+        harness
+            .context
+            .predecessor_account_id(vault_id())
+            .signer_account_pk(card_key())
+            .prepaid_gas(near_sdk::Gas::from_tgas(50))
+            .build()
+    );
+    harness.vault.pay(shop(), U128(10), None, None);
+}
+
+#[test]
+fn issue_58_a_stuck_registry_check_is_recovered_after_the_ttl() {
+    let mut harness = with_risk_mode(RiskMode::BlockOnly);
+    harness.pay(10);
+    assert_eq!(harness.reserved(), 10);
+    harness.at(NOW + crate::DEFAULT_APPROVAL_TTL_NS);
+    harness.as_account(shop());
+    harness.vault.recover_payment(0);
+    assert!(harness.vault.get_payment(0).is_none());
+    assert_eq!((harness.available(), harness.reserved()), (1_000, 0));
+    assert_eq!(harness.day_spent(), 0);
+}
+
+#[test]
+#[should_panic(expected = "approval time has not run out yet")]
+fn issue_58_recovery_waits_for_the_ttl() {
+    let mut harness = with_risk_mode(RiskMode::BlockOnly);
+    harness.pay(10);
+    harness.vault.recover_payment(0);
+}
+
+#[test]
+#[should_panic(expected = "only a payment stuck in the registry check can be recovered")]
+fn issue_58_a_transfer_in_flight_is_never_recovered() {
+    let mut harness = Harness::new();
+    harness.pay(10);
+    harness.at(NOW + crate::DEFAULT_APPROVAL_TTL_NS);
+    harness.vault.recover_payment(0);
+}

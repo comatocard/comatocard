@@ -3,7 +3,6 @@
 use near_sdk::json_types::U128;
 use near_sdk::{AccountId, NearToken, PromiseError, PromiseOrValue, env, near, require};
 
-use crate::ext::ext_ft;
 use crate::types::TokenBalance;
 use crate::{GAS_CALLBACK, GAS_FT_TRANSFER, Vault, VaultExt, events};
 
@@ -38,7 +37,7 @@ impl Vault {
             "insufficient available balance"
         );
         balance.available = (balance.available.0 - amount.0).into();
-        ext_ft::ext(token.clone())
+        near_contract_standards::fungible_token::core::ext_ft_core::ext(token.clone())
             .with_attached_deposit(NearToken::from_yoctonear(1))
             .with_static_gas(GAS_FT_TRANSFER)
             .ft_transfer(receiver_id.clone(), amount, None)

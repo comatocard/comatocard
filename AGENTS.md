@@ -19,7 +19,7 @@ Rules for every coding agent (Claude Code, Codex, others) and every human contri
 ## Testing
 Every behaviour change ships with tests in the right layer.
 - Unit: next to the code (`#[cfg(test)] mod tests` in Rust, `*.test.ts` beside the module). No network, no chain, no database server.
-- Integration: contracts in `contracts/<name>/tests/` against `near-sandbox`; apps in `apps/<name>/test/integration/` against real dependencies run in-process (PGlite for Postgres, recorded blocks for neardata). Run with `pnpm test:integration`.
+- Integration: contracts in `contracts/<name>/tests/` against `near-sandbox`; TypeScript apps in `apps/<name>/test/integration/` against real dependencies run in-process; the Rust indexer in `apps/indexer/tests/` against Postgres started by testcontainers (needs Docker) and recorded blocks for neardata. Run with `pnpm test:integration`.
 - Regression: one test per fixed bug, named after its issue (`issue_42_*.rs`, `issue-42-*.test.ts`), plus golden snapshots for event JSON and API responses. A regression test is never deleted or loosened to make CI pass.
 
 ## Repository map

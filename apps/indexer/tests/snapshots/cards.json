@@ -1,0 +1,24 @@
+[
+  {
+    "card_id": 0,
+    "created_at": "1794000101000000000",
+    "holder_id": null,
+    "kind": "agent",
+    "label": "research agent",
+    "policy": {
+      "approval_threshold": "50000000",
+      "daily_limit": "150000000",
+      "expires_at": null,
+      "merchants": "any",
+      "monthly_limit": "1000000000",
+      "per_tx_limit": "100000000",
+      "risk_mode": "block_only",
+      "token": "tusd.comatocard.testnet",
+      "valid_from": null
+    },
+    "public_key": "ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp",
+    "status": "active",
+    "updated_at": "1794000101000000000",
+    "vault_id": "alice.factory.comatocard.testnet"
+  }
+]

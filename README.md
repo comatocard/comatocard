@@ -12,7 +12,7 @@ Status: in development for NEAR HACKATHON (tracks `realworld`, `security`, `agen
 | `apps/web` | Owner dashboard, card management, approvals, merchant checkout |
 | `apps/merchant` | Demo merchant with an HTTP 402 resource |
 | `apps/agents` | Spending agent, treasury agent, policy assistant, attack demo |
-| `apps/indexer` | Event indexer with REST and WebSocket API |
+| `apps/indexer` | Event indexer in Rust with REST and WebSocket API |
 | `apps/relayer` | Meta transaction relayer for owner actions |
 | `contracts/vault` | Vault contract |
 | `contracts/factory` | Vault factory using global contract code |

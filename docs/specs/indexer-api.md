@@ -1,6 +1,6 @@
 # Indexer API specification
 
-Status: v1, implemented in `apps/indexer`. Owner: indexer workstream.
+Status: v1, implemented in Rust in `apps/indexer`. Owner: indexer workstream.
 
 ## Ingestion
 - Source: neardata finalized blocks (`/v0/block/:height`, `/v0/last_block/final`), testnet or mainnet by configuration.
@@ -36,6 +36,7 @@ All responses are JSON unless noted. Lists use cursor pagination (`?cursor=&limi
 `GET /stream?vault=<id>` or `?merchant=<id>`: pushes each validated event as `{ "contract_id", "event", "data", "block_height", "tx_hash", "timestamp" }` after it is committed.
 
 ## Operations
-- Postgres in Docker Compose for local development.
-- Configuration through environment variables: network, factory id, registry id, database URL, neardata API key (optional).
+- Postgres and the indexer image in Docker Compose (`apps/indexer/docker-compose.yml`).
+- Configuration through environment variables: network, factory id, registry id, database URL, neardata API key (recommended for deployments), head poll interval.
+- Invalid requests answer 400 with `{ "error": "invalid request", "details": "<field>: <problem>" }`.
 - Metrics: indexed height, lag, events per type, dead letters.

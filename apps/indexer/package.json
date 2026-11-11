@@ -1,39 +1,11 @@
 {
   "name": "@comatocard/indexer",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "private": true,
-  "description": "Indexes Comatocard events from NEAR into Postgres and serves REST and WebSocket APIs",
-  "license": "MIT",
-  "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "biome check .",
-    "test": "vitest run --project unit",
-    "test:integration": "vitest run --coverage",
-    "db:generate": "drizzle-kit generate",
-    "dev": "tsx watch src/main.ts",
-    "start": "node dist/main.js"
-  },
-  "dependencies": {
-    "@comatocard/sdk": "workspace:*",
-    "@hono/node-server": "2.1.6",
-    "drizzle-orm": "0.45.4",
-    "hono": "4.13.17",
-    "pino": "10.4.0",
-    "postgres": "4.1.0",
-    "ws": "8.22.2",
-    "zod": "4.6.7"
-  },
-  "devDependencies": {
-    "@comatocard/config": "workspace:*",
-    "@electric-sql/pglite": "0.5.16",
-    "@types/node": "26.6.6",
-    "@types/ws": "8.18.2",
-    "@vitest/coverage-v8": "5.1.0",
-    "drizzle-kit": "0.31.11",
-    "tsx": "4.23.15",
-    "typescript": "7.0.2",
-    "vitest": "5.1.0"
+    "lint": "cargo clippy -p comatocard-indexer --all-targets -- -D warnings && cargo fmt -p comatocard-indexer -- --check",
+    "test": "cargo test -p comatocard-indexer --lib",
+    "test:integration": "cargo test -p comatocard-indexer --tests",
+    "build": "cargo build -p comatocard-indexer --locked"
   }
 }

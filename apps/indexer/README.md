@@ -1,24 +1,33 @@
 # apps/indexer
 
-Polls finalized NEAR blocks from neardata, validates Comatocard events with `@comatocard/sdk`, maintains Postgres projections and serves a REST and WebSocket API, including counterparty risk verdicts and an accountant CSV export.
+Rust service that follows finalized NEAR blocks from neardata, validates Comatocard events against the contract types, keeps Postgres projections and serves the REST and WebSocket API, including counterparty risk verdicts and an accountant CSV export.
 
 Workstream A. Specification: [indexer API](../../docs/specs/indexer-api.md).
 
 ## Run locally
-1. `docker compose -f apps/indexer/docker-compose.yml up -d`, then `cp apps/indexer/.env.example apps/indexer/.env` and set `FACTORY_ID` and `REGISTRY_ID`.
-2. `pnpm turbo run build --filter=@comatocard/indexer`, then from `apps/indexer`: `node --env-file=.env dist/main.js`. Migrations run on start.
+1. `docker compose -f apps/indexer/docker-compose.yml up -d postgres`, then `cp apps/indexer/.env.example apps/indexer/.env` and set `FACTORY_ID` and `REGISTRY_ID`.
+2. `set -a && . apps/indexer/.env && set +a && cargo run -p comatocard-indexer`. Migrations run on start.
 3. `curl localhost:4000/health` shows the indexed height and the lag behind the chain.
 4. `curl "localhost:4000/vaults?owner=<account>"` lists the vaults of an owner once their `vault_created` events are indexed.
 
+Container: `docker compose -f apps/indexer/docker-compose.yml up --build` runs Postgres and the indexer against testnet. The image is built from the repository root with `apps/indexer/Dockerfile`.
+
+## Footprint
+Measured on testnet on 2026-11-11 while following the chain: 6 to 9 MB resident memory and under 1.5% of one CPU. The TypeScript indexer it replaced used 80 to 100 MB.
+
+The neardata free tier allows about 3 requests per second per IP. Testnet makes about 1.7 blocks per second, so the indexer reads the head height from the `last_block/final` redirect without following it and checks the head every 2 seconds at the tip. A shared or throttled IP still meets `429` responses; set `NEARDATA_API_KEY` for a deployment.
+
 ## Tests
-- `pnpm test`: unit tests (extraction, neardata client, risk rules, CSV, pagination, configuration).
-- `pnpm test:integration`: recorded blocks through the runner into PGlite, the full API with snapshot regressions, and the WebSocket stream; reports combined coverage.
+- `pnpm test` (`cargo test --lib`): event parsing against the contract golden fixtures, the neardata client on a paused clock (pacing, `Retry-After`, redirects, shutdown), risk rules, formatting, configuration.
+- `pnpm test:integration` (`cargo test --tests`, needs Docker): ingestion and the full API against a real Postgres started by testcontainers. The API snapshots in `tests/snapshots` were recorded by the TypeScript indexer and must keep matching.
 
 ## Layout
 | Path | Purpose |
 |-|-|
-| `src/neardata` | Block source, block schema, log extraction |
+| `src/events.rs` | NEP-297 parsing into contract types |
+| `src/neardata` | Block types, client, log extraction |
 | `src/ingest` | Runner loop and projections |
-| `src/db` | Drizzle schema; SQL migrations live in `drizzle/` |
-| `src/risk` | Signals, verdict rules, chain reader |
-| `src/api` | Hono routes, CSV, pagination, stream filter |
+| `src/risk.rs` | Signals and verdict rules |
+| `src/rpc.rs` | NEAR RPC reads: accounts and token decimals |
+| `src/api` | Axum routes, CSV and cursor formatting, stream filter |
+| `migrations` | SQL schema, applied by sqlx on start |

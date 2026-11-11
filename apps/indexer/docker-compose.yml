@@ -14,5 +14,21 @@ services:
       interval: 5s
       retries: 10
 
+  indexer:
+    build:
+      context: ../..
+      dockerfile: apps/indexer/Dockerfile
+    environment:
+      NETWORK: testnet
+      FACTORY_ID: factory.comatocard.testnet
+      REGISTRY_ID: registry.comatocard.testnet
+      DATABASE_URL: postgres://comatocard:comatocard@postgres:5432/comatocard
+      NEARDATA_API_KEY: ${NEARDATA_API_KEY:-}
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres-data:

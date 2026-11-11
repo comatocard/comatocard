@@ -1,6 +1,7 @@
 [workspace]
 resolver = "3"
 members = [
+    "apps/indexer",
     "contracts/common",
     "contracts/factory",
     "contracts/mock-ft",
@@ -47,3 +48,11 @@ lto = true
 debug = false
 panic = "abort"
 overflow-checks = true
+
+# Native server binaries (the indexer): full speed and unwinding panics, unlike the size-tuned
+# contract profile above. Used by `apps/indexer/Dockerfile`.
+[profile.server]
+inherits = "release"
+opt-level = 3
+lto = "thin"
+panic = "unwind"

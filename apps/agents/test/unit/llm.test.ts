@@ -14,7 +14,11 @@ describe("openAiChat", () => {
     const [url, init] = fetch.mock.calls[0] ?? [];
     expect(url).toBe("https://ai.example/v1/chat/completions");
     expect(new Headers(init?.headers).get("authorization")).toBe("Bearer k");
-    expect(JSON.parse(String(init?.body))).toMatchObject({ model: "m", temperature: 0 });
+    expect(JSON.parse(String(init?.body))).toMatchObject({
+      model: "m",
+      messages: [{ role: "user", content: "hi" }],
+      tools: [],
+    });
   });
 
   it("throws on HTTP errors and malformed completions", async () => {

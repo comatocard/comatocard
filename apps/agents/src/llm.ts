@@ -41,7 +41,7 @@ export function openAiChat(options: {
     const response = await fetchFn(`${options.baseUrl.replace(/\/$/, "")}/chat/completions`, {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${options.apiKey}` },
-      body: JSON.stringify({ model: options.model, messages, tools, temperature: 0 }),
+      body: JSON.stringify({ model: options.model, messages, tools }),
       signal: AbortSignal.timeout(120_000),
     });
     if (!response.ok) {

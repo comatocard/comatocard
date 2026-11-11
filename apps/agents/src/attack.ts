@@ -18,7 +18,7 @@ const unsetIfEmpty = (value: unknown) => (value === "" ? undefined : value);
 const llmEnv = z
   .object({
     NEAR_AI_API_KEY: z.string().min(1),
-    NEAR_AI_MODEL: z.preprocess(unsetIfEmpty, z.string().default("Qwen/Qwen3.6-35B-A3B-FP8")),
+    NEAR_AI_MODEL: z.preprocess(unsetIfEmpty, z.string().default("openai/gpt-4.1-mini")),
     NEAR_AI_BASE_URL: z.preprocess(unsetIfEmpty, z.url().default("https://cloud-api.near.ai/v1")),
   })
   .parse(process.env);

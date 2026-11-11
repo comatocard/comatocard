@@ -56,6 +56,7 @@ Demo post on X: built at NEAR HACKATHON, tags `@NEARProtocol` and `#NEARHackatho
 | NEAR docs | https://docs.near.org |
 | NEAR Intents and 1Click | https://docs.near-intents.org |
 | NEAR AI Cloud | https://docs.near.ai/cloud/quickstart |
+| NEAR AI credits: $10 with a separate API key after joining NEAR Builders (Q-000) | https://nearbuilders.org/join, https://nearbuilders.org/dashboard |
 | Builder resources, testnet faucet | https://nearbuilders.org/build, https://near-faucet.io |
 | Partner API keys (1Click JWT) | https://partners.near-intents.org |
 | Community | https://discord.gg/nearprotocol, https://t.me/nearbuilderschat |

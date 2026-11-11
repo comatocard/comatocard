@@ -2,10 +2,11 @@
 // Biome stays the formatter and the general linter; ESLint runs only the Sonar rule set.
 // typescript-eslint parses with TypeScript 6 (a dependency of this package) because TypeScript 7,
 // which compiles the workspaces, no longer exposes the JavaScript API a parser needs.
+import { defineConfig } from "eslint/config";
 import sonarjs from "eslint-plugin-sonarjs";
 import tseslint from "typescript-eslint";
 
-export default tseslint.config(
+export default defineConfig(
   { ignores: ["**/dist/**", "**/coverage/**", "**/node_modules/**"] },
   {
     files: ["**/*.ts"],

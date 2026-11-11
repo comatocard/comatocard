@@ -5,7 +5,8 @@ use near_api::{AccountId, NearGas, NearToken};
 use serde_json::{Value, json};
 use testkit::Env;
 use testkit::comatocard::{
-    UNIT, balance, deploy_token, deploy_vault, fund_vault, has_event, issue_card, pay, policy, tusd,
+    CardKey, UNIT, balance, deploy_token, deploy_vault, fund_vault, has_event, issue_card, pay,
+    policy, tusd,
 };
 /// Default Sputnik proposal bond: 1 NEAR, which must be attached exactly.
 const PROPOSAL_BOND: NearToken = NearToken::from_near(1);
@@ -125,6 +126,24 @@ async fn dao_takes_ownership_and_approves_large_payments() -> anyhow::Result<()>
     assert!(has_event(&logs, "owner_changed"));
     let config: Value = env.view(&vault, "get_config", json!({})).await?;
     assert_eq!(config["owner"], dao.as_str());
+
+    // Keys alice issued do not survive the handover (#62); the DAO issues a new one.
+    assert!(
+        pay(&env, &vault, &card, &shop, 1, None).await.is_err(),
+        "the previous owner's card key is deleted"
+    );
+    let secret = near_api::signer::generate_secret_key()?;
+    let card = CardKey {
+        public_key: secret.public_key().to_string(),
+        signer: near_api::Signer::from_secret_key(secret)?,
+    };
+    let rotate = function_call(
+        &vault,
+        "rotate_card_key",
+        &json!({ "card_id": 0, "new_public_key": card.public_key, "gas_allowance": null }),
+    );
+    let logs = propose_and_approve(&env, &dao, &council, rotate).await?;
+    assert!(has_event(&logs, "card_key_rotated"));
 
     // A payment above the threshold waits for the DAO.
     let decision: Value = pay(&env, &vault, &card, &shop, 50, None).await?.json()?;

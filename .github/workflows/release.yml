@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    name: Attach contracts and publish the SDK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          registry-url: https://npm.pkg.github.com
+          scope: "@comatocard"
+      - name: Install Rust toolchain from rust-toolchain.toml
+        run: rustup toolchain install
+      - name: Install cargo-near
+        run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/near/cargo-near/releases/download/cargo-near-v0.23.0/cargo-near-installer.sh | sh
+      - run: pnpm install --frozen-lockfile
+      - name: Build contracts and SDK
+        run: pnpm turbo run build --filter='./contracts/*' --filter=@comatocard/sdk
+      - name: Collect wasm with checksums and NEAR code hashes
+        run: |
+          mkdir release
+          cp target/near/*/*.wasm release/
+          cd release
+          sha256sum ./*.wasm > SHA256SUMS
+          python3 -I ../scripts/code-hash.py ./*.wasm > CODE_HASHES
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" release/* --clobber
+      - name: Publish @comatocard/sdk to GitHub Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+        run: pnpm --filter @comatocard/sdk publish --no-git-checks

@@ -1,9 +1,13 @@
 {
   "name": "@comatocard/sdk",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.4.0",
   "description": "Comatocard contract types, event schemas and vault client",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/comatocard/comatocard.git",
+    "directory": "packages/sdk"
+  },
   "type": "module",
   "sideEffects": false,
   "exports": {
@@ -15,6 +19,9 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",

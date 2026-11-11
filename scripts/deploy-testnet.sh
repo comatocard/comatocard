@@ -101,17 +101,7 @@ else
 fi
 
 log "Publishing the vault code as a global contract"
-expected_hash="$(python3 -I -c '
-import hashlib, sys
-alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-digest = hashlib.sha256(open(sys.argv[1], "rb").read()).digest()
-n = int.from_bytes(digest, "big")
-out = ""
-while n:
-    n, r = divmod(n, 58)
-    out = alphabet[r] + out
-print("1" * (len(digest) - len(digest.lstrip(b"\0"))) + out)
-' "${WASM_DIR}/vault/vault.wasm")"
+expected_hash="$(python3 -I "${REPO_ROOT}/scripts/code-hash.py" "${WASM_DIR}/vault/vault.wasm" | cut -d" " -f1)"
 if view "${FACTORY}" get_config '{}' | grep -q "\"${expected_hash}\""; then
   echo "vault code ${expected_hash} already published"
 else

@@ -60,8 +60,8 @@ fn millis(nanoseconds: u64) -> String {
 
 #[near]
 impl Vault {
-    /// Moves the card token to `receiver_id` and deletes the card key, so the previous holder
-    /// can no longer pay. The card is unusable until the new holder calls `set_card_key`.
+    /// Moves the card token to `receiver_id`, deletes the card key and declines the queued
+    /// payments of the card, so nothing the previous holder asked for can be approved later. The card is unusable until the new holder calls `set_card_key`.
     #[payable]
     pub fn nft_transfer(
         &mut self,
@@ -88,6 +88,7 @@ impl Vault {
             self.card_keys.remove(&key);
             crate::cards::delete_card_key(key);
         }
+        self.decline_queued(id, &holder);
         events::card_transferred(id, &holder, &receiver_id);
     }
 

@@ -714,3 +714,26 @@ fn revoke_burns_a_transferred_card() {
     assert!(harness.vault.nft_token("0".to_owned()).is_none());
     assert_eq!(harness.vault.nft_total_supply().0, 0);
 }
+
+#[test]
+fn issue_49_transfer_declines_queued_payments() {
+    let mut harness = Harness::new();
+    let PaymentDecision::Submitted {
+        payment_id: in_flight,
+    } = harness.pay(10)
+    else {
+        panic!("small payment should be submitted");
+    };
+    let PaymentDecision::Queued {
+        payment_id: queued, ..
+    } = harness.pay(60)
+    else {
+        panic!("large payment should be queued");
+    };
+    harness.transfer(owner(), agent());
+    assert!(has_event("payment_declined"));
+    assert!(harness.vault.get_payment(queued).is_none());
+    assert!(harness.vault.get_payment(in_flight).is_some());
+    assert_eq!(harness.reserved(), 10);
+    assert_eq!(harness.day_spent(), 10);
+}

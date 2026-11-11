@@ -105,7 +105,8 @@ impl Vault {
     }
 
     /// Approves a queued payment. Callable by the owner or by an approver whose limit covers the
-    /// amount. The card must still be active.
+    /// amount, within the approval TTL. The card must still be active and inside its validity
+    /// window, and the merchant must still be allowed.
     pub fn approve_payment(&mut self, payment_id: PaymentId) {
         assert_payment_gas();
         let approver = env::predecessor_account_id();
@@ -118,6 +119,21 @@ impl Vault {
         require!(
             card.status == CardStatus::Active,
             "card is not active, decline the payment instead"
+        );
+        let now = env::block_timestamp();
+        require!(
+            now < payment.created_at.0.saturating_add(self.approval_ttl),
+            "approval time ran out, expire the payment instead"
+        );
+        let policy = &card.policy;
+        require!(
+            policy.valid_from.is_none_or(|from| now >= from.0)
+                && policy.expires_at.is_none_or(|until| now < until.0),
+            "card is outside its validity window, decline the payment instead"
+        );
+        require!(
+            policy.merchants.permits(&payment.merchant),
+            "merchant is no longer allowed, decline the payment instead"
         );
         let mut payment = payment;
         self.unqueue(&payment);
@@ -316,7 +332,8 @@ impl Vault {
     }
 
     /// Sends a reserved payment on: through the registry when the card asks for it, otherwise
-    /// straight to the transfer.
+    /// straight to the transfer. A card that asks for a check on a vault without a registry fails
+    /// closed.
     fn dispatch(&mut self, mut payment: Payment, approved: bool) {
         match (&self.registry, self.risk_mode(&payment)) {
             (Some(registry), RiskMode::BlockOnly | RiskMode::Strict) => {
@@ -332,6 +349,9 @@ impl Vault {
                     )
                     .detach();
                 self.payments.insert(payment_id, payment);
+            }
+            (None, RiskMode::BlockOnly | RiskMode::Strict) => {
+                self.fail(&payment, FailureCause::RegistryUnavailable);
             }
             _ => self.transfer(payment),
         }

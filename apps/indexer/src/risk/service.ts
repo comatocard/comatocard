@@ -1,7 +1,8 @@
+import type { RiskAssessment } from "@comatocard/sdk";
 import { and, count, eq, min, ne } from "drizzle-orm";
 import type { Database } from "../db/client.js";
 import { accountCode, payments, registryReports, registryStatuses } from "../db/schema.js";
-import { assessRisk, type RiskAssessment } from "./assess.js";
+import { assessRisk } from "./assess.js";
 import type { ChainReader } from "./chain.js";
 
 export interface RiskServiceOptions {

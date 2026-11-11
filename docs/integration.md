@@ -37,7 +37,7 @@ Amounts are strings in the token's smallest unit; tUSD has 6 decimals, so `"2500
 
 ## Counterparty risk
 - Cards with `risk_mode` `block_only` or `strict` make the vault ask the registry before paying. `blocked` merchants fail with `merchant_blocked`; in `strict` mode `flagged` merchants are queued with cause `risk_flagged`.
-- Agents should also ask the indexer before signing: `GET /risk/<merchant>?vault=<vault>` returns `allow`, `warn` or `block` with reasons. Refuse on `block`, ask a human on `warn`.
+- Agents should also ask the indexer before signing: `GET /risk/<merchant>?vault=<vault>` returns `allow`, `warn` or `block` with reasons; parse it with `riskAssessment` from the SDK. Refuse on `block`, ask a human on `warn`.
 - Anyone can file a report on the registry (`report` with category and evidence URI, storage paid by the reporter); curators decide the status.
 
 ## SDK (`@comatocard/sdk`)

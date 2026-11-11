@@ -1,0 +1,5 @@
+date_utc,card_id,card_label,merchant,token,amount,amount_raw,status,queue_cause,reason,reference,memo,payment_id,transaction_hash
+2026-11-06T21:21:43.000Z,0,research agent,shop.testnet,tusd.comatocard.testnet,40,40000000,settled,,,inv-1,api credits,0,tx-pay-0
+2026-11-06T21:21:44.000Z,0,research agent,travel.testnet,tusd.comatocard.testnet,60,60000000,settled,threshold,,,,1,tx-pay-1
+2026-11-06T21:21:45.000Z,0,research agent,shop.testnet,tusd.comatocard.testnet,101,101000000,rejected,,per_tx_limit,inv-2,,,tx-105-0
+2026-11-06T21:21:47.000Z,0,research agent,scam.testnet,tusd.comatocard.testnet,10,10000000,failed,,merchant_blocked,,,2,tx-pay-2

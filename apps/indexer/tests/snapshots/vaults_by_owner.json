@@ -1,0 +1,9 @@
+[
+  {
+    "code_version": 1,
+    "created_at": "1794000100000000000",
+    "factory_id": "factory.comatocard.testnet",
+    "owner_id": "alice.testnet",
+    "vault_id": "alice.factory.comatocard.testnet"
+  }
+]

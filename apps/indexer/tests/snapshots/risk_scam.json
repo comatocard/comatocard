@@ -1,0 +1,30 @@
+{
+  "account_id": "scam.testnet",
+  "reasons": [
+    {
+      "code": "registry_blocked",
+      "detail": "a registry curator blocked this account",
+      "level": "block"
+    },
+    {
+      "code": "first_payment",
+      "detail": "this vault has never paid this account",
+      "level": "info"
+    },
+    {
+      "code": "never_paid",
+      "detail": "no indexed vault has paid this account before",
+      "level": "info"
+    }
+  ],
+  "signals": {
+    "code_changed_at": null,
+    "exists": true,
+    "first_paid_at": null,
+    "is_contract": false,
+    "prior_payments": 0,
+    "registry_status": "blocked",
+    "report_count": 1
+  },
+  "verdict": "block"
+}

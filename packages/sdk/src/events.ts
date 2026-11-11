@@ -48,6 +48,7 @@ export const eventData = {
     old_public_key: publicKey.nullable(),
     new_public_key: publicKey,
   }),
+  card_key_rejected: z.strictObject({ card_id: id, public_key: publicKey }),
   card_transferred: z.strictObject({
     card_id: id,
     old_holder: accountId,

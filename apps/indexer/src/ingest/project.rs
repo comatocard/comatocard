@@ -165,6 +165,18 @@ pub async fn project(
             .execute(&mut *db)
             .await?;
         }
+        EventData::CardKeyRejected(e) => {
+            sqlx::query(
+                "update cards set public_key = null, updated_at = $1::numeric \
+                 where vault_id = $2 and card_id = $3 and public_key = $4",
+            )
+            .bind(at)
+            .bind(vault)
+            .bind(int(e.card_id))
+            .bind(e.public_key.to_string())
+            .execute(&mut *db)
+            .await?;
+        }
         EventData::ApproverSet(e) => match e.max_amount {
             None => {
                 sqlx::query("delete from approvers where vault_id = $1 and account_id = $2")

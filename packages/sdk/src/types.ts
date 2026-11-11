@@ -6,7 +6,12 @@ export const cardStatus = z.enum(["active", "frozen", "revoked"]);
 export const riskMode = z.enum(["off", "block_only", "strict"]);
 export const registryStatus = z.enum(["clear", "flagged", "blocked"]);
 export const queueCause = z.enum(["threshold", "risk_flagged"]);
-export const failureCause = z.enum(["transfer_failed", "merchant_blocked", "registry_unavailable"]);
+export const failureCause = z.enum([
+  "transfer_failed",
+  "merchant_blocked",
+  "registry_unavailable",
+  "queue_full",
+]);
 export const paymentStatus = z.enum(["queued", "checking", "transferring"]);
 export const rejectReason = z.enum([
   "card_frozen",
@@ -20,6 +25,7 @@ export const rejectReason = z.enum([
   "daily_limit",
   "monthly_limit",
   "insufficient_balance",
+  "queue_full",
 ]);
 
 export const merchantRule = z.union([

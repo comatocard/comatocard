@@ -139,6 +139,7 @@ describe("vaultCalls", () => {
     });
     expect(calls.approvePayment(3).gas).toBe("100000000000000");
     expect(calls.declinePayment(3).args).toEqual({ payment_id: 3 });
+    expect(calls.recoverPayment(3).methodName).toBe("recover_payment");
     expect(calls.expirePayment(3).methodName).toBe("expire_payment");
     expect(calls.withdraw("tusd.testnet", "5", "alice.testnet").args).toEqual({
       token: "tusd.testnet",

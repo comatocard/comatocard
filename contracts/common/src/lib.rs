@@ -43,27 +43,17 @@ pub mod events {
     #[derive(Serialize)]
     #[serde(crate = "near_sdk::serde")]
     struct Envelope<'a, T: Serialize> {
-        standard: &'a str,
-        version: &'a str,
+        standard: &'static str,
+        version: &'static str,
         event: &'a str,
         data: [&'a T; 1],
     }
 
     /// Formats the log line for `event` with a single `data` object.
     pub fn format(event: &str, data: &impl Serialize) -> String {
-        format_standard(STANDARD, VERSION, event, data)
-    }
-
-    /// Formats a log line of another NEP-297 standard, for example `nep171`.
-    pub fn format_standard(
-        standard: &str,
-        version: &str,
-        event: &str,
-        data: &impl Serialize,
-    ) -> String {
         let envelope = Envelope {
-            standard,
-            version,
+            standard: STANDARD,
+            version: VERSION,
             event,
             data: [data],
         };

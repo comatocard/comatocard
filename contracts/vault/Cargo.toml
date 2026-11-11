@@ -13,6 +13,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 comatocard-common.workspace = true
+near-contract-standards.workspace = true
 near-sdk.workspace = true
 
 [dev-dependencies]

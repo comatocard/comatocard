@@ -69,7 +69,7 @@ impl Vault {
             created_at: env::block_timestamp().into(),
         };
         events::card_created(id, &public_key, &card.label, kind, &card.policy);
-        events::nep171_supply("nft_mint", id, &self.owner);
+        events::card_minted(id, &self.owner);
         self.cards.insert(id, card);
         self.card_keys.insert(public_key.clone(), id);
         add_card_key(public_key, allowance(gas_allowance));
@@ -122,7 +122,7 @@ impl Vault {
             delete_card_key(public_key);
         }
         events::card_status("card_revoked", card_id);
-        events::nep171_supply("nft_burn", card_id, &holder);
+        events::card_burned(card_id, &holder);
     }
 
     /// Replaces the key of a card, for example after a leak or when the allowance ran out.

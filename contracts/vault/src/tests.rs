@@ -1,6 +1,8 @@
 //! Contract-level unit tests with a mocked blockchain. Asynchronous results are simulated by
 //! calling the callbacks with explicit promise results.
 
+use near_contract_standards::non_fungible_token::core::NonFungibleTokenCore;
+use near_contract_standards::non_fungible_token::enumeration::NonFungibleTokenEnumeration;
 use near_sdk::json_types::{U64, U128};
 use near_sdk::test_utils::{VMContextBuilder, get_logs};
 use near_sdk::{AccountId, NearToken, PromiseError, PublicKey, testing_env};
@@ -620,7 +622,10 @@ fn every_card_is_a_token_of_the_owner() {
     assert!(has_event("nft_mint"));
     let token = harness.vault.nft_token("0".to_owned()).unwrap();
     assert_eq!(token.owner_id, owner());
-    assert_eq!(token.metadata.title, "research agent");
+    assert_eq!(
+        token.metadata.and_then(|m| m.title).as_deref(),
+        Some("research agent")
+    );
     assert_eq!(harness.vault.nft_total_supply().0, 1);
     assert_eq!(harness.vault.nft_supply_for_owner(owner()).0, 1);
     assert_eq!(harness.vault.nft_tokens(None, None).len(), 1);
@@ -736,4 +741,109 @@ fn issue_49_transfer_declines_queued_payments() {
     assert!(harness.vault.get_payment(in_flight).is_some());
     assert_eq!(harness.reserved(), 10);
     assert_eq!(harness.day_spent(), 10);
+}
+
+fn resolve(harness: &mut Harness, result: near_sdk::PromiseResult) -> bool {
+    use near_contract_standards::non_fungible_token::core::NonFungibleTokenResolver;
+    testing_env!(
+        harness
+            .context
+            .predecessor_account_id(vault_id())
+            .attached_deposit(NearToken::from_yoctonear(0))
+            .build(),
+        near_sdk::test_vm_config(),
+        near_sdk::RuntimeFeesConfig::test(),
+        std::collections::HashMap::default(),
+        vec![result]
+    );
+    harness
+        .vault
+        .nft_resolve_transfer(owner(), agent(), "0".to_owned(), None)
+}
+
+#[test]
+fn transfer_call_keeps_the_token_when_the_receiver_accepts() {
+    let mut harness = Harness::new();
+    harness.with_deposit(owner(), NearToken::from_yoctonear(1));
+    let _ = harness
+        .vault
+        .nft_transfer_call(agent(), "0".to_owned(), None, None, String::new());
+    let accepted = near_sdk::PromiseResult::Successful(b"false".to_vec());
+    assert!(resolve(&mut harness, accepted));
+    assert_eq!(harness.vault.get_card(0).unwrap().holder, Some(agent()));
+}
+
+#[test]
+fn transfer_call_returns_the_token_when_the_receiver_refuses_or_fails() {
+    for result in [
+        near_sdk::PromiseResult::Successful(b"true".to_vec()),
+        near_sdk::PromiseResult::Failed,
+    ] {
+        let mut harness = Harness::new();
+        harness.with_deposit(owner(), NearToken::from_yoctonear(1));
+        let _ = harness
+            .vault
+            .nft_transfer_call(agent(), "0".to_owned(), None, None, String::new());
+        assert!(!resolve(&mut harness, result));
+        let card = harness.vault.get_card(0).unwrap();
+        assert_eq!(card.holder, None);
+        assert_eq!(card.public_key, None, "the handed over key stays deleted");
+    }
+}
+
+#[test]
+fn returned_token_drops_the_key_the_receiver_set_meanwhile() {
+    let mut harness = Harness::new();
+    harness.with_deposit(owner(), NearToken::from_yoctonear(1));
+    let _ = harness
+        .vault
+        .nft_transfer_call(agent(), "0".to_owned(), None, None, String::new());
+    harness.with_deposit(agent(), MIN_HOLDER_ALLOWANCE);
+    harness.vault.set_card_key(0, other_key());
+    let PaymentDecision::Queued { payment_id, .. } = ({
+        harness.as_card(other_key());
+        harness.vault.pay(shop(), U128(60), None, None)
+    }) else {
+        panic!("large payment should be queued");
+    };
+    assert!(!resolve(
+        &mut harness,
+        near_sdk::PromiseResult::Successful(b"true".to_vec())
+    ));
+    assert!(harness.vault.get_card_by_key(other_key()).is_none());
+    assert!(harness.vault.get_payment(payment_id).is_none());
+    assert_eq!(harness.vault.get_card(0).unwrap().holder, None);
+}
+
+#[test]
+fn resolve_keeps_a_token_the_receiver_already_passed_on() {
+    let mut harness = Harness::new();
+    harness.with_deposit(owner(), NearToken::from_yoctonear(1));
+    let _ = harness
+        .vault
+        .nft_transfer_call(agent(), "0".to_owned(), None, None, String::new());
+    harness.transfer(agent(), shop());
+    assert!(resolve(&mut harness, near_sdk::PromiseResult::Failed));
+    assert_eq!(harness.vault.get_card(0).unwrap().holder, Some(shop()));
+}
+
+#[test]
+#[should_panic(expected = "approvals are not supported")]
+fn approvals_are_rejected() {
+    let mut harness = Harness::new();
+    harness.with_deposit(owner(), NearToken::from_yoctonear(1));
+    harness
+        .vault
+        .nft_transfer(agent(), "0".to_owned(), Some(1), None);
+}
+
+#[test]
+fn metadata_follows_nep_177() {
+    use near_contract_standards::non_fungible_token::metadata::NonFungibleTokenMetadataProvider;
+    let harness = Harness::new();
+    let metadata = harness.vault.nft_metadata();
+    metadata.assert_valid();
+    assert_eq!(metadata.spec, "nft-1.0.0");
+    let token = harness.vault.nft_token("0".to_owned()).unwrap();
+    token.metadata.unwrap().assert_valid();
 }

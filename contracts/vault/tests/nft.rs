@@ -67,3 +67,48 @@ async fn transferred_card_pays_only_with_the_new_holder_key() -> anyhow::Result<
     assert_eq!(balance(&env, &token, &shop).await?, 5_000_000);
     Ok(())
 }
+
+#[tokio::test]
+async fn transfer_call_to_an_account_without_a_receiver_returns_the_token() -> anyhow::Result<()> {
+    let env = Env::new().await?;
+    let token = deploy_token(&env).await?;
+    let owner = env.account("owner").await?;
+    let agent = env.account("agent").await?;
+    let vault = deploy_vault(&env, &owner, &token, None).await?;
+    fund_vault(&env, &token, &owner, &vault, &[], 10).await?;
+    issue_card(
+        &env,
+        &owner,
+        &vault,
+        "returned",
+        policy(&token, 5, 5, 5, &json!({})),
+    )
+    .await?;
+
+    let outcome = env
+        .call(
+            &owner,
+            &vault,
+            "nft_transfer_call",
+            json!({
+                "receiver_id": agent,
+                "token_id": "0",
+                "approval_id": null,
+                "memo": null,
+                "msg": "",
+            }),
+        )
+        .deposit(NearToken::from_yoctonear(1))
+        .send()
+        .await?
+        .assert_success();
+    assert!(
+        !outcome.json::<bool>()?,
+        "the receiver call fails, so the token returns"
+    );
+    let token_view: Value = env
+        .view(&vault, "nft_token", json!({ "token_id": "0" }))
+        .await?;
+    assert_eq!(token_view["owner_id"], owner.to_string());
+    Ok(())
+}

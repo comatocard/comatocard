@@ -2,6 +2,7 @@
 //! whose field order is the JSON order; the golden fixtures shared with the SDK pin it.
 
 use comatocard_common::events::emit;
+use near_contract_standards::non_fungible_token::events::{NftBurn, NftMint, NftTransfer};
 use near_sdk::json_types::U128;
 use near_sdk::serde::Serialize;
 use near_sdk::{AccountId, PublicKey};
@@ -180,8 +181,13 @@ pub fn card_key_rotated(card_id: CardId, old: Option<&PublicKey>, new: &PublicKe
     );
 }
 
-/// Records a token transfer in the Comatocard standard and in NEP-171.
-pub fn card_transferred(card_id: CardId, old_holder: &AccountId, new_holder: &AccountId) {
+/// Records a token transfer in the Comatocard standard and as NEP-171 `nft_transfer`.
+pub fn card_transferred(
+    card_id: CardId,
+    old_holder: &AccountId,
+    new_holder: &AccountId,
+    memo: Option<&str>,
+) {
     emit(
         "card_transferred",
         &CardTransferred {
@@ -190,47 +196,38 @@ pub fn card_transferred(card_id: CardId, old_holder: &AccountId, new_holder: &Ac
             new_holder,
         },
     );
-    let token_ids = [card_id.to_string()];
-    nep171(
-        "nft_transfer",
-        &Nep171Transfer {
-            old_owner_id: old_holder,
-            new_owner_id: new_holder,
-            token_ids: &token_ids,
-        },
-    );
+    let token_id = card_id.to_string();
+    NftTransfer {
+        old_owner_id: old_holder,
+        new_owner_id: new_holder,
+        token_ids: &[&token_id],
+        authorized_id: None,
+        memo,
+    }
+    .emit();
 }
 
-#[derive(Serialize)]
-#[serde(crate = "near_sdk::serde")]
-struct Nep171Owner<'a> {
-    owner_id: &'a AccountId,
-    token_ids: &'a [String],
+/// NEP-171 `nft_mint` for a new card.
+pub fn card_minted(card_id: CardId, owner_id: &AccountId) {
+    let token_id = card_id.to_string();
+    NftMint {
+        owner_id,
+        token_ids: &[&token_id],
+        memo: None,
+    }
+    .emit();
 }
 
-#[derive(Serialize)]
-#[serde(crate = "near_sdk::serde")]
-struct Nep171Transfer<'a> {
-    old_owner_id: &'a AccountId,
-    new_owner_id: &'a AccountId,
-    token_ids: &'a [String],
-}
-
-fn nep171(event: &str, data: &impl Serialize) {
-    near_sdk::env::log_str(&comatocard_common::events::format_standard(
-        "nep171", "1.0.0", event, data,
-    ));
-}
-
-/// NEP-171 `nft_mint` or `nft_burn` for one card token.
-pub fn nep171_supply(event: &str, card_id: CardId, owner_id: &AccountId) {
-    nep171(
-        event,
-        &Nep171Owner {
-            owner_id,
-            token_ids: &[card_id.to_string()],
-        },
-    );
+/// NEP-171 `nft_burn` for a revoked card.
+pub fn card_burned(card_id: CardId, owner_id: &AccountId) {
+    let token_id = card_id.to_string();
+    NftBurn {
+        owner_id,
+        token_ids: &[&token_id],
+        authorized_id: None,
+        memo: None,
+    }
+    .emit();
 }
 
 pub fn approver_set(account_id: &AccountId, max_amount: Option<U128>) {
@@ -419,7 +416,7 @@ mod tests {
         card_status("card_revoked", 1);
         card_key_rotated(1, Some(&key), &new_key);
         card_key_rotated(1, None, &new_key);
-        card_transferred(1, &owner, &account("agent.testnet"));
+        card_transferred(1, &owner, &account("agent.testnet"), Some("handover"));
         approver_set(&account("council.testnet"), Some(U128(80_000_000)));
         approver_set(&account("council.testnet"), None);
         deposit(&payment.token, &owner, U128(500_000_000));

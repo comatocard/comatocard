@@ -33,7 +33,7 @@ jobs:
       - run: pnpm install --frozen-lockfile --filter @comatocard/docs...
       - run: pnpm --filter @comatocard/docs build
         env:
-          NEXT_PUBLIC_BASE_PATH: /comatocard
+          NEXT_PUBLIC_SITE_URL: https://docs.comatocard.xyz/
       - uses: actions/upload-pages-artifact@v5
         with:
           path: apps/docs/out

@@ -1,6 +1,6 @@
 # apps/docs
 
-The documentation site at https://comatocard.github.io/comatocard/: Nextra 2 on Next.js, exported as static files.
+The documentation site at https://docs.comatocard.xyz/: Nextra 2 on Next.js, exported as static files.
 
 The pages are not written here. `scripts/sync-content.mjs` turns the repository Markdown (`docs/` and the READMEs) into the site sections on every `dev`, `build` and `typecheck`, so `docs/` stays the single source. The section list, titles and descriptions live in `SECTIONS` in that script; the home page is `src/pages/index.mdx`.
 
@@ -15,7 +15,7 @@ The pages are not written here. `scripts/sync-content.mjs` turns the repository 
 - `pnpm --filter @comatocard/docs lint` runs Biome and the SonarJS rules.
 
 ## Deploy
-`.github/workflows/docs.yml` builds the site on every push to `main` that touches `apps/docs/`, `docs/` or a README, and deploys `out/` to GitHub Pages under the `/comatocard` base path (`NEXT_PUBLIC_BASE_PATH`). Run it by hand from the Actions tab with "Run workflow". For a custom domain later: set it in the Pages settings, add `CNAME <host> comatocard.github.io` and build with `NEXT_PUBLIC_BASE_PATH=""` and `NEXT_PUBLIC_SITE_URL=https://<host>/`.
+`.github/workflows/docs.yml` builds the site on every push to `main` that touches `apps/docs/`, `docs/` or a README, and deploys `out/` to GitHub Pages with the custom domain `docs.comatocard.xyz` (DNS: `CNAME docs comatocard.github.io`). Run it by hand from the Actions tab with "Run workflow". To serve it under a path instead, such as `comatocard.github.io/comatocard`, remove the custom domain and build with `NEXT_PUBLIC_BASE_PATH=/comatocard`.
 
 ## Origin
 Built from [zeta-chain/docs](https://github.com/zeta-chain/docs) (MIT, see [LICENSE](LICENSE)): its layout, components, illustrations and article icons. ZetaChain content, logos, fonts, services and packages are removed.

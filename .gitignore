@@ -31,3 +31,6 @@ submission*.json
 # Playwright output
 test-results/
 playwright-report/
+
+# Worktrees of coding agents
+.claude/worktrees/

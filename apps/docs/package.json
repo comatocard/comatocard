@@ -8,7 +8,7 @@
     "sync": "node scripts/sync-content.mjs",
     "dev": "node scripts/sync-content.mjs && next dev -p 3001",
     "build": "node scripts/sync-content.mjs && next build",
-    "typecheck": "node scripts/sync-content.mjs && tsc --project tsconfig.json --noEmit",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
     "lint": "biome check . && eslint . --max-warnings 0",
     "test": "node --test"
   },

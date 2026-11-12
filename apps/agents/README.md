@@ -16,11 +16,21 @@ Workstream B. Card keys are read from environment variables, never from files in
 ## Treasury agent
 Keeps enough stablecoin in the vault for what its cards may still spend. Each active card needs what it may still spend today, capped by what is left of its period limit, with the vault's own day and period windows. When the vault's available balance is below the total, the agent asks NEAR Intents 1Click for an `EXACT_OUTPUT` quote of the deficit with a slippage limit and refuses a plan above a USD cap.
 
-It is a dry run: it prints the plan and never signs or sends. NEAR Intents has no testnet (Q-007), so the testnet token is quoted as mainnet USDC.
+A run is a dry run unless `--execute` is given: it prints the plan and never signs or sends. NEAR Intents has no testnet (Q-007), so the testnet token is quoted as mainnet USDC.
 
 1. Set `VAULT_ID` and `TREASURY_ACCOUNT` (an existing mainnet account that would receive the swap; 1Click answers 500 for an account that does not exist).
-2. `pnpm treasury` logs `treasury plan: none` when the vault covers every card, `treasury plan: top_up` with the deficit and the 1Click quote, or `treasury plan: refused` with the reason.
+2. `pnpm treasury` logs `treasury plan: none` when the vault covers every card, `treasury plan: top_up` with the deficit and the 1Click quote, or `treasury plan: refused` with the reason (exit code 1).
 3. Optional: `TREASURY_SLIPPAGE_BPS` (default 100), `TREASURY_MAX_SWAP_USD` (default 20), `TREASURY_ORIGIN_ASSET` (default `nep141:wrap.near`), `ONECLICK_JWT` for the partner fee schedule.
+
+### Execute a top-up on mainnet
+`pnpm treasury --execute` swaps for real when the plan is `top_up`. It needs `TREASURY_PRIVATE_KEY`, the full access key of `TREASURY_ACCOUNT` on mainnet, and that account must hold the NEAR to swap. Use a separate account funded with only what the cap allows.
+
+1. Commits a fresh `EXACT_OUTPUT` quote (`dry: false`) and applies the same checks as the plan; a refused quote sends nothing.
+2. Sends one transaction to `wrap.near`: `storage_deposit` for the treasury account and the 1Click deposit address (a fresh implicit account that wrap.near does not know yet; refunded when already registered), `near_deposit` of the quoted input and `ft_transfer` to the deposit address.
+3. Calls `POST /deposit/submit` and polls `GET /status` every 3 seconds for up to 10 minutes.
+4. Logs `treasury swap: SUCCESS` with the deposit and delivery transaction hashes. `REFUNDED`, `INCOMPLETE_DEPOSIT`, `FAILED` or `TIMEOUT` exit with code 1; a refund returns to `TREASURY_ACCOUNT`.
+
+The swapped USDC lands in `TREASURY_ACCOUNT`. The testnet vault cannot receive mainnet tokens; on a mainnet vault the owner deposits it with `ft_transfer_call`.
 
 ## Policy assistant
 An owner describes a policy change in plain language; a model running in a TEE on NEAR AI Cloud proposes the full new policy; the agent proves the answer came from that TEE and prints the `update_policy` call for the owner to sign. It never signs.
@@ -42,4 +52,4 @@ A proposal is offered for signing only when every check passes:
 Not checked: TCB level and revocation (Intel collateral), NVIDIA GPU evidence, and an allowlist of measurements; the compose hash is printed so a reviewer can compare it with the published compose.
 
 ## Tests
-`pnpm test`: configuration, card lookup, the indexer risk client, the terminal prompt, every branch of the guard, card buffers, treasury plans, the 1Click client, TDX quote and response signature checks on recorded NEAR AI traffic (`test/fixtures/near-ai-qwen.json`) and the policy assistant, with no network.
+`pnpm test`: configuration, card lookup, the indexer risk client, the terminal prompt, every branch of the guard, card buffers, treasury plans, the treasury execution (deposit transaction, polling, refunds, timeout), the 1Click client, TDX quote and response signature checks on recorded NEAR AI traffic (`test/fixtures/near-ai-qwen.json`) and the policy assistant, with no network.

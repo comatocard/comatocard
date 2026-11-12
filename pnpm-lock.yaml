@@ -224,6 +224,43 @@ importers:
 
   apps/indexer: {}
 
+  apps/relayer:
+    dependencies:
+      '@comatocard/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+      borsh:
+        specifier: 2.0.0
+        version: 2.0.0
+      near-api-js:
+        specifier: 7.4.0
+        version: 7.4.0
+      pino:
+        specifier: 10.4.0
+        version: 10.4.0
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@comatocard/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@types/node':
+        specifier: 26.6.6
+        version: 26.6.6
+      '@vitest/coverage-v8':
+        specifier: 5.1.0
+        version: 5.1.0(vitest@5.1.0)
+      eslint:
+        specifier: 10.14.0
+        version: 10.14.0(jiti@2.7.0)
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+      vitest:
+        specifier: 5.1.0
+        version: 5.1.0(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(vite@8.3.6(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+
   contracts/common: {}
 
   contracts/factory:

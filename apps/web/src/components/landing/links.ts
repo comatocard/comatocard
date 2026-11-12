@@ -2,7 +2,7 @@
 export const LINKS = {
   app: "/connect",
   repo: "https://github.com/comatocard/comatocard",
-  docs: "https://comatocard.github.io/comatocard",
+  docs: "https://docs.comatocard.xyz",
   compliance: "https://github.com/comatocard/comatocard/blob/main/docs/compliance.md",
   near: "https://near.org",
 } as const;

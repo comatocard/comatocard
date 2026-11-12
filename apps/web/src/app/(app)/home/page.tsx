@@ -7,8 +7,6 @@ import { NewCardSheet } from "../../../components/cards/NewCardSheet";
 import { AvailableHero } from "../../../components/home/AvailableHero";
 import { CreateVaultSheet } from "../../../components/home/CreateVaultSheet";
 import { LeadCard } from "../../../components/home/LeadCard";
-import { NoVault } from "../../../components/home/NoVault";
-import { ReadOnlyNotice } from "../../../components/home/ReadOnlyNotice";
 import { TopUpSheet } from "../../../components/home/TopUpSheet";
 import { VaultPicker } from "../../../components/home/VaultPicker";
 import { ActionPill, ActionRow, Card } from "../../../components/ui";
@@ -20,14 +18,13 @@ import { useVault } from "../../../hooks/useVault";
 
 /** Home: what the vault can pay, its lead card, every card's spend, and the latest payments. */
 export default function HomePage() {
+  // VaultGuard only renders this once the account's own vault is open.
   const { vaultId } = useVault();
-  const { accountId } = useOwnership(vaultId);
-  if (!vaultId) return <NoVault accountId={accountId} />;
-  return <VaultHome vault={vaultId} />;
+  return vaultId ? <VaultHome vault={vaultId} /> : null;
 }
 
 function VaultHome({ vault }: { vault: string }) {
-  const { owner, isOwner, accountId } = useOwnership(vault);
+  const { isOwner, accountId } = useOwnership(vault);
   const token = useToken();
   const balances = useBalances(vault);
   const cards = useCards(vault);
@@ -65,9 +62,7 @@ function VaultHome({ vault }: { vault: string }) {
             </ActionPill>
             <ActionPill onClick={() => setSheet("topup")}>Top up</ActionPill>
           </ActionRow>
-        ) : (
-          <ReadOnlyNotice owner={owner} accountId={accountId} />
-        )}
+        ) : null}
 
         <LeadCard card={lead} loading={cards.isLoading} />
 

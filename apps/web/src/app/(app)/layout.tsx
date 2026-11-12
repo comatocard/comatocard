@@ -4,6 +4,7 @@ import { type ReactNode, type TouchEvent, useRef, useState } from "react";
 import { AuthGate } from "../../components/AuthGate";
 import { AccountMenu } from "../../components/desktop/AccountMenu";
 import { BottomNav, DesktopNav, SHELL, TopBlur } from "../../components/ui";
+import { VaultGuard } from "../../components/VaultGuard";
 import { useApprovals } from "../../hooks/data";
 import { useIsDesktop } from "../../hooks/useIsDesktop";
 import { useNav } from "../../hooks/useNav";
@@ -65,7 +66,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <DesktopNav account={isDesktop ? <AccountMenu /> : undefined} badge={pending} />
         <div className={`${SHELL} pb-[120px] pt-14 lg:pb-16 lg:pt-8`}>
           <div key={pathname} className={isDesktop ? undefined : enterClass}>
-            {children}
+            <VaultGuard>{children}</VaultGuard>
           </div>
         </div>
         <div className="lg:hidden">

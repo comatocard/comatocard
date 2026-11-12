@@ -12,12 +12,10 @@ Workstream C. It reads the vaults over RPC with `@comatocard/sdk`, the history f
 ## Try it
 | Do | See |
 |-|-|
-| Skip the tour, press **Look around without a wallet** | The testnet demo vault, read only: its available tUSD, its cards with today's spend, and its history |
-| Open a card, press **Ask the assistant**, pick an example | A proposed policy as a before and after list, and **Verified in TEE** with each check (TEE signature, Intel TDX quote, Intel root, key and nonce binding, measured app). Only the owner can sign it |
-| Open **Approvals** | Payments waiting above a card's threshold, read from the vault itself. For a vault owned by a Sputnik DAO, its proposals and votes |
-| Connect a testnet wallet, **Create a vault** with a name | A new vault `<name>.factory.comatocard.testnet` owned by you, 0.5 NEAR from your wallet |
-| **Top up** 100 | tUSD minted by the public faucet and deposited into the vault; Available shows it |
-| **New card**, keep the defaults | The card on Home, and its secret key shown once as a `.env` snippet for `apps/agents` |
+| Skip the tour, press **Connect wallet** with a testnet wallet (Meteor first) | **Set up your vault**: three steps whose state is read from the chain. A remembered vault that another account owns is never opened |
+| Step 1, **Create a vault** with a name | A new vault `<name>.factory.comatocard.testnet` owned by you, 0.5 NEAR from your wallet |
+| Step 2, **Top up** 100 | tUSD minted by the public faucet and deposited into the vault; Available shows it |
+| Step 3, **New card**, keep the defaults | The card on Home, and its secret key shown once as a `.env` snippet for `apps/agents` |
 | On the card, **Freeze** | Signed in the wallet as a delegate action and sent by the relayer: the card shows Frozen and you paid no gas. If the relayer refuses, the app offers to sign it from your wallet |
 | Open `/shop` | A 402 challenge with a reference and the `pnpm --filter @comatocard/agents pay ...` command; once that payment settles, the gas report unlocks with its transaction |
 | **Account** | Vault details, the treasury dry run with a NEAR Intents 1Click quote when the cards may spend more than the vault holds, and the accountant CSV |

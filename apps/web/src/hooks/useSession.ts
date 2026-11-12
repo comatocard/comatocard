@@ -3,30 +3,18 @@
 import { useNearWallet } from "near-connect-hooks";
 import { useVault } from "./useVault";
 
-/**
- * Who is looking. `accountId` is the connected wallet; without one, a visitor can still open a
- * vault read only (`guest`), and every owner action then asks for a wallet first.
- */
+/** The connected wallet. Every screen behind onboarding needs one. */
 export function useSession() {
   const { signedAccountId, loading, signIn, signOut } = useNearWallet();
-  const { vaultId, hydrated } = useVault();
-  const accountId = signedAccountId || null;
-  return {
-    ready: !loading && hydrated,
-    accountId,
-    guest: accountId === null && vaultId !== null,
-    signIn,
-    signOut,
-  };
+  const { hydrated } = useVault();
+  return { ready: !loading && hydrated, accountId: signedAccountId || null, signIn, signOut };
 }
 
-/** Ends the visit: disconnects the wallet and forgets the opened vault on this device. */
+/** Ends the visit: disconnects the wallet. The account's vault stays remembered for next time. */
 export function useSignOut() {
   const { signOut } = useNearWallet();
-  const { setVaultId } = useVault();
   return async () => {
     await signOut().catch(() => undefined);
-    setVaultId(null);
   };
 }
 

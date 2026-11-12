@@ -3,11 +3,11 @@ import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect } from "react";
 import { useSession } from "../hooks/useSession";
 
-/** Screens behind a wallet or an opened vault. Waits for the wallet before deciding. */
+/** Screens behind a connected wallet. Waits for the wallet before deciding. */
 export function AuthGate({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const { ready, accountId, guest } = useSession();
-  const allowed = accountId !== null || guest;
+  const { ready, accountId } = useSession();
+  const allowed = accountId !== null;
   useEffect(() => {
     if (ready && !allowed) router.replace("/");
   }, [ready, allowed, router]);

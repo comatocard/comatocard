@@ -7,8 +7,6 @@ import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 import { Button, Toast } from "../components/ui";
 import { useSession } from "../hooks/useSession";
-import { useVault } from "../hooks/useVault";
-import { DEMO_VAULT } from "../lib/demo";
 import { readStored, STORAGE, writeStored } from "../lib/storage";
 import styles from "./Onboarding.module.css";
 
@@ -35,21 +33,21 @@ const TOUR: TourScreen[] = [
 
 export default function Onboarding() {
   const router = useRouter();
-  const { ready, accountId, guest } = useSession();
+  const { ready, accountId } = useSession();
   const [mode, setMode] = useState<"tour" | "connect" | null>(null);
   const [step, setStep] = useState(0);
 
-  // A connected wallet or an opened vault skips onboarding. `replace` keeps `/` out of history.
+  // A connected wallet skips onboarding. `replace` keeps `/` out of history.
   useEffect(() => {
-    if (ready && (accountId || guest)) router.replace("/home");
-  }, [ready, accountId, guest, router]);
+    if (ready && accountId) router.replace("/home");
+  }, [ready, accountId, router]);
 
   useEffect(() => {
-    if (!ready || accountId || guest) return;
+    if (!ready || accountId) return;
     setMode(readStored(STORAGE.onboardingDone) === "1" ? "connect" : "tour");
-  }, [ready, accountId, guest]);
+  }, [ready, accountId]);
 
-  if (!ready || accountId || guest || mode === null) return <SplashScreen />;
+  if (!ready || accountId || mode === null) return <SplashScreen />;
 
   const finishTour = () => {
     writeStored(STORAGE.onboardingDone, "1");
@@ -97,11 +95,10 @@ export default function Onboarding() {
   );
 }
 
-/** The last screen: connect a NEAR wallet, or look around the testnet demo vault without one. */
+/** The last screen: connect a NEAR wallet. Setup takes over once it is connected. */
 function ConnectScreen({ onBack }: { onBack: () => void }) {
   const router = useRouter();
   const { connector } = useNearWallet();
-  const { setVaultId } = useVault();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -125,11 +122,6 @@ function ConnectScreen({ onBack }: { onBack: () => void }) {
     }
   };
 
-  const lookAround = () => {
-    setVaultId(DEMO_VAULT);
-    router.replace("/home");
-  };
-
   return (
     <main className={`${styles.screen} ${styles.tourScreen} ${styles.connectScreen}`}>
       <div className={styles.onboardingPanel}>
@@ -150,8 +142,8 @@ function ConnectScreen({ onBack }: { onBack: () => void }) {
             </div>
           </div>
           <div className={styles.tourCopy}>
-            <h1>Open your vault</h1>
-            <p>Connect a NEAR wallet. Your vault, your keys, on testnet.</p>
+            <h1>Connect your wallet</h1>
+            <p>Your vault is owned by your NEAR account. Testnet, no real money.</p>
             <Stepper current={TOUR.length} total={TOUR.length + 1} />
           </div>
         </section>
@@ -160,14 +152,6 @@ function ConnectScreen({ onBack }: { onBack: () => void }) {
           <Button onClick={() => void connect()} disabled={busy}>
             {busy ? "Waiting for your wallet…" : "Connect wallet"}
           </Button>
-          <button
-            type="button"
-            className={styles.secondaryAction}
-            onClick={lookAround}
-            disabled={busy}
-          >
-            Look around without a wallet
-          </button>
         </div>
         <Toast open={!!error} message={error ?? ""} />
       </div>

@@ -10,7 +10,16 @@ import { BottomSheet, Button } from "../ui";
 const shortVault = (vault: string) => vault.replace(`.${FACTORY_ID}`, "");
 
 /** The vault pill at the top of Home, and the sheet to switch, open by name, or create one. */
-export function VaultPicker({ owner, onCreate }: { owner: string | null; onCreate: () => void }) {
+export function VaultPicker({
+  owner,
+  onCreate,
+  label,
+}: {
+  owner: string | null;
+  onCreate: () => void;
+  /** Text of the trigger when no vault is open. */
+  label?: string;
+}) {
   const { vaultId, setVaultId } = useVault();
   const vaults = useOwnerVaults(owner);
   const [open, setOpen] = useState(false);
@@ -29,7 +38,7 @@ export function VaultPicker({ owner, onCreate }: { owner: string | null; onCreat
         className="mx-auto flex h-10 items-center gap-2 rounded-full border border-line bg-white pl-4 pr-3 text-[14px] font-semibold [box-shadow:0_8px_18px_-12px_rgba(0,0,0,.2)]"
       >
         <span className="max-w-[220px] truncate">
-          {vaultId ? shortVault(vaultId) : "Choose a vault"}
+          {vaultId ? shortVault(vaultId) : (label ?? "Choose a vault")}
         </span>
         <svg
           aria-hidden="true"

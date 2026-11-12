@@ -1,10 +1,10 @@
 /**
  * Local storage keys, all under the `comatocard.` prefix. Storage holds conveniences only (the
- * selected vault, a seen tour); it can be blocked, so every read and write tolerates failure.
+ * selected vault per account, a seen tour); it can be blocked, so every read and write tolerates failure.
  */
 export const STORAGE = {
-  /** The vault last opened on this device. */
-  vault: "comatocard.vault.v1",
+  /** The vault an account last opened on this device. */
+  vault: (account: string) => `comatocard.vault.v2.${account}`,
   /** "1" once the three-step tour has been seen or skipped. */
   onboardingDone: "comatocard.onboarding.done",
 } as const;

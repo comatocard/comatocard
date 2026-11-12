@@ -11,4 +11,6 @@ module.exports = withNextra({
   output: "export",
   images: { unoptimized: true },
   trailingSlash: true,
+  // Set when the site is served under a path, for example /comatocard on GitHub Pages.
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || "",
 });

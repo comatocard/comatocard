@@ -3,7 +3,8 @@ import type { NextSeoProps } from "next-seo";
 export const defaultTitle = "Comatocard Docs";
 export const defaultDescription =
   "Programmable payment cards for people and AI agents, enforced by smart contracts on NEAR.";
-export const defaultBaseUrl = "https://docs.comatocard.xyz/";
+export const defaultBaseUrl =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://comatocard.github.io/comatocard/";
 
 export const nextSeoProps: NextSeoProps = {
   titleTemplate: `%s – ${defaultTitle}`,

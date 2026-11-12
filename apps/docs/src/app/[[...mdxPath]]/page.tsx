@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { compileMdx } from "nextra/compile";
 import { MDXRemote } from "nextra/mdx-remote";
+import { createCssVariablesTheme } from "shiki/core";
 
 import { HomePage } from "~/components/Home";
 import { CurrentPageNavigationSections, MainContentWrapper } from "~/components/shared";
@@ -19,6 +20,16 @@ const REPO = join(process.cwd(), "../..");
 
 // A plain function despite the name Next requires for mdx-components; built once for all pages.
 const components = getMDXComponents();
+
+// Token colours come from the --shiki-* variables in globals.css, one set per colour mode.
+type CompileOptions = NonNullable<Parameters<typeof compileMdx>[1]>;
+type CodeTheme = NonNullable<
+  NonNullable<NonNullable<CompileOptions["mdxOptions"]>["rehypePrettyCodeOptions"]>["theme"]
+>;
+const codeTheme = createCssVariablesTheme({
+  name: "css-variables",
+  variablePrefix: "--shiki-",
+}) as CodeTheme;
 
 export const dynamicParams = false;
 
@@ -60,6 +71,7 @@ export default async function Page(props: Props) {
   const compiledSource = await compileMdx(toMdx(markdown, page.source), {
     defaultShowCopyCode: true,
     filePath: page.source,
+    mdxOptions: { rehypePrettyCodeOptions: { theme: codeTheme, keepBackground: false } },
   });
 
   return (

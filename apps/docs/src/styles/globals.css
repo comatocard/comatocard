@@ -86,19 +86,41 @@
     @apply rounded-lg mt-8;
   }
 
-  /* Code highlighted by Nextra (rehype-pretty-code with a light and a dark theme). */
-  pre code span {
-    color: var(--shiki-light);
+  /* Code blocks: one 20px grid row per line with 16px side padding, as with Nextra 2. */
+  pre code {
+    @apply grid p-0 leading-5 rounded-none;
   }
 
-  &:where(.dark, .dark *) pre code span,
-  :where(.dark) & pre code span {
-    color: var(--shiki-dark);
+  pre code [data-line] {
+    @apply block px-4;
   }
+}
 
-  pre code [data-highlighted-line] {
-    @apply bg-grey-200 dark:bg-grey-600;
-  }
+/* Syntax colours for Shiki's CSS-variables theme, the values the Nextra 2 site rendered. */
+:root {
+  --shiki-foreground: lab(27.53% 0 0);
+  --shiki-token-keyword: lab(47.89% 63.03 42.31);
+  --shiki-token-string: lab(49.14% -42.04 31.86);
+  --shiki-token-string-expression: lab(49.14% -42.04 31.86);
+  --shiki-token-function: lab(39.03% 41.19 -60.58);
+  --shiki-token-constant: lab(48.4% 0.65 -55.57);
+  --shiki-token-comment: lab(69.61% 0 0);
+  --shiki-token-parameter: lab(72.74% 33.91 77.36);
+  --shiki-token-punctuation: lab(12.74% 0 0);
+  --shiki-token-link: lab(49.14% -42.04 31.86);
+}
+
+.dark {
+  --shiki-foreground: lab(83.84% 0 0);
+  --shiki-token-keyword: lab(65.91% 52.49 18.13);
+  --shiki-token-string: lab(77.53% 27.42 43.24);
+  --shiki-token-string-expression: lab(66.47% -48.73 44.73);
+  --shiki-token-function: lab(66.45% 27.23 -43.26);
+  --shiki-token-constant: lab(72.68% -5.94 -41.83);
+  --shiki-token-comment: lab(47.98% -1.63 -6.06);
+  --shiki-token-parameter: lab(72.74% 33.91 77.36);
+  --shiki-token-punctuation: lab(75.88% 0 0);
+  --shiki-token-link: lab(77.53% 27.42 43.24);
 }
 
 /* Search results from Pagefind. */

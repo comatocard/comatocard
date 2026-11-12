@@ -10,6 +10,7 @@ export const Code = ({ children, className, ...props }: ComponentProps<"code">) 
     dir="ltr"
     {...props}
   >
-    {children}
+    {/* A code block's text ends with a newline that would render as an empty last line. */}
+    {typeof children === "string" ? children.replace(/\n$/, "") : children}
   </code>
 );

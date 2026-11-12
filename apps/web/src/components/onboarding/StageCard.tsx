@@ -147,9 +147,10 @@ export function StageCard(props: StageCardProps) {
             dark && "ring-1 ring-white/15",
           )}
         >
+          {/* A vault numbers its cards from 0, so the first card it issues reads 0000. */}
           <CardArtwork
             label={(stage === "card" || stage === "done" ? label : account) || "Your card"}
-            number={cardNumber(1)}
+            number={cardNumber(0)}
             expiry="None"
             kind="agent"
             frozen={false}

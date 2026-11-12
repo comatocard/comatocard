@@ -44,7 +44,7 @@ export function FloatingCard() {
       >
         <CardArtwork
           label="Your agent"
-          number={cardNumber(1)}
+          number={cardNumber(0)}
           expiry="None"
           kind="agent"
           frozen={false}

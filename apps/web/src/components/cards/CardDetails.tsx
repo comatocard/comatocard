@@ -1,6 +1,7 @@
 "use client";
 import type { PaymentPage, Card as VaultCard } from "@comatocard/sdk";
 import { useRef, useState } from "react";
+import { SmoothHeight } from "../../lib/motion/SmoothHeight";
 import { useStepSwap } from "../../lib/motion/useStepSwap";
 import { PaymentList } from "../activity/PaymentList";
 import { Card } from "../ui";
@@ -49,31 +50,34 @@ export function CardDetails({
           ]}
         />
       </div>
-      <div className="overflow-hidden">
-        <div ref={panel}>
-          {tab === "limits" ? (
-            <LimitsPanel card={card} now={now} decimals={decimals} symbol={symbol} />
-          ) : (
-            <Card className="px-5 pt-1 pb-2">
-              <div className="flex justify-end pt-3 empty:hidden">
-                <Pager page={paged.page} count={paged.count} onPage={paged.go} label="payments" />
-              </div>
-              <PagedPanel panel={paged.panel}>
-                <PaymentList
-                  rows={payments.data ? paged.items : undefined}
-                  cards={undefined}
-                  loading={payments.isLoading}
-                  error={payments.error ? payments.error.message : null}
-                  decimals={decimals}
-                  symbol={symbol}
-                  now={now}
-                  emptyDescription={`Every payment ${card.label} tries, including refused ones, shows here.`}
-                />
-              </PagedPanel>
-            </Card>
-          )}
+      {/* Limits and Payments differ in height; the frame follows instead of jumping. */}
+      <SmoothHeight>
+        <div className="overflow-hidden">
+          <div ref={panel}>
+            {tab === "limits" ? (
+              <LimitsPanel card={card} now={now} decimals={decimals} symbol={symbol} />
+            ) : (
+              <Card className="px-5 pt-1 pb-2">
+                <div className="flex justify-end pt-3 empty:hidden">
+                  <Pager page={paged.page} count={paged.count} onPage={paged.go} label="payments" />
+                </div>
+                <PagedPanel panel={paged.panel}>
+                  <PaymentList
+                    rows={payments.data ? paged.items : undefined}
+                    cards={undefined}
+                    loading={payments.isLoading}
+                    error={payments.error ? payments.error.message : null}
+                    decimals={decimals}
+                    symbol={symbol}
+                    now={now}
+                    emptyDescription={`Every payment ${card.label} tries, including refused ones, shows here.`}
+                  />
+                </PagedPanel>
+              </Card>
+            )}
+          </div>
         </div>
-      </div>
+      </SmoothHeight>
     </>
   );
 }

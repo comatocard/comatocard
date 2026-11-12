@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { quoteExactOutput } from "../../src/oneclick.js";
+import { getSwapStatus, quoteExactOutput, submitDeposit } from "../../src/oneclick.js";
 
 const request = {
   originAsset: "nep141:wrap.near",
@@ -52,5 +52,32 @@ describe("quoteExactOutput", () => {
     );
     const odd = async () => new Response(JSON.stringify({ quote: {} }));
     await expect(quoteExactOutput(request, { fetch: odd })).rejects.toThrow("unexpected response");
+  });
+});
+
+describe("submitDeposit and getSwapStatus", () => {
+  it("posts the NEAR deposit and reads the status by deposit address", async () => {
+    const fetch = vi.fn(async (url: string | URL | Request, _init?: RequestInit) =>
+      String(url).includes("/status")
+        ? new Response(JSON.stringify({ status: "PENDING_DEPOSIT", swapDetails: {} }))
+        : new Response("{}"),
+    );
+    const deposit = { txHash: "Tx1", depositAddress: "abc", nearSenderAccount: "treasury.near" };
+    await submitDeposit(deposit, { fetch });
+    expect(fetch.mock.calls[0]?.[0]).toBe("https://1click.chaindefuser.com/v0/deposit/submit");
+    expect(JSON.parse(String(fetch.mock.calls[0]?.[1]?.body))).toEqual(deposit);
+    await expect(getSwapStatus("abc", { fetch })).resolves.toMatchObject({
+      status: "PENDING_DEPOSIT",
+    });
+    expect(fetch.mock.calls[1]?.[0]).toBe(
+      "https://1click.chaindefuser.com/v0/status?depositAddress=abc",
+    );
+  });
+
+  it("rejects an unknown status", async () => {
+    const fetch = async () => new Response(JSON.stringify({ status: "LOST" }));
+    await expect(getSwapStatus("abc", { fetch })).rejects.toThrow(
+      "1click status: unexpected response",
+    );
   });
 });

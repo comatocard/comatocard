@@ -93,15 +93,19 @@ export async function planTreasury(
     dry: true,
   });
   const plan = { ...base, deficit: deficit.toString(), quote, slippageBps: config.slippageBps };
-  if (BigInt(quote.minAmountOut) < deficit) {
-    return { action: "refused", ...plan, reason: "quote does not guarantee the deficit" };
+  const reason = quoteRefusal(quote, deficit, config.maxSwapUsd);
+  return reason ? { action: "refused", ...plan, reason } : { action: "top_up", ...plan };
+}
+
+/** Why a quote for `deficit` must not be used, or undefined when it may. */
+export function quoteRefusal(
+  quote: Quote,
+  deficit: bigint,
+  maxSwapUsd: number,
+): string | undefined {
+  if (BigInt(quote.minAmountOut) < deficit) return "quote does not guarantee the deficit";
+  if (Number(quote.amountInUsd) > maxSwapUsd) {
+    return `costs ${quote.amountInUsd} USD, above the ${maxSwapUsd} USD cap`;
   }
-  if (Number(quote.amountInUsd) > config.maxSwapUsd) {
-    return {
-      action: "refused",
-      ...plan,
-      reason: `costs ${quote.amountInUsd} USD, above the ${config.maxSwapUsd} USD cap`,
-    };
-  }
-  return { action: "top_up", ...plan };
+  return undefined;
 }

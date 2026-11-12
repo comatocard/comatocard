@@ -9,7 +9,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const { ready, accountId } = useSession();
   const allowed = accountId !== null;
   useEffect(() => {
-    if (ready && !allowed) router.replace("/");
+    if (ready && !allowed) router.replace("/connect");
   }, [ready, allowed, router]);
   if (!ready || !allowed) return null;
   return <>{children}</>;

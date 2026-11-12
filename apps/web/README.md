@@ -12,6 +12,7 @@ Workstream C. It reads the vaults over RPC with `@comatocard/sdk`, the history f
 ## Try it
 | Do | See |
 |-|-|
+| Open `/`, the landing page, then **Open the app** | `/connect`: the connect screen. A wallet already connected goes straight to the app |
 | Press **Connect wallet** with a testnet wallet (Meteor first; on a desktop, pick it from the list) | **Open a card account**: setup runs full screen, a card on the left builds itself as you go. Each step reads the chain, so a reload resumes where you were. A remembered account that another wallet owns is never opened |
 | Step 1, type a name, **Create account** | The card face appears with the name; `<name>.factory.comatocard.testnet` is owned by you, 0.5 NEAR from your wallet |
 | Step 2, **Add 100 tUSD** | tUSD minted by the public faucet and deposited; a +100 tUSD chip on the card |
@@ -32,10 +33,10 @@ The indexer and the relayer send no CORS headers, so the browser reaches them th
 | `GET /api/shop/report` | HTTP 402 resource; a reference unlocks it once, after a settled payment to the merchant |
 
 ## Tests
-`pnpm test`: token units, the policy form, card spend windows, payment wording, DAO proposals and the 402 checks. `pnpm test:integration`: the server routes in-process against real HTTP servers standing in for the indexer, the relayer and the RPC. `pnpm test:e2e`: Playwright against `next dev` at phone and desktop widths (connect screen, info tips, reduced motion, the redirect away from setup without a wallet); set `E2E_BASE_URL` to reuse a dev server already running, since Next refuses a second one in the same folder.
+`pnpm test`: token units, the policy form, card spend windows, payment wording, DAO proposals and the 402 checks. `pnpm test:integration`: the server routes in-process against real HTTP servers standing in for the indexer, the relayer and the RPC. `pnpm test:e2e`: Playwright against `next dev` at phone and desktop widths (the landing page and its facts, the connect screen, info tips, reduced motion, the redirect away from setup without a wallet); set `E2E_BASE_URL` to reuse a dev server already running, since Next refuses a second one in the same folder.
 
 ## Motion
-Every change of layout or position runs through GSAP (`src/lib/motion/`): `SmoothHeight` for boxes that grow or shrink, `useStepSwap` and `useReveal` for screens that change, the eases and durations in `gsap.ts`. Each honours `prefers-reduced-motion`. The design source is `design/comatocard.pen` with its Motion spec frame.
+Every change of layout or position runs through GSAP (`src/lib/motion/`): `SmoothHeight` for boxes that grow or shrink, `useStepSwap` and `useReveal` for screens that change, `scroll.ts` for the landing page (scroll reveals, the logo marquee, counters, floating icons), the eases and durations in `gsap.ts`. Each honours `prefers-reduced-motion`. The design source is `design/comatocard.pen` with its Motion spec frame.
 
 ## Third-party code
 The UI kit (`src/components/ui`, `motion`, `card`, the onboarding styles) comes from the frontend owner's earlier card app, written in October 2026 before the hackathon window: baseline under Q-005. `card-folder` and `digit-swap` are vendored from beUI (MIT). Thinking indicator: `thinking-orbs` (MIT). Font: Switzer (Fontshare).

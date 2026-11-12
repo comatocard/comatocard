@@ -12,7 +12,7 @@ function collectErrors(page: Page): string[] {
 test.describe("connect screen", () => {
   test("shows the pitch and a way to connect", async ({ page }) => {
     const errors = collectErrors(page);
-    await page.goto("/");
+    await page.goto("/connect");
     await expect(page.getByRole("heading", { name: /Cards your agents/ })).toBeVisible();
     await expect(page.getByText("Limits live on chain. You hold the keys.")).toBeVisible();
     if (isPhone(page)) {
@@ -28,7 +28,7 @@ test.describe("connect screen", () => {
   });
 
   test("never scrolls sideways", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/connect");
     await expect(page.getByRole("heading", { name: /Cards your agents/ })).toBeVisible();
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -37,7 +37,7 @@ test.describe("connect screen", () => {
   });
 
   test("keeps the long explanation behind the info tip", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/connect");
     const tip = page.getByRole("button", { name: "About Wallets" }).locator("visible=true");
     await expect(page.getByRole("tooltip")).toHaveCount(0);
     await tip.first().click();
@@ -48,7 +48,7 @@ test.describe("connect screen", () => {
 
   test("settles the card in even with reduced motion", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/");
+    await page.goto("/connect");
     const card = page.locator("main [aria-hidden=true] .aspect-\\[1\\.586\\]").first();
     await expect(card).toBeVisible();
     await expect(card).toHaveCSS("opacity", "1");
@@ -57,6 +57,6 @@ test.describe("connect screen", () => {
 
 test("setup without a wallet goes back to connect", async ({ page }) => {
   await page.goto("/setup");
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/connect$/);
   await expect(page.getByRole("heading", { name: /Cards your agents/ })).toBeVisible();
 });

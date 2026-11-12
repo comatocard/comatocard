@@ -22,5 +22,24 @@ It is a dry run: it prints the plan and never signs or sends. NEAR Intents has n
 2. `pnpm treasury` logs `treasury plan: none` when the vault covers every card, `treasury plan: top_up` with the deficit and the 1Click quote, or `treasury plan: refused` with the reason.
 3. Optional: `TREASURY_SLIPPAGE_BPS` (default 100), `TREASURY_MAX_SWAP_USD` (default 20), `TREASURY_ORIGIN_ASSET` (default `nep141:wrap.near`), `ONECLICK_JWT` for the partner fee schedule.
 
+## Policy assistant
+An owner describes a policy change in plain language; a model running in a TEE on NEAR AI Cloud proposes the full new policy; the agent proves the answer came from that TEE and prints the `update_policy` call for the owner to sign. It never signs.
+
+1. Set `VAULT_ID` and `NEAR_AI_API_KEY`; `POLICY_MODEL` defaults to `Qwen/Qwen3.8-27B`.
+2. `pnpm policy 0 "Lower the daily limit to 40 tUSD and only allow paying comatocard-shop.testnet"` logs `proposal verified in TEE, changes: daily_limit, merchants` with the current and proposed policy and the verification, then prints a `pnpm --filter @comatocard/relayer owner-call ... update_policy '...'` command.
+3. Running that command signs as the owner, gasless through the relayer; the vault emits `card_policy_updated`.
+
+A proposal is offered for signing only when every check passes:
+
+| Check | How |
+|-|-|
+| Response signed by the TEE | `GET /v1/signature/<id>` (ed25519) signs `model:sha256(request):sha256(response)` of the exact bytes sent and received |
+| Signing key attested | `GET /v1/attestation/report` with a fresh nonce returns the signing instance; its Intel TDX quote is signed by the attestation key, the QE report by the PCK certificate, the QE report binds the attestation key, and the PCK chain ends at the pinned Intel SGX Root CA (`src/intel-root.ts`) |
+| Key and nonce bound | The quote's report data is the signing key followed by our nonce |
+| App measured | MRCONFIGID is `01`, sha256 of the published app compose, then zero bytes |
+| Policy valid | SDK `policy` schema, same token, `per_tx_limit <= daily_limit <= monthly_limit` |
+
+Not checked: TCB level and revocation (Intel collateral), NVIDIA GPU evidence, and an allowlist of measurements; the compose hash is printed so a reviewer can compare it with the published compose.
+
 ## Tests
-`pnpm test`: configuration, card lookup, the indexer risk client, the terminal prompt, every branch of the guard, card buffers, treasury plans and the 1Click client, with no network.
+`pnpm test`: configuration, card lookup, the indexer risk client, the terminal prompt, every branch of the guard, card buffers, treasury plans, the 1Click client, TDX quote and response signature checks on recorded NEAR AI traffic (`test/fixtures/near-ai-qwen.json`) and the policy assistant, with no network.

@@ -69,12 +69,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <VaultGuard>{children}</VaultGuard>
           </div>
         </div>
-        {/* Setup is a guided flow with its own Next and Back; the tab bar would cover them. */}
-        {pathname === "/setup" ? null : (
-          <div className="lg:hidden">
-            <BottomNav badge={pending} />
-          </div>
-        )}
+        <div className="lg:hidden">
+          <BottomNav badge={pending} />
+        </div>
       </div>
     </AuthGate>
   );

@@ -8,6 +8,7 @@ Deployed with `ROOT_ACCOUNT=comatocard.testnet scripts/deploy-testnet.sh` on 202
 | Test stablecoin (tUSD, 6 decimals, public faucet) | `tusd.comatocard.testnet` | `contracts/mock-ft` |
 | Counterparty registry, curator `comatocard.testnet`, redeployed 2026-11-11 with sanctions reports (PR #74) | `registry.comatocard.testnet` | `contracts/registry` |
 | Factory, default token tUSD, default registry above | `factory.comatocard.testnet` | `contracts/factory` |
+| Vault global contract (by hash), code version 5, contract 0.4.0 from the reproducible build of release v0.4.1 (PR #90) | `6XRhVBvaFGBuDqrLzn6EPptBX9e724h85Gw5tHPsGXXU` | `contracts/vault` |
 | Vault global contract (by hash), code version 4, contract 0.4.0 built without wee_alloc (PRs #79 #80) | `CQn2sAQtZ87h2v1akv4wnCiLdH4wLHKfCeEXyh1edRED` | `contracts/vault` |
 | Vault global contract (by hash), code version 3, contract 0.4.0 with the audit fixes (PR #65) | `6b8ijoAK9QhACv5y8s4UdRwvBNpeUVsX1bBCDLRNC9Ms` | `contracts/vault` |
 | Vault global contract (by hash), code version 2, contract 0.2.0 with card tokens (PR #32) | `HedzS3czoNHwASMvGiwbugSBCoFzvGtCPFDB2MQ94Q2N` | `contracts/vault` |
@@ -15,7 +16,8 @@ Deployed with `ROOT_ACCOUNT=comatocard.testnet scripts/deploy-testnet.sh` on 202
 | Demo vault owned by `comatocard.testnet`, code version 1 | `demo.factory.comatocard.testnet` | global vault code |
 | Card token demo vault owned by `comatocard.testnet`, code version 2 | `nft.factory.comatocard.testnet` | global vault code |
 | Audited demo vault owned by `comatocard.testnet`, code version 3, card risk mode `block_only` | `audit.factory.comatocard.testnet` | global vault code |
-| Current demo vault owned by `comatocard.testnet`, code version 4, card risk mode `block_only` | `v4.factory.comatocard.testnet` | global vault code |
+| Demo vault owned by `comatocard.testnet`, code version 4, card risk mode `block_only` | `v4.factory.comatocard.testnet` | global vault code |
+| Current demo vault owned by `comatocard.testnet`, code version 5, card risk mode `block_only` | `v5.factory.comatocard.testnet` | global vault code |
 
 Demo accounts: `comatocard-shop.testnet` (merchant), `comatocard-council.testnet` (DAO council member), `comatocard-agent.testnet` (agent operator).
 
@@ -84,6 +86,23 @@ Testnet matches main after PRs #79 and #80. Registry, factory and tUSD code were
 | Card pays 1 tUSD with 100 Tgas | `2He3J1YWUs8Vkk2VA9PDYa4yavySHjbRn9sJRwqZcZrA` | Registry check, `payment_submitted`, `payment_settled` |
 
 Explorer: `https://testnet.nearblocks.io/txns/<transaction>`.
+
+### Reproducible republish on 2026-11-12
+Every contract on testnet now runs the assets of [release v0.4.1](https://github.com/comatocard/comatocard/releases/tag/v0.4.1), deployed with `RELEASE_WASM=<assets> scripts/deploy-testnet.sh`. Contract source is unchanged from v0.4.0. tUSD, registry and factory were deployed in place and their state reads back unchanged; the on-chain code hashes equal the release `CODE_HASHES`:
+
+| Contract | Code hash |
+|-|-|
+| `tusd.comatocard.testnet` | `DLqSjb2C1unje3tk9CVR6VS11bXnTYsi97rNzjG8jZeD` |
+| `registry.comatocard.testnet` | `8WBR6WNBwiLJRWmF6fhRV1tBQagp7QLB6kD79FTyGiZQ` |
+| `factory.comatocard.testnet` | `5HQhYDp1EuT2VCxA7rvKvFviw37HzJYoeYxQ38k5cDAB` |
+| Vault global contract, code version 5 | `6XRhVBvaFGBuDqrLzn6EPptBX9e724h85Gw5tHPsGXXU` |
+
+| Step | Transaction | Result |
+|-|-|-|
+| Factory publishes the vault code | `4Bwzqfu8YSdXvfPMeKxaQtNd2quB5ex3ags8oCsppttZ` | `vault_code_published`, code version 5 |
+| Factory creates `v5.factory.comatocard.testnet` | `Ans9jY51W6qZBqex1UgqYvrhacQ4Lx3LA7Hd7oUjtgFy` | `vault_created`, code version 5 |
+| Owner issues a card checked by the registry | `7iP8drQZo1S5hFzHv2aLGvPm649uXgK9DSLpUpM5SXbb` | `card_created`, `nft_mint`, key added |
+| Card pays 1 tUSD with 100 Tgas | `7nK8SHcVnQWgDjeng4ozKgUA7ueGMRei5d6FSyZmbVmR` | Registry check, `payment_submitted`, `payment_settled` |
 
 ### Get test funds
 1. Register: `near contract call-function as-transaction tusd.comatocard.testnet storage_deposit json-args '{"account_id":"<you>.testnet","registration_only":true}' prepaid-gas '30.0 Tgas' attached-deposit '0.00125 NEAR' sign-as <you>.testnet network-config testnet sign-with-legacy-keychain send`

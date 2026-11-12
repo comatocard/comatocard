@@ -18,7 +18,7 @@ export const Layout: React.FC<PropsWithChildren> = ({ children }) => {
     <div className="docs-layout">
       <NavigationLayout isMainPage={isMainPage}>
         <TopBar />
-        {/* pb-8 and the mt-16 spacer keep the gap above the footer that Nextra's article had. */}
+        {/* pb-8 keeps the gap above the footer that Nextra's article had. */}
         <div className="pb-8">
           <main
             className={clsx("px-4 py-5 sm:py-8 sm:px-6 md:px-[72px]", {
@@ -28,7 +28,7 @@ export const Layout: React.FC<PropsWithChildren> = ({ children }) => {
             })}
           >
             {children}
-            <div className="mt-16" />
+            {route === "/" && <div className="mt-16" />}
           </main>
         </div>
       </NavigationLayout>

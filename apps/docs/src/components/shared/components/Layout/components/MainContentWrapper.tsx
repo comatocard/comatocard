@@ -18,7 +18,11 @@ export const MainContentWrapper: React.FC<MainContentWrapperProps> = ({ route, c
       {/* Pagefind indexes only this element, so search ignores the navigation. */}
       <div data-pagefind-body>
         <Hero />
-        <TableOfContentsWrapper>{children}</TableOfContentsWrapper>
+        <TableOfContentsWrapper>
+          {children}
+          {/* The spacer Nextra 2 put after the page content. */}
+          <div className="mt-16" />
+        </TableOfContentsWrapper>
       </div>
       {editUrl && (
         <div className="mt-16 mb-8">

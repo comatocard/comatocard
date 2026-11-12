@@ -13,5 +13,14 @@ Workstream B. Card keys are read from environment variables, never from files in
    - The indexer at `INDEXER_URL` answers `GET /risk/<merchant>?vault=<vault>` with `block`: refused. With `warn`: a human confirms on the terminal; without a terminal, or on Ctrl+C or Ctrl+D, it is refused. Unreachable indexer or invalid answer: refused.
    - Otherwise the agent signs `pay` with the card key and logs the decision (`submitted` or `queued`) and the transaction hash. Refusals exit with code 1.
 
+## Treasury agent
+Keeps enough stablecoin in the vault for what its cards may still spend. Each active card needs what it may still spend today, capped by what is left of its period limit, with the vault's own day and period windows. When the vault's available balance is below the total, the agent asks NEAR Intents 1Click for an `EXACT_OUTPUT` quote of the deficit with a slippage limit and refuses a plan above a USD cap.
+
+It is a dry run: it prints the plan and never signs or sends. NEAR Intents has no testnet (Q-007), so the testnet token is quoted as mainnet USDC.
+
+1. Set `VAULT_ID` and `TREASURY_ACCOUNT` (an existing mainnet account that would receive the swap; 1Click answers 500 for an account that does not exist).
+2. `pnpm treasury` logs `treasury plan: none` when the vault covers every card, `treasury plan: top_up` with the deficit and the 1Click quote, or `treasury plan: refused` with the reason.
+3. Optional: `TREASURY_SLIPPAGE_BPS` (default 100), `TREASURY_MAX_SWAP_USD` (default 20), `TREASURY_ORIGIN_ASSET` (default `nep141:wrap.near`), `ONECLICK_JWT` for the partner fee schedule.
+
 ## Tests
-`pnpm test`: configuration, card lookup, the indexer risk client, the terminal prompt and every branch of the guard, with no network.
+`pnpm test`: configuration, card lookup, the indexer risk client, the terminal prompt, every branch of the guard, card buffers, treasury plans and the 1Click client, with no network.

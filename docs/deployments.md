@@ -74,6 +74,17 @@ Vault `audit.factory.comatocard.testnet`, code version 3, published from main at
 | Card pays 2 tUSD with 50 Tgas | refused before execution | `attach at least 80 Tgas`, nothing reserved (#58) |
 | Card pays 2 tUSD with 100 Tgas | `EYcoFo6RHbcvsjuZZSXzkhLgVovqefWvufKAvnssSzpi` | Registry check, `payment_settled`, `reserved` back to 0 |
 
+### Treasury dry run on 2026-11-12
+Vault `rio74936.factory.comatocard.testnet`; `TREASURY_ACCOUNT=near` only as an existing mainnet account for the quote. Card 1 (30 tUSD per day) was added through the relayer, tx `B3FVCC7k6MnoJwqty5aDgZpMtSsAzRGxQzQ8e6pRDUbj`.
+
+| Command | Plan |
+|-|-|
+| `pnpm treasury` before card 1 | `none`: cards need 50 tUSD, 78 tUSD available |
+| `pnpm treasury` after card 1 | `top_up`: cards need 80 tUSD, deficit 2 tUSD, 1Click quotes 0.5795 wNEAR (2.03 USD) for exactly 2 USDC, slippage 100 bps |
+| `TREASURY_MAX_SWAP_USD=1 pnpm treasury` | `refused`: costs 2.03 USD, above the 1 USD cap |
+
+Nothing was signed or sent; a mainnet swap waits for team confirmation.
+
 ### Relayer check on 2026-11-12
 Relayer `riorblade-relayer-6393.testnet` from `apps/relayer` against vault `rio74936.factory.comatocard.testnet`, owner `riorblade-e2e-1794374914.testnet`. Commands from `apps/relayer/README.md`.
 

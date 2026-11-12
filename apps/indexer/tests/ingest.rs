@@ -397,3 +397,78 @@ async fn a_rejected_card_key_is_cleared() {
         .unwrap();
     assert_eq!(card.0, None);
 }
+
+/// A source that answers after a delay and records how many requests overlap.
+struct SlowSource {
+    inner: FixtureSource,
+    in_flight: std::sync::atomic::AtomicUsize,
+    max_in_flight: std::sync::atomic::AtomicUsize,
+}
+
+impl comatocard_indexer::neardata::BlockSource for SlowSource {
+    async fn final_height(&self) -> anyhow::Result<u64> {
+        self.inner.final_height().await
+    }
+
+    async fn block(
+        &self,
+        height: u64,
+    ) -> anyhow::Result<Option<comatocard_indexer::neardata::Block>> {
+        use std::sync::atomic::Ordering::SeqCst;
+        let now = self.in_flight.fetch_add(1, SeqCst) + 1;
+        self.max_in_flight.fetch_max(now, SeqCst);
+        tokio::time::sleep(Duration::from_millis(20)).await;
+        self.in_flight.fetch_sub(1, SeqCst);
+        self.inner.block(height).await
+    }
+}
+
+#[tokio::test]
+async fn prefetches_blocks_concurrently_and_indexes_them_in_order() {
+    let pool = support::database().await;
+    let source = Arc::new(SlowSource {
+        inner: FixtureSource::new(scenario()),
+        in_flight: 0.into(),
+        max_in_flight: 0.into(),
+    });
+    let progress = Arc::new(Progress::default());
+    let shutdown = CancellationToken::new();
+    let runner = Runner {
+        pool: pool.clone(),
+        source: source.clone(),
+        bus: EventBus::default(),
+        tracked: tracked(),
+        start_block: Some(100),
+        poll_interval: Duration::from_millis(5),
+        progress: progress.clone(),
+    };
+    let task = tokio::spawn(runner.run(shutdown.clone()));
+    tokio::time::timeout(Duration::from_secs(10), async {
+        while progress.indexed() != Some(108) {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+    })
+    .await
+    .expect("runner reaches the head");
+    shutdown.cancel();
+    task.await.unwrap().unwrap();
+
+    assert!(
+        source
+            .max_in_flight
+            .load(std::sync::atomic::Ordering::SeqCst)
+            > 1
+    );
+    assert_eq!(stored_height(&pool).await.unwrap(), Some(108));
+    // The projection must equal a strictly sequential run over the same blocks.
+    let sequential = support::database().await;
+    index_scenario(&sequential).await;
+    let sql =
+        "select coalesce(payment_id, -1), status, card_id, amount::text from payments order by id";
+    let prefetched: Vec<(i64, String, i32, String)> =
+        sqlx::query_as(sql).fetch_all(&pool).await.unwrap();
+    let expected: Vec<(i64, String, i32, String)> =
+        sqlx::query_as(sql).fetch_all(&sequential).await.unwrap();
+    assert!(!expected.is_empty());
+    assert_eq!(prefetched, expected);
+}

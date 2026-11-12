@@ -22,9 +22,11 @@ use super::vaults::{self, Card};
 use super::{ApiError, AppState};
 use crate::rpc::Chain;
 
-/// Nesting and cost caps for the public endpoint.
-const MAX_DEPTH: usize = 6;
-const MAX_COMPLEXITY: usize = 500;
+/// Nesting and cost caps for the public endpoint. The schema has no nested types, so the depth
+/// cap only matters for introspection: it fits the query `GraphiQL` sends (about 13 levels)
+/// and rejects deeper ones.
+const MAX_DEPTH: usize = 16;
+const MAX_COMPLEXITY: usize = 1000;
 
 pub type IndexerSchema<C> = Schema<QueryRoot<C>, EmptyMutation, EmptySubscription>;
 

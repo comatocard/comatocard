@@ -139,12 +139,28 @@ async fn maps_request_errors() {
     assert_eq!(body["errors"][0]["message"], json!("vault not found"));
 }
 
+/// The introspection query `GraphiQL` sends to load the schema (graphql-js `getIntrospectionQuery`).
+const INTROSPECTION: &str = "query IntrospectionQuery { __schema { queryType { name } mutationType { name } subscriptionType { name } types { ...FullType } directives { name description locations args { ...InputValue } } } } fragment FullType on __Type { kind name description fields(includeDeprecated: true) { name description args { ...InputValue } type { ...TypeRef } isDeprecated deprecationReason } inputFields { ...InputValue } interfaces { ...TypeRef } enumValues(includeDeprecated: true) { name description isDeprecated deprecationReason } possibleTypes { ...TypeRef } } fragment InputValue on __InputValue { name description type { ...TypeRef } defaultValue } fragment TypeRef on __Type { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name } } } } } } } }";
+
+#[tokio::test]
+async fn answers_the_graphiql_introspection_query() {
+    let app = app().await;
+    let body = graphql(&app, INTROSPECTION).await;
+    assert!(body["errors"].is_null(), "{body}");
+    assert_eq!(
+        body["data"]["__schema"]["queryType"]["name"],
+        json!("QueryRoot")
+    );
+}
+
 #[tokio::test]
 async fn rejects_queries_nested_too_deep() {
     let app = app().await;
-    let deep =
-        "{ __schema { types { fields { type { ofType { ofType { ofType { name } } } } } } } }";
-    let body = graphql(&app, deep).await;
+    let mut deep = String::from("{ __schema { types { fields { type { ");
+    deep.push_str(&"ofType { ".repeat(14));
+    deep.push_str("name");
+    deep.push_str(&" }".repeat(14 + 5));
+    let body = graphql(&app, &deep).await;
     assert!(body["data"].is_null(), "{body}");
     assert!(
         body["errors"][0]["message"]

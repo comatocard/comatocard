@@ -21,7 +21,7 @@ Demo accounts: `comatocard-shop.testnet` (merchant), `comatocard-council.testnet
 
 ### Verify
 - `near contract call-function as-read-only factory.comatocard.testnet get_config json-args '{}' network-config testnet now` shows the latest vault code hash above. New vaults use the latest code; existing vaults keep the code they were created with.
-- The vault hash equals the base58 SHA-256 of `target/near/vault/vault.wasm` built from the same commit with `pnpm turbo run build --filter=@comatocard/vault`.
+- From release v0.4.1 on, testnet code is deployed from the release assets, built with `cargo near build reproducible-wasm` in the image pinned in each contract's `Cargo.toml`. To check it, check out the release tag, run `cargo near build reproducible-wasm --manifest-path contracts/vault/Cargo.toml` (Docker required) and compare `python3 scripts/code-hash.py target/near/vault/vault.wasm` with the release `CODE_HASHES` asset and the hash on chain.
 
 ### End-to-end check on 2026-11-10
 | Step | Transaction | Result |

@@ -1,6 +1,6 @@
 {
   "name": "@comatocard/sdk",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Comatocard contract types, event schemas and vault client",
   "license": "MIT",
   "repository": {

@@ -12,7 +12,8 @@
     "typecheck": "next typegen && tsc -p tsconfig.json --noEmit",
     "lint": "biome check . && eslint . --max-warnings 0",
     "test": "vitest run --coverage",
-    "test:integration": "vitest run --config vitest.integration.config.ts"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@comatocard/agents": "workspace:*",
@@ -35,6 +36,7 @@
   },
   "devDependencies": {
     "@comatocard/config": "workspace:*",
+    "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "4.3.4",
     "@types/node": "26.6.6",
     "@types/react": "19.3.0",

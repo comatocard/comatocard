@@ -41,18 +41,21 @@ export function PanelGlow() {
  */
 export function SetupLayout({
   step,
+  done,
   stage,
   panel,
   onBack,
   children,
 }: {
   step: number;
+  /** What the chain has done, per step, for the checks in the step list. */
+  done: readonly boolean[];
   stage: ReactNode;
   panel: RefObject<HTMLDivElement | null>;
   onBack: (() => void) | null;
   children: ReactNode;
 }) {
-  const done = step >= DONE_STEP;
+  const finished = step >= DONE_STEP;
   return (
     <main className="flex min-h-dvh flex-col lg:grid lg:grid-cols-[minmax(440px,42%)_1fr]">
       <aside className="relative px-6 pt-[max(16px,env(safe-area-inset-top))] lg:flex lg:flex-col lg:justify-between lg:overflow-hidden lg:bg-[#0b0c0d] lg:px-14 lg:py-10 lg:text-white">
@@ -72,12 +75,12 @@ export function SetupLayout({
           </button>
           <SetupProgress step={step} />
           <span className="w-9 text-right text-[13px] font-semibold text-muted tabular-nums">
-            {done ? "Done" : `${step + 1}/3`}
+            {finished ? "Done" : `${step + 1}/3`}
           </span>
         </div>
         <div className="relative py-8 lg:py-0">{stage}</div>
         <div className="relative hidden lg:block">
-          <SetupStepList step={step} />
+          <SetupStepList step={step} done={done} />
         </div>
       </aside>
       <section className="flex flex-1 flex-col px-6 pb-[max(20px,env(safe-area-inset-bottom))] lg:items-center lg:justify-center lg:px-16 lg:py-12">

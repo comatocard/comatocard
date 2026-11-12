@@ -101,6 +101,7 @@ export default function SetupPage() {
   return (
     <SetupLayout
       step={step}
+      done={done}
       panel={panel}
       onBack={back}
       stage={

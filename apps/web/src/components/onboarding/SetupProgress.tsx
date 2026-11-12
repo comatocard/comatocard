@@ -48,19 +48,22 @@ export function SetupProgress({ step }: { step: number }) {
   );
 }
 
-/** The desktop panel's list of steps: done ones get a check, the current one is bright. */
-export function SetupStepList({ step }: { step: number }) {
+/**
+ * The desktop panel's list of steps. A check means the chain has it done, so going back to a step
+ * keeps its check; the current step is bright.
+ */
+export function SetupStepList({ step, done }: { step: number; done: readonly boolean[] }) {
   return (
     <ol className="space-y-3.5">
       {SETUP_STEPS.map((name, i) => {
-        const done = i < step;
+        const finished = done[i] === true || i < step;
         const current = i === step;
         return (
           <li
             key={name}
             className={cn(
               "flex items-center gap-3 text-[15px] text-white transition-opacity duration-300",
-              done || current ? "opacity-100" : "opacity-45",
+              finished || current ? "opacity-100" : "opacity-45",
               current ? "font-semibold" : "font-medium",
             )}
             aria-current={current ? "step" : undefined}
@@ -68,10 +71,10 @@ export function SetupStepList({ step }: { step: number }) {
             <span
               className={cn(
                 "grid size-[26px] place-items-center rounded-full text-[12px] font-bold transition-colors duration-300 [&_svg]:size-3.5",
-                stepDotTone(done, current),
+                stepDotTone(finished, current),
               )}
             >
-              {done ? <Check strokeWidth={3} /> : i + 1}
+              {finished ? <Check strokeWidth={3} /> : i + 1}
             </span>
             {name}
           </li>

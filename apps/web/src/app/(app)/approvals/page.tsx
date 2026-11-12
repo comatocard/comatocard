@@ -3,7 +3,8 @@ import { type Payment, vaultCalls } from "@comatocard/sdk";
 import { type ReactNode, useState } from "react";
 import { DaoDecision } from "../../../components/approvals/DaoDecision";
 import { ActionStatus } from "../../../components/form/ActionStatus";
-import { Card, PageHeader, Skeleton } from "../../../components/ui";
+import { Card, PageHeader } from "../../../components/ui";
+import { ApprovalSkeleton } from "../../../components/ui/ScreenSkeletons";
 import { useApprovals, useCards, useToken } from "../../../hooks/data";
 import { useDaoPolicy, useDaoProposals } from "../../../hooks/useDao";
 import { useLiveFeed } from "../../../hooks/useLiveFeed";
@@ -14,6 +15,7 @@ import { useVault } from "../../../hooks/useVault";
 import { accountUrl } from "../../../lib/config";
 import type { DaoPolicy, DaoProposal } from "../../../lib/dao";
 import { ago } from "../../../lib/format";
+import { SmoothHeight } from "../../../lib/motion/SmoothHeight";
 import { nsToMs, reasonText } from "../../../lib/payments";
 import { displayUnits } from "../../../lib/units";
 
@@ -47,29 +49,32 @@ export default function ApprovalsPage() {
         title="Approvals"
         description="Payments waiting for you. Nothing moves until you decide."
       />
-      <Queue
-        loading={approvals.isLoading}
-        error={approvals.error?.message}
-        items={approvals.data?.items}
-        render={(row) => (
-          <ApprovalCard
-            key={row.id}
-            row={row}
-            vault={vaultId ?? ""}
-            cardLabel={labels.get(row.card_id) ?? `Card ${row.card_id}`}
-            decimals={token.data?.decimals ?? 0}
-            symbol={token.data?.symbol ?? ""}
-            now={now}
-            canDecide={dao === null && canDecide(row)}
-            accountId={accountId}
-            dao={
-              dao && daoPolicy.data
-                ? { id: dao, policy: daoPolicy.data, proposals: proposals.data }
-                : null
-            }
-          />
-        )}
-      />
+      {/* The queue swaps skeleton, requests and empty state; its height follows smoothly. */}
+      <SmoothHeight>
+        <Queue
+          loading={approvals.isLoading}
+          error={approvals.error?.message}
+          items={approvals.data?.items}
+          render={(row) => (
+            <ApprovalCard
+              key={row.id}
+              row={row}
+              vault={vaultId ?? ""}
+              cardLabel={labels.get(row.card_id) ?? `Card ${row.card_id}`}
+              decimals={token.data?.decimals ?? 0}
+              symbol={token.data?.symbol ?? ""}
+              now={now}
+              canDecide={dao === null && canDecide(row)}
+              accountId={accountId}
+              dao={
+                dao && daoPolicy.data
+                  ? { id: dao, policy: daoPolicy.data, proposals: proposals.data }
+                  : null
+              }
+            />
+          )}
+        />
+      </SmoothHeight>
 
       {approvals.data?.approvers.length ? (
         <>
@@ -111,7 +116,7 @@ function Queue({
   items: Payment[] | undefined;
   render: (row: Payment) => ReactNode;
 }) {
-  if (loading) return <Skeleton className="h-28 w-full rounded-[22px]" />;
+  if (loading) return <ApprovalSkeleton />;
   if (error) {
     return (
       <Card className="p-6 text-center text-sm text-muted">

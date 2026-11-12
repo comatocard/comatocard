@@ -1,11 +1,9 @@
 "use client";
-import { type CardKind, vaultCalls } from "@comatocard/sdk";
-import { KeyPair } from "near-api-js";
+import type { CardKind } from "@comatocard/sdk";
 import { useState } from "react";
-import { useToken } from "../../hooks/data";
-import { useOwnerAction } from "../../hooks/useOwnerAction";
-import { TOKEN_ID } from "../../lib/config";
-import { DEFAULT_FORM, type PolicyForm, toPolicy } from "../../lib/policy-form";
+import { useIssueCard } from "../../hooks/setup";
+import { DEFAULT_FORM, type PolicyForm } from "../../lib/policy-form";
+import { cardEnv } from "../../lib/setup-flow";
 import { ActionStatus } from "../form/ActionStatus";
 import { Choice, Field } from "../form/Field";
 import { PolicyFields } from "../form/PolicyFields";
@@ -18,8 +16,8 @@ const KINDS = [
 ] as const;
 
 /**
- * Issues a card. The key pair is made here, in the browser; only the public key goes on chain.
- * The secret is shown once, after the card exists, for the agent or person who will hold it.
+ * Issues a card with every policy field. The secret is shown once, after the card exists, for the
+ * agent or person who will hold it.
  */
 export function NewCardSheet({
   open,
@@ -30,53 +28,21 @@ export function NewCardSheet({
   onClose: () => void;
   vault: string;
 }) {
-  const token = useToken();
   const [label, setLabel] = useState("");
   const [kind, setKind] = useState<CardKind>("agent");
   const [form, setForm] = useState<PolicyForm>(DEFAULT_FORM);
-  const [error, setError] = useState<{ field: keyof PolicyForm; message: string } | null>(null);
-  const [labelError, setLabelError] = useState<string | null>(null);
-  const [secret, setSecret] = useState<string | null>(null);
-  const { state, run, runDirect, reset } = useOwnerAction(vault);
-  const symbol = token.data?.symbol ?? "";
-
-  const submit = async () => {
-    setError(null);
-    setLabelError(null);
-    const decimals = token.data?.decimals;
-    if (decimals === undefined) return;
-    const trimmed = label.trim();
-    if (!trimmed || new TextEncoder().encode(trimmed).length > 64) {
-      setLabelError("Name the card, up to 64 characters.");
-      return;
-    }
-    const result = toPolicy(form, { token: TOKEN_ID, decimals });
-    if (!result.ok) {
-      setError({ field: result.field, message: result.message });
-      return;
-    }
-    const key = KeyPair.fromRandom("ed25519");
-    const call = vaultCalls(vault).createCard({
-      publicKey: key.getPublicKey().toString(),
-      label: trimmed,
-      kind,
-      policy: result.policy,
-    });
-    // Kept in memory only until the sheet closes; the vault stores the public key alone.
-    setSecret(key.toString());
-    if (!(await run(call))) return;
-  };
+  const { issue, error, secret, symbol, ready, state, retryDirect, reset } = useIssueCard(vault);
+  const policyError =
+    error && error.field !== "label" ? { field: error.field, message: error.message } : null;
 
   const close = () => {
     reset();
-    setSecret(null);
     setLabel("");
     setForm(DEFAULT_FORM);
-    setError(null);
     onClose();
   };
 
-  const envSnippet = secret ? `VAULT_ID=${vault}\nCARD_PRIVATE_KEY=${secret}\n` : "";
+  const envSnippet = secret ? cardEnv(vault, secret) : "";
 
   return (
     <BottomSheet open={open} onClose={close} label="New card">
@@ -113,20 +79,20 @@ export function NewCardSheet({
               placeholder="Research agent"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              error={labelError}
+              error={error?.field === "label" ? error.message : null}
             />
             <Choice label="Who holds it" options={KINDS} value={kind} onChange={setKind} />
-            <PolicyFields form={form} onChange={setForm} symbol={symbol} error={error} />
+            <PolicyFields form={form} onChange={setForm} symbol={symbol} error={policyError} />
           </div>
           <div className="mt-6">
             <Button
-              onClick={() => void submit()}
-              disabled={!token.data || state.status === "signing"}
+              onClick={() => void issue({ label, kind, form })}
+              disabled={!ready || state.status === "signing"}
             >
               {state.status === "signing" ? "Confirm in your wallet…" : "Issue card"}
             </Button>
           </div>
-          <ActionStatus state={state} onDirect={() => void runDirect()} />
+          <ActionStatus state={state} onDirect={retryDirect} />
         </div>
       )}
     </BottomSheet>

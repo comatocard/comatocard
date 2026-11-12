@@ -1,11 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useToken } from "../../hooks/data";
-import { useOwnerAction } from "../../hooks/useOwnerAction";
-import { isRegistered } from "../../lib/chain";
-import { TOKEN_ID } from "../../lib/config";
-import { parseUnits } from "../../lib/units";
-import { topUpCalls } from "../../lib/vault-setup";
+import { useTopUp } from "../../hooks/setup";
 import { ActionStatus } from "../form/ActionStatus";
 import { Field } from "../form/Field";
 import { BottomSheet, Button } from "../ui";
@@ -22,33 +17,11 @@ export function TopUpSheet({
   owner: string;
   vault: string;
 }) {
-  const token = useToken();
   const [amount, setAmount] = useState("100");
-  const [error, setError] = useState<string | null>(null);
-  const { state, runDirect, reset } = useOwnerAction(vault);
-  const symbol = token.data?.symbol ?? "";
-
-  const submit = async () => {
-    setError(null);
-    const decimals = token.data?.decimals;
-    if (decimals === undefined) return;
-    const raw = parseUnits(amount, decimals);
-    if (!raw || raw === "0" || BigInt(raw) > 10_000n * 10n ** BigInt(decimals)) {
-      setError("Enter an amount up to 10,000.");
-      return;
-    }
-    const [ownerRegistered, vaultRegistered] = await Promise.all([
-      isRegistered(TOKEN_ID, owner),
-      isRegistered(TOKEN_ID, vault),
-    ]);
-    await runDirect(
-      topUpCalls({ token: TOKEN_ID, owner, vault, amount: raw, ownerRegistered, vaultRegistered }),
-    );
-  };
+  const { topUp, error, symbol, ready, state, reset } = useTopUp(owner, vault);
 
   const close = () => {
     reset();
-    setError(null);
     onClose();
   };
 
@@ -72,8 +45,8 @@ export function TopUpSheet({
           <Button onClick={close}>Done</Button>
         ) : (
           <Button
-            onClick={() => void submit()}
-            disabled={!token.data || state.status === "signing"}
+            onClick={() => void topUp(amount)}
+            disabled={!ready || state.status === "signing"}
           >
             {state.status === "signing" ? "Confirm in your wallet…" : "Mint and deposit"}
           </Button>

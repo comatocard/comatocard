@@ -1,11 +1,7 @@
 "use client";
-import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { useOwnerAction } from "../../hooks/useOwnerAction";
-import { useVault } from "../../hooks/useVault";
-import { accountExists } from "../../lib/chain";
+import { useCreateVault } from "../../hooks/setup";
 import { FACTORY_ID } from "../../lib/config";
-import { createVaultCall, VAULT_NAME } from "../../lib/vault-setup";
 import { ActionStatus } from "../form/ActionStatus";
 import { Field } from "../form/Field";
 import { BottomSheet, Button } from "../ui";
@@ -21,37 +17,12 @@ export function CreateVaultSheet({
   owner: string;
 }) {
   const [name, setName] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [checking, setChecking] = useState(false);
-  const { state, runDirect, reset } = useOwnerAction(null);
-  const { setVaultId } = useVault();
-  const queryClient = useQueryClient();
+  const { create, error, checking, state, reset } = useCreateVault(owner);
   const vaultId = `${name}.${FACTORY_ID}`;
-
-  const submit = async () => {
-    setError(null);
-    if (!VAULT_NAME.test(name)) {
-      setError("Use lowercase letters, digits, - or _.");
-      return;
-    }
-    setChecking(true);
-    const taken = await accountExists(vaultId).catch(() => false);
-    setChecking(false);
-    if (taken) {
-      setError(`${vaultId} already exists.`);
-      return;
-    }
-    // A deposit is attached, so this one is signed and paid by the owner, never relayed.
-    if (await runDirect([createVaultCall(FACTORY_ID, name)])) {
-      setVaultId(vaultId);
-      void queryClient.invalidateQueries({ queryKey: ["vaults", owner] });
-    }
-  };
 
   const close = () => {
     reset();
     setName("");
-    setError(null);
     onClose();
   };
 
@@ -78,7 +49,7 @@ export function CreateVaultSheet({
           <Button onClick={close}>Continue</Button>
         ) : (
           <Button
-            onClick={() => void submit()}
+            onClick={() => void create(name)}
             disabled={!name || checking || state.status === "signing"}
           >
             {state.status === "signing" ? "Confirm in your wallet…" : "Create with 0.5 NEAR"}

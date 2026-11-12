@@ -15,6 +15,10 @@
     "test:integration": {
       "dependsOn": ["^build", "build"],
       "cache": false
+    },
+    "test:e2e": {
+      "dependsOn": ["^build"],
+      "cache": false
     }
   }
 }

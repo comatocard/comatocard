@@ -14,5 +14,8 @@ The pages are not written here. `scripts/sync-content.mjs` turns the repository 
 - `pnpm --filter @comatocard/docs test` checks the Markdown to MDX conversion and the link rewrites.
 - `pnpm --filter @comatocard/docs lint` runs Biome and the SonarJS rules.
 
+## Deploy
+`.github/workflows/docs.yml` builds the site on every push to `main` that touches `apps/docs/`, `docs/` or a README, and deploys `out/` to GitHub Pages with the custom domain `docs.comatocard.xyz` (DNS: `CNAME docs comatocard.github.io`). Run it by hand from the Actions tab with "Run workflow".
+
 ## Origin
 Built from [zeta-chain/docs](https://github.com/zeta-chain/docs) (MIT, see [LICENSE](LICENSE)): its layout, components, illustrations and article icons. ZetaChain content, logos, fonts, services and packages are removed.

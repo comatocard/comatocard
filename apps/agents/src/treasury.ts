@@ -23,11 +23,13 @@ export function cardBuffers(cards: Card[], token: string, nowNs: bigint): CardBu
       const periodSpent = BigInt(c.spend.period) === period ? BigInt(c.spend.period_spent) : 0n;
       const dayRoom = clamp(BigInt(c.policy.daily_limit) - daySpent);
       const periodRoom = clamp(BigInt(c.policy.monthly_limit) - periodSpent);
-      return { cardId: c.id, label: c.label, buffer: dayRoom < periodRoom ? dayRoom : periodRoom };
+      return { cardId: c.id, label: c.label, buffer: smaller(dayRoom, periodRoom) };
     });
 }
 
 const clamp = (value: bigint) => (value > 0n ? value : 0n);
+// Math.min does not take bigint.
+const smaller = (a: bigint, b: bigint) => (b < a ? b : a);
 
 export interface TreasuryConfig {
   token: string;

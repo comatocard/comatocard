@@ -110,7 +110,7 @@ export function AccountMenu() {
             </svg>
             <span className="grow">
               <span className="block text-sm font-semibold">Settings</span>
-              <span className="block text-xs text-muted">Vaults, export, network</span>
+              <span className="block text-xs text-muted">Card account, export, network</span>
             </span>
             <svg
               aria-hidden="true"

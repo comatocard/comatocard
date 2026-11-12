@@ -56,14 +56,14 @@ export function CreateVaultSheet({
   };
 
   return (
-    <BottomSheet open={open} onClose={close} label="Create a vault">
-      <h2 className="mb-1 text-xl font-semibold">Create a vault</h2>
+    <BottomSheet open={open} onClose={close} label="Create a card account">
+      <h2 className="mb-1 text-xl font-semibold">Create a card account</h2>
       <p className="mb-5 text-sm text-muted">
-        Your vault is its own NEAR account. It holds the funds and issues the cards. 0.5 NEAR from
-        your wallet pays its storage and the gas of every card payment.
+        Your card account holds the money your cards spend. It is its own NEAR account and only you
+        control it. 0.5 NEAR from your wallet pays its storage and the gas of every card payment.
       </p>
       <Field
-        label="Vault name"
+        label="Name"
         value={name}
         autoCapitalize="none"
         autoCorrect="off"
@@ -71,11 +71,11 @@ export function CreateVaultSheet({
         placeholder="acme"
         onChange={(e) => setName(e.target.value.toLowerCase().trim())}
         error={error}
-        hint={name ? vaultId : `The vault will be <name>.${FACTORY_ID}`}
+        hint={name ? vaultId : `Its NEAR account will be <name>.${FACTORY_ID}`}
       />
       <div className="mt-5">
         {state.status === "confirmed" ? (
-          <Button onClick={close}>Open the vault</Button>
+          <Button onClick={close}>Continue</Button>
         ) : (
           <Button
             onClick={() => void submit()}

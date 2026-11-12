@@ -228,7 +228,7 @@ function SignStep({
   if (!canSign) {
     return (
       <p className="text-center text-[13px] text-muted">
-        Only the vault owner can sign these limits.
+        Only the owner of this card account can sign these limits.
       </p>
     );
   }

@@ -143,7 +143,7 @@ function ConnectScreen({ onBack }: { onBack: () => void }) {
           </div>
           <div className={styles.tourCopy}>
             <h1>Connect your wallet</h1>
-            <p>Your vault is owned by your NEAR account. Testnet, no real money.</p>
+            <p>Your card account is owned by your NEAR account. Testnet, no real money.</p>
             <Stepper current={TOUR.length} total={TOUR.length + 1} />
           </div>
         </section>
@@ -286,7 +286,7 @@ function RecordVisual() {
         <div className={styles.phoneIsland} />
         <div className={styles.phoneContent}>
           <div className={styles.homeHeroMini}>
-            <span>Vault balance</span>
+            <span>Card account</span>
             <b>tUSD</b>
             <em>on NEAR</em>
           </div>

@@ -57,7 +57,7 @@ export function TopUpSheet({
       <h2 className="mb-1 text-xl font-semibold">Top up with test {symbol}</h2>
       <p className="mb-5 text-sm text-muted">
         {symbol} is the testnet stablecoin. Its faucet mints to your account, then one deposit moves
-        it into the vault. Cards spend from the vault only.
+        it into your card account. Cards spend from it only.
       </p>
       <Field
         label="Amount"

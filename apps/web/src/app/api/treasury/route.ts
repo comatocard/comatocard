@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     return Response.json({ error: "Too many requests, try again in a minute." }, { status: 429 });
   }
   const vault = accountId.safeParse(new URL(request.url).searchParams.get("vault"));
-  if (!vault.success) return Response.json({ error: "Name a vault." }, { status: 400 });
+  if (!vault.success) return Response.json({ error: "Name a card account." }, { status: 400 });
   const client = createVaultClient({ rpcUrl: RPC_URL, vaultId: vault.data });
   const jwt = process.env.ONECLICK_JWT;
   try {

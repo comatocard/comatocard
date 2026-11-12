@@ -104,8 +104,8 @@ export function NewCardSheet({
         <div>
           <h2 className="mb-1 text-xl font-semibold">New card</h2>
           <p className="mb-5 text-sm text-muted">
-            A card is a key that can only pay from this vault, inside these limits. The holder
-            can&apos;t change them.
+            A card is a key that can only pay from your card account, inside these limits. The
+            holder can&apos;t change them.
           </p>
           <div className="space-y-4">
             <Field

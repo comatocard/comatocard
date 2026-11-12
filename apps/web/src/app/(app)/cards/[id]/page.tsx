@@ -91,7 +91,9 @@ function CardScreen() {
     return (
       <div className="mx-auto w-full max-w-[560px]">
         <SubHeader title="Card" />
-        <p className="mt-10 text-center text-sm text-muted">This vault has no card {params.id}.</p>
+        <p className="mt-10 text-center text-sm text-muted">
+          This card account has no card {params.id}.
+        </p>
       </div>
     );
   }
@@ -181,7 +183,7 @@ function CardScreen() {
             {{ off: "Off", block_only: "Refuse blocked", strict: "Strict" }[p.risk_mode]}
           </dd>
           <dt className="text-muted">Held by</dt>
-          <dd className="truncate text-right font-semibold">{card.holder ?? "Vault owner"}</dd>
+          <dd className="truncate text-right font-semibold">{card.holder ?? "You"}</dd>
           <dt className="text-muted">Status</dt>
           <dd className="text-right font-semibold capitalize">{card.status}</dd>
         </dl>

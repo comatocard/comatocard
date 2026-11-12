@@ -71,8 +71,8 @@ function PlanBody({
         <span className="text-[12px] text-muted">dry run</span>
       </div>
       <p className="mt-1 text-muted">
-        Cards may still spend {displayUnits(plan.required, decimals)} {symbol}; the vault holds{" "}
-        {displayUnits(plan.available, decimals)} {symbol}.
+        Cards may still spend {displayUnits(plan.required, decimals)} {symbol}; your card account
+        holds {displayUnits(plan.available, decimals)} {symbol}.
       </p>
       {plan.action === "none" ? null : (
         <div className="mt-3 rounded-2xl bg-pill px-3.5 py-3 text-[12.5px]">

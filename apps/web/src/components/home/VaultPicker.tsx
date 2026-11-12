@@ -38,7 +38,7 @@ export function VaultPicker({
         className="mx-auto flex h-10 items-center gap-2 rounded-full border border-line bg-white pl-4 pr-3 text-[14px] font-semibold [box-shadow:0_8px_18px_-12px_rgba(0,0,0,.2)]"
       >
         <span className="max-w-[220px] truncate">
-          {vaultId ? shortVault(vaultId) : (label ?? "Choose a vault")}
+          {vaultId ? shortVault(vaultId) : (label ?? "Choose a card account")}
         </span>
         <svg
           aria-hidden="true"
@@ -53,8 +53,8 @@ export function VaultPicker({
           <path d="m6 9 6 6 6-6" />
         </svg>
       </button>
-      <BottomSheet open={open} onClose={() => setOpen(false)} label="Vaults">
-        <h2 className="mb-4 text-xl font-semibold">Vaults</h2>
+      <BottomSheet open={open} onClose={() => setOpen(false)} label="Card accounts">
+        <h2 className="mb-4 text-xl font-semibold">Card accounts</h2>
         {owner ? (
           <div className="mb-5 divide-y divide-line rounded-[16px] border border-line bg-white px-4">
             <VaultList
@@ -77,7 +77,7 @@ export function VaultPicker({
         >
           <div className="flex-1">
             <Field
-              label="Open a vault by name"
+              label="Open a card account by name"
               placeholder={`name or name.${FACTORY_ID}`}
               autoCapitalize="none"
               value={name}
@@ -96,7 +96,7 @@ export function VaultPicker({
                 onCreate();
               }}
             >
-              Create a vault
+              Create a card account
             </Button>
           </div>
         ) : null}
@@ -124,9 +124,9 @@ function VaultList({
   if (loading) return note("Loading your vaults…");
   if (failed)
     return note(
-      "Your vaults could not be listed: the indexer is not reachable. Open one by name below.",
+      "Your card accounts could not be listed: the indexer is not reachable. Open one by name below.",
     );
-  if (!vaults?.length) return note(`No vault yet for ${owner}.`);
+  if (!vaults?.length) return note(`No card account yet for ${owner}.`);
   return (
     <>
       {vaults.map((v) => (

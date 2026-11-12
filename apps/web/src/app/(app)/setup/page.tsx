@@ -83,23 +83,23 @@ export default function SetupPage() {
     <Wrap>
       <PageHeader
         className="mb-5"
-        title="Set up your vault"
+        title="Set up your cards"
         description="Three steps, all on NEAR testnet. You can stop and come back."
       />
       <Card className="divide-y divide-line px-5">
         <Step
           index={1}
-          title="Create your vault"
-          body="A NEAR account that holds the funds and issues the cards. Only you control it. 0.5 NEAR from your wallet pays its storage and card gas."
+          title="Create your card account"
+          body="Holds the money your cards spend, as its own NEAR account that only you control. 0.5 NEAR from your wallet pays its storage and card gas."
           done={hasVault}
           enabled
-          action="Create a vault"
+          action="Create a card account"
           onAction={() => setSheet("vault")}
         />
         <Step
           index={2}
           title="Add test funds"
-          body="Mint tUSD, the testnet stablecoin, and deposit it. Cards spend from the vault only."
+          body="Mint tUSD, the testnet stablecoin, and deposit it. Cards spend from it only."
           done={funded}
           enabled={hasVault}
           action="Top up"
@@ -118,14 +118,14 @@ export default function SetupPage() {
 
       <div className="mt-6">
         <Button onClick={() => router.replace("/home")} disabled={!hasVault}>
-          {hasCard ? "Open my vault" : "Skip to my vault"}
+          {hasCard ? "Go to my cards" : "Skip to my cards"}
         </Button>
       </div>
       <div className="mt-5 flex justify-center">
         <VaultPicker
           owner={accountId}
           onCreate={() => setSheet("vault")}
-          label="Already have a vault?"
+          label="Already have a card account?"
         />
       </div>
 

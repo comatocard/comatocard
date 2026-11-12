@@ -23,7 +23,7 @@ export function AvailableHero({
       <div className="flex items-center gap-1.5 text-[15px] font-medium text-muted">
         Available
         <InfoTip label="Available">
-          What the vault can pay out now, read from the contract. Funds reserved for payments in
+          What your cards can spend from now, read from the contract. Funds reserved for payments in
           flight are shown apart and come back if a payment fails.
         </InfoTip>
       </div>

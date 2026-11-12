@@ -15,7 +15,7 @@ const RISK_MODES = [
 ] as const;
 
 const RISK_HINT = {
-  off: "The vault does not ask the registry before paying.",
+  off: "Payments go out without asking the registry.",
   block_only: "Payments to accounts the registry blocks are refused on chain.",
   strict: "Blocked accounts are refused, flagged ones wait for your approval.",
 } as const;

@@ -65,7 +65,7 @@ export default function AccountPage() {
 
       {vaultId ? (
         <>
-          <Section title="Vault" className="mb-[22px]">
+          <Section title="Card account" className="mb-[22px]">
             <Card className="divide-y divide-line px-5">
               <Row label="Account" value={vaultId} href={accountUrl(vaultId)} />
               <Row label="Owner" value={owner ?? "…"} {...ownerLink} />

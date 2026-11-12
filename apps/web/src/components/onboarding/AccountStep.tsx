@@ -1,6 +1,7 @@
 "use client";
 import { useCreateVault } from "../../hooks/setup";
 import { FACTORY_ID } from "../../lib/config";
+import { SmoothHeight } from "../../lib/motion/SmoothHeight";
 import { Field } from "../form/Field";
 import { VaultPicker } from "../home/VaultPicker";
 import { InfoTip } from "../ui";
@@ -28,34 +29,36 @@ export function AccountStep({
         sub="Holds what your cards spend."
         tip="Its own NEAR account that only your wallet controls. Cards pay from it, never from your wallet."
       />
-      <div className="mt-6 space-y-3">
-        <div data-reveal>
-          <Field
-            label="Name"
-            value={name}
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-            placeholder="my-agents"
-            onChange={(e) => onName(e.target.value.toLowerCase().trim())}
-            error={error}
-            hint={name ? `${name}.${FACTORY_ID}` : null}
-          />
+      <SmoothHeight className="mt-6">
+        <div className="space-y-3">
+          <div data-reveal>
+            <Field
+              label="Name"
+              value={name}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              placeholder="my-agents"
+              onChange={(e) => onName(e.target.value.toLowerCase().trim())}
+              error={error}
+              hint={name ? `${name}.${FACTORY_ID}` : null}
+            />
+          </div>
+          <div
+            data-reveal
+            className="flex items-center justify-between rounded-[16px] bg-card px-4 py-3.5 text-[14px]"
+          >
+            <span className="flex items-center gap-1.5 text-muted">
+              One-time cost
+              <InfoTip label="One-time cost">
+                Pays the account&apos;s storage and the gas of every card payment. It stays in the
+                card account.
+              </InfoTip>
+            </span>
+            <span className="font-semibold tabular-nums">0.5 NEAR</span>
+          </div>
         </div>
-        <div
-          data-reveal
-          className="flex items-center justify-between rounded-[16px] bg-card px-4 py-3.5 text-[14px]"
-        >
-          <span className="flex items-center gap-1.5 text-muted">
-            One-time cost
-            <InfoTip label="One-time cost">
-              Pays the account&apos;s storage and the gas of every card payment. It stays in the
-              card account.
-            </InfoTip>
-          </span>
-          <span className="font-semibold tabular-nums">0.5 NEAR</span>
-        </div>
-      </div>
+      </SmoothHeight>
       <StepFooter
         state={state}
         secondary={

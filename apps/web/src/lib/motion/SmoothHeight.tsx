@@ -5,7 +5,8 @@ import { DURATION, EASE, gsap, prefersReducedMotion } from "./gsap";
 /**
  * Tweens its own height whenever its content grows or shrinks, then returns to `auto`, so a
  * message, an error line or a new row never makes the layout jump. The outer box carries no
- * padding: padding on it would be measured twice.
+ * padding: padding on it would be measured twice. It clips only while it tweens, so a tooltip
+ * that pokes out of it stays visible the rest of the time.
  */
 export function SmoothHeight({ children, className }: { children: ReactNode; className?: string }) {
   const outer = useRef<HTMLDivElement>(null);
@@ -31,8 +32,12 @@ export function SmoothHeight({ children, className }: { children: ReactNode; cla
           duration: DURATION.height,
           ease: EASE.inOut,
           overwrite: true,
+          onStart: () => {
+            box.style.overflow = "clip";
+          },
           onComplete: () => {
             box.style.height = "auto";
+            box.style.overflow = "";
           },
         },
       );
@@ -45,7 +50,7 @@ export function SmoothHeight({ children, className }: { children: ReactNode; cla
   }, []);
 
   return (
-    <div ref={outer} className={className} style={{ overflow: "clip" }}>
+    <div ref={outer} className={className}>
       <div ref={inner}>{children}</div>
     </div>
   );

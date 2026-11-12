@@ -3,6 +3,7 @@ name: Release
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -26,20 +27,35 @@ jobs:
       - name: Install cargo-near
         run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/near/cargo-near/releases/download/cargo-near-v0.23.0/cargo-near-installer.sh | sh
       - run: pnpm install --frozen-lockfile
-      - name: Build contracts and SDK
-        run: pnpm turbo run build --filter='./contracts/*' --filter=@comatocard/sdk
+      - name: Build contracts reproducibly
+        run: |
+          for contract in vault factory registry mock-ft; do
+            cargo near build reproducible-wasm --manifest-path "contracts/${contract}/Cargo.toml"
+          done
+      - name: Build SDK
+        run: pnpm turbo run build --filter=@comatocard/sdk
       - name: Collect wasm with checksums and NEAR code hashes
         run: |
           mkdir release
-          cp target/near/*/*.wasm release/
+          find . -path ./node_modules -prune -o -path '*/target/near/*' -name '*.wasm' -print -exec cp {} release/ \;
           cd release
           sha256sum ./*.wasm > SHA256SUMS
           python3 -I ../scripts/code-hash.py ./*.wasm > CODE_HASHES
+      - name: Show code hashes
+        run: cat release/CODE_HASHES >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep the build of a manual run
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v7
+        with:
+          name: contracts
+          path: release/
       - name: Attach to the release
+        if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${{ github.event.release.tag_name }}" release/* --clobber
       - name: Publish @comatocard/sdk to GitHub Packages
+        if: github.event_name == 'release'
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
         run: pnpm --filter @comatocard/sdk publish --no-git-checks

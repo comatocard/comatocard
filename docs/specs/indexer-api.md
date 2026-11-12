@@ -35,6 +35,24 @@ All responses are JSON unless noted. Lists use cursor pagination (`?cursor=&limi
 ## WebSocket
 `GET /stream?vault=<id>` or `?merchant=<id>`: pushes each validated event as `{ "contract_id", "event", "data", "block_height", "tx_hash", "timestamp" }` after it is committed.
 
+## GraphQL
+`POST /graphql` answers read-only GraphQL queries; `GET /graphql` serves the GraphiQL explorer. Every field calls the REST route for the same data, so validation, errors and values match REST.
+
+| Field | REST route |
+|-|-|
+| `health` | `GET /health` |
+| `vaults(owner)`, `vault(id)` | `GET /vaults?owner=`, `GET /vaults/:vault` |
+| `cards(vault)`, `cardsByHolder(holder)` | `GET /vaults/:vault/cards`, `GET /cards?holder=` |
+| `payments(vault, card, status, merchant, from, to, limit, cursor)` | `GET /vaults/:vault/payments` |
+| `payment(vault, id)`, `approvals(vault)` | `GET /vaults/:vault/payments/:id`, `GET /vaults/:vault/approvals` |
+| `merchantPayments(merchant, reference)` | `GET /merchants/:merchant/payments` |
+| `analytics(vault)`, `risk(account, vault)` | `GET /analytics/:vault`, `GET /risk/:account` |
+
+- `Card` and `Payment` are typed objects with camelCase fields; `payments` returns `{ items, nextCursor }`. Summaries (`vault`, `payment`, `approvals`, `analytics`, `risk`, `health`) are `JSON` in their REST shape.
+- Errors use the GraphQL `errors` array with the REST message, for example `invalid request: vault: invalid account id` or `vault not found`.
+- Queries deeper than 6 levels or above complexity 500 are rejected.
+- Example: `{ cards(vault: "v5.factory.comatocard.testnet") { cardId label status } payments(vault: "v5.factory.comatocard.testnet", limit: 5) { items { status amount merchant } nextCursor } }`
+
 ## Operations
 - Postgres and the indexer image in Docker Compose (`apps/indexer/docker-compose.yml`).
 - Configuration through environment variables: network, factory id, registry id, database URL, neardata API key (recommended for deployments), head poll interval.

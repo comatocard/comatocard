@@ -3,6 +3,7 @@
 mod analytics;
 mod export;
 mod format;
+mod graphql;
 mod payments;
 mod stream;
 mod vaults;
@@ -139,7 +140,7 @@ async fn risk<C: Chain>(
     State(state): Shared<C>,
     Path(target): Path<String>,
     Query(params): Params,
-) -> ApiResult<impl IntoResponse> {
+) -> ApiResult<axum::Json<crate::risk::Assessment>> {
     let target = account(&target, "account")?;
     let vault = optional_account(&params, "vault")?;
     let assessment = crate::risk::assess_account(
@@ -160,7 +161,8 @@ async fn not_found() -> ApiError {
 
 /// Builds the router over `state`.
 pub fn router<C: Chain + 'static>(state: AppState<C>) -> Router {
-    Router::new()
+    let state = Arc::new(state);
+    let rest = Router::new()
         .route("/health", get(health::<C>))
         .route("/vaults", get(vaults::list::<C>))
         .route("/vaults/{vault}", get(vaults::summary::<C>))
@@ -178,6 +180,12 @@ pub fn router<C: Chain + 'static>(state: AppState<C>) -> Router {
             get(payments::by_merchant::<C>),
         )
         .route("/stream", get(stream::stream::<C>))
-        .fallback(not_found)
-        .with_state(Arc::new(state))
+        .with_state(Arc::clone(&state));
+    let graphql = Router::new()
+        .route(
+            "/graphql",
+            get(graphql::graphiql).post(graphql::execute::<C>),
+        )
+        .with_state(graphql::schema(state));
+    rest.merge(graphql).fallback(not_found)
 }

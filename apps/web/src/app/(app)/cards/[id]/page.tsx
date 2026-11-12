@@ -16,9 +16,9 @@ import {
   BottomSheet,
   Button,
   Card,
-  Skeleton,
   SubHeader,
 } from "../../../../components/ui";
+import { CardScreenSkeleton } from "../../../../components/ui/ScreenSkeletons";
 import { useCards, usePayments, useToken } from "../../../../hooks/data";
 import { useNow } from "../../../../hooks/useNow";
 import { type ActionState, useOwnerAction } from "../../../../hooks/useOwnerAction";
@@ -66,7 +66,7 @@ function CardScreen() {
     return (
       <div className="mx-auto w-full max-w-[560px]">
         <SubHeader title="Card" />
-        <Skeleton className="mx-auto mt-6 aspect-[1.586] w-full max-w-[340px] rounded-[22px]" />
+        <CardScreenSkeleton />
       </div>
     );
   }

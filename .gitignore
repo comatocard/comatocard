@@ -24,3 +24,6 @@ submission*.json
 
 # Coverage profiles
 *.profraw
+
+# TypeScript incremental build state
+*.tsbuildinfo

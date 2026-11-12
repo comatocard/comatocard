@@ -14,3 +14,8 @@ allowedDeprecatedVersions:
   lodash.get: "4"
 
 savePrefix: ""
+
+# near-connect-hooks 1.1.6 depends on @hot-labs/near-connect ^0.11; one copy at 0.12.0, which adds
+# only gas-key APIs and keeps signDelegateActions.
+overrides:
+  "@hot-labs/near-connect": "0.12.0"

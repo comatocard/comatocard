@@ -5,6 +5,24 @@
   "description": "Comatocard agents that hold card keys",
   "license": "MIT",
   "type": "module",
+  "exports": {
+    "./policy-assistant": {
+      "types": "./dist/policy-assistant.d.ts",
+      "import": "./dist/policy-assistant.js"
+    },
+    "./private-chat": {
+      "types": "./dist/private-chat.d.ts",
+      "import": "./dist/private-chat.js"
+    },
+    "./treasury": {
+      "types": "./dist/treasury.d.ts",
+      "import": "./dist/treasury.js"
+    },
+    "./oneclick": {
+      "types": "./dist/oneclick.d.ts",
+      "import": "./dist/oneclick.js"
+    }
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",

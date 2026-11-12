@@ -6,7 +6,7 @@ Who builds what, in which order, and what "done" means. Each task becomes a GitH
 |-|-|-|
 | A. Contracts and indexer | `@owner-a` | `contracts/*`, `apps/indexer`, `packages/sdk` (types and schemas) |
 | B. Agents and services | `@owner-b` | `apps/agents`, `apps/relayer`, treasury and AI integrations |
-| C. Product and infrastructure | `@owner-c` | `apps/web`, `apps/merchant`, monorepo tooling, CI, SonarQube, README, demo |
+| C. Product and infrastructure | `@owner-c` | `apps/web` (owner app and demo merchant), monorepo tooling, CI, SonarQube, README, demo |
 
 ## Status of workstream A (2026-11-10)
 | Item | State |
@@ -20,6 +20,16 @@ Who builds what, in which order, and what "done" means. Each task becomes a GitH
 | Cards as NEP-171 tokens (stretch, `nfts`) | Done, PRs #32 #53, live on testnet, see `docs/deployments.md` |
 | Indexer in Rust | Done, PRs #55 #57 |
 | Contract audit fixes, vault 0.4.0 | Done, PR #65, live on testnet |
+
+## Status of workstream C (2026-11-12)
+| Item | State |
+|-|-|
+| Owner app: sign in, vaults, cards, top up (M1) | Built in `apps/web`, #103 |
+| Approvals, freeze, revoke, rotate, history with reasons, live feed (M2) | Built, #104 |
+| DAO-owned vault: proposals and votes (M3) | Built, #106; not yet run against a DAO-owned vault on testnet |
+| Policy assistant with Verified in TEE, treasury dry run (M4) | Built, #105; assistant checked end to end on testnet |
+| HTTP 402 merchant as `/shop` in `apps/web` | Built, #107 |
+| Hosted demo | Not yet |
 
 ## Interfaces between workstreams
 The specs are the contract. Agree on them first, then build in parallel against mocks.

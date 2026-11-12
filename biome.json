@@ -1,8 +1,20 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
-  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
   "files": {
-    "includes": ["**", "!**/target", "!**/dist", "!**/.next", "!**/drizzle/meta", "!**/*.md"]
+    "includes": [
+      "**",
+      "!**/target",
+      "!**/dist",
+      "!**/.next",
+      "!**/drizzle/meta",
+      "!**/*.md",
+      "!**/public"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -14,11 +26,31 @@
     "enabled": true,
     "rules": {
       "preset": "recommended",
-      "style": { "noNonNullAssertion": "error", "useImportType": "error" },
-      "suspicious": { "noExplicitAny": "error" }
+      "style": {
+        "noNonNullAssertion": "error",
+        "useImportType": "error"
+      },
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noUnknownAtRules": {
+          "level": "error",
+          "options": {
+            "ignore": ["tailwind"]
+          }
+        }
+      }
     }
   },
   "javascript": {
-    "formatter": { "quoteStyle": "double", "semicolons": "always", "trailingCommas": "all" }
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "always",
+      "trailingCommas": "all"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
   }
 }

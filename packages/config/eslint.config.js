@@ -7,9 +7,9 @@ import sonarjs from "eslint-plugin-sonarjs";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
-  { ignores: ["**/dist/**", "**/coverage/**", "**/node_modules/**"] },
+  { ignores: ["**/dist/**", "**/coverage/**", "**/node_modules/**", "**/.next/**", "**/out/**"] },
   {
-    files: ["**/*.ts"],
+    files: ["**/*.ts", "**/*.tsx"],
     languageOptions: { parser: tseslint.parser },
     plugins: { sonarjs },
     rules: sonarjs.configs.recommended.rules,

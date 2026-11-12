@@ -1,0 +1,11 @@
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+
+# Generated from docs/ and the READMEs by scripts/sync-content.mjs
+src/pages/start/
+src/pages/build/
+src/pages/contracts/
+src/pages/agents/
+src/pages/security/

@@ -7,13 +7,10 @@ allowBuilds:
   esbuild: true
   lefthook: true
 
-# drizzle-kit 0.31, the latest stable release, still depends on these loaders. Remove once
-# drizzle-kit 1.0 is stable and the indexer migrates to it.
+# apps/docs runs Nextra 2.13.4 and twin.macro 3.1.0, the latest releases of those lines; they
+# still depend on these. Remove once the docs site moves to Nextra 4 (App Router).
 allowedDeprecatedVersions:
-  "@esbuild-kit/core-utils": "3"
-  "@esbuild-kit/esm-loader": "2"
-
-minimumReleaseAgeExclude:
-  - "@electric-sql/pglite@0.5.16"
+  intersection-observer: "0.12"
+  lodash.get: "4"
 
 savePrefix: ""

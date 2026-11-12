@@ -100,7 +100,13 @@ export function Nav({
         </nav>
       </div>
 
-      <header className="fixed inset-x-0 top-0 z-[60] flex items-center justify-between px-5 py-4 sm:px-8 sm:py-5 md:px-10">
+      <header
+        className={cn(
+          "fixed inset-x-0 top-0 z-[60] flex items-center justify-between px-5 py-4 transition-[background-color,backdrop-filter] duration-500 sm:px-8 sm:py-5 md:px-10",
+          // Once the page is open, content scrolls under the header; a soft backdrop keeps the links readable.
+          d ? "bg-[#F4F0ED]/80 backdrop-blur-md" : "bg-transparent",
+        )}
+      >
         <span className="flex items-center gap-2.5">
           <Image src="/comatocard-icon.svg" alt="" width={24} height={24} className="size-6" />
           <span

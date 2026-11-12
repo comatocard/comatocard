@@ -79,6 +79,15 @@ export default function SetupPage() {
     else setStep(resume);
   }, [loading, resume, router]);
 
+  // Opening another card account that is already set up leaves setup for the app. Only a change
+  // of account does this, so issuing another card from the done screen stays here.
+  const seenVault = useRef(vault);
+  useEffect(() => {
+    if (loading || vault === seenVault.current) return;
+    seenVault.current = vault;
+    if (resume === "complete" && secret === null) router.replace("/home");
+  }, [vault, loading, resume, secret, router]);
+
   const panel = useRef<HTMLDivElement>(null);
   const current = step ?? 0;
   const swap = useStepSwap(panel, current);

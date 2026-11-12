@@ -1,118 +1,114 @@
 "use client";
-import { Play } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { EASE, gsap, prefersReducedMotion } from "../../lib/motion/gsap";
-import { Wordmark } from "../onboarding/SetupLayout";
-import { LINKS, SECTIONS } from "./links";
+import { RevealLayer } from "./RevealLayer";
 
-/** The first screen: the photo, the promise, and the way into the app. */
+const GRID = 48;
+
+/**
+ * The first screen: the portal photo, its glowing twin under a cursor spotlight, a faint grid
+ * that drifts against the pointer, and the promise in the lower left.
+ */
 export function Hero() {
   const root = useRef<HTMLElement>(null);
+  const pattern = useRef<SVGPatternElement>(null);
 
-  // Seen once per visit, so it may take a little longer: the headline rises line by line.
   useLayoutEffect(() => {
     const el = root.current;
     if (!el) return;
     const reduce = prefersReducedMotion();
     const ctx = gsap.context(() => {
       gsap.fromTo(
-        "[data-hero]",
-        { opacity: 0, y: reduce ? 0 : 28 },
-        { opacity: 1, y: 0, duration: 0.8, ease: EASE.out, stagger: 0.09, delay: 0.1 },
+        "[data-hero-photo]",
+        { opacity: 0 },
+        { opacity: 1, duration: 1, ease: EASE.out, delay: 0.1 },
       );
       gsap.fromTo(
-        "[data-hero-photo]",
-        { scale: reduce ? 1 : 1.06 },
-        { scale: 1, duration: 1.6, ease: EASE.out },
+        "[data-hero-line]",
+        { opacity: 0, y: reduce ? 0 : 24 },
+        { opacity: 1, y: 0, duration: 0.9, ease: EASE.out, stagger: 0.18, delay: 0.5 },
       );
     }, el);
     return () => ctx.revert();
   }, []);
 
+  // The grid drifts a few pixels against the pointer, eased so it never snaps.
+  useEffect(() => {
+    const el = root.current;
+    const grid = pattern.current;
+    if (!el || !grid || prefersReducedMotion()) return;
+    const target = { x: 0, y: 0 };
+    const offset = { x: 0, y: 0 };
+    let frame = 0;
+    const onMove = (e: MouseEvent) => {
+      const rect = el.getBoundingClientRect();
+      target.x = ((e.clientX - rect.left) / rect.width - 0.5) * 16;
+      target.y = ((e.clientY - rect.top) / rect.height - 0.5) * 16;
+    };
+    const tick = () => {
+      offset.x += (target.x - offset.x) * 0.06;
+      offset.y += (target.y - offset.y) * 0.06;
+      grid.setAttribute("x", String(offset.x));
+      grid.setAttribute("y", String(offset.y));
+      frame = requestAnimationFrame(tick);
+    };
+    window.addEventListener("mousemove", onMove);
+    frame = requestAnimationFrame(tick);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
   return (
-    <header ref={root} className="relative flex min-h-[100svh] flex-col overflow-hidden text-white">
-      <div data-hero-photo className="absolute inset-0">
-        <Image
-          src="/landing/hero.jpg"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-[50%_40%]"
-        />
-        <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.35)_0%,rgba(0,0,0,0)_30%,rgba(0,0,0,.15)_60%,rgba(0,0,0,.65)_100%)]" />
-      </div>
-
-      <nav className="relative mx-auto flex w-full max-w-[1280px] items-center justify-between px-5 pt-5 lg:px-10 lg:pt-6">
-        <Wordmark className="text-white" />
-        <ul className="hidden items-center gap-1 rounded-full border border-white/15 bg-black/25 p-1 backdrop-blur-md md:flex">
-          {SECTIONS.map((s) => (
-            <li key={s.id}>
-              <a
-                href={`#${s.id}`}
-                className="block rounded-full px-4 py-2 text-[14px] font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-              >
-                {s.label}
-              </a>
-            </li>
-          ))}
-          <li>
-            <a
-              href={LINKS.docs}
-              className="block rounded-full px-4 py-2 text-[14px] font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-            >
-              Docs
-            </a>
-          </li>
-        </ul>
-        <Link
-          href={LINKS.app}
-          className="rounded-full bg-white px-4 py-2.5 text-[14px] font-semibold text-ink transition-transform duration-150 active:scale-[.97]"
-        >
-          Open the app
-        </Link>
-      </nav>
-
-      <div className="relative mx-auto mt-auto w-full max-w-[1280px] px-5 pb-10 lg:px-10 lg:pb-14">
-        <p data-hero className="mb-4 flex flex-wrap items-center gap-2 text-[12px] font-semibold">
-          <span className="rounded-full bg-[#4ade80] px-2.5 py-1 text-[#0b0c0d]">
-            Live on testnet
-          </span>
-          <span className="rounded-full border border-white/25 bg-black/25 px-2.5 py-1 backdrop-blur-md">
-            Built at NEAR Hackathon
-          </span>
-        </p>
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <h1
-            data-hero
-            className="max-w-[820px] text-[44px] font-semibold leading-[0.98] tracking-[-.04em] sm:text-[64px] lg:text-[88px]"
+    <section ref={root} className="relative h-[100svh] w-full overflow-clip bg-[#0A0B11]">
+      <svg aria-hidden="true" className="absolute inset-0 h-full w-full opacity-[.08]">
+        <defs>
+          <pattern
+            ref={pattern}
+            id="hero-grid"
+            width={GRID}
+            height={GRID}
+            patternUnits="userSpaceOnUse"
           >
-            Give your agents a card, not your wallet.
-          </h1>
-          <div data-hero className="space-y-4 lg:max-w-[300px] lg:pb-3">
-            <p className="text-[16px] text-white/80">
-              Cards for AI agents. Limits enforced on NEAR.
-            </p>
-            <div className="flex flex-wrap gap-2.5">
-              <Link
-                href={LINKS.app}
-                className="rounded-full bg-white px-5 py-3 text-[15px] font-semibold text-ink transition-transform duration-150 active:scale-[.97]"
-              >
-                Open the app
-              </Link>
-              <a
-                href="#story"
-                className="flex items-center gap-2 rounded-full border border-white/25 bg-black/25 px-5 py-3 text-[15px] font-semibold backdrop-blur-md transition-transform duration-150 active:scale-[.97]"
-              >
-                <Play className="size-4 fill-current" />
-                See it work
-              </a>
-            </div>
-          </div>
-        </div>
+            <path
+              d={`M ${GRID} 0 L 0 0 0 ${GRID}`}
+              fill="none"
+              stroke="#94a3b8"
+              strokeWidth="0.5"
+            />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#hero-grid)" />
+      </svg>
+      <div
+        data-hero-photo
+        className="absolute inset-0 bg-cover bg-center opacity-0"
+        style={{ backgroundImage: "url(/landing/story-3-portal.jpg)" }}
+      />
+      <RevealLayer image="/landing/story-4-portal-glow.jpg" />
+      <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-[#0A0B11] via-[#0A0B11]/60 to-transparent" />
+
+      <div className="absolute inset-x-0 bottom-0 grid gap-10 px-6 pb-12 sm:px-10 sm:pb-16 md:grid-cols-12 md:items-end md:px-14 md:pb-20">
+        <h1
+          data-hero-line
+          className="font-light text-white opacity-0 md:col-span-7 lg:col-span-8"
+          style={{
+            fontSize: "clamp(2.2rem, 6.5vw, 5rem)",
+            lineHeight: 0.95,
+            letterSpacing: "-0.03em",
+          }}
+        >
+          Give your agents
+          <br />a card, not your wallet
+        </h1>
+        <p
+          data-hero-line
+          className="max-w-md text-[15px] leading-relaxed text-white/75 opacity-0 sm:text-base md:col-span-5 lg:col-span-4"
+        >
+          Each agent gets its own card, with limits only you can change.
+        </p>
       </div>
-    </header>
+    </section>
   );
 }

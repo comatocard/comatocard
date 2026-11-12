@@ -2,9 +2,9 @@
 
 Programmable payment cards for people and AI agents, enforced by smart contracts on NEAR.
 
-[Website](https://comatocard.xyz) · [App](https://app.comatocard.xyz) · [Docs](https://docs.comatocard.xyz) · [Testnet deployment](docs/deployments.md)
+[Docs](https://comatocard.github.io/comatocard/) · [Testnet deployment](docs/deployments.md)
 
-The hosted site, app and docs are being deployed; until then everything below runs against NEAR testnet and locally.
+The docs are live; the hosted app is being deployed, so until then everything below runs against NEAR testnet and locally.
 
 ## What it is
 A Comatocard vault is a self-custodial NEAR account that holds stablecoins and issues cards. A card is a NEAR access key that can call only `pay`, with its own spending policy: limits per payment, day and 30-day period, merchant allow or deny lists, an approval threshold, a validity window and counterparty checks. The vault enforces the policy on every payment and records every attempt, including rejections and their reasons, as an on-chain event. An AI agent can spend on its own, inside limits it cannot change.
@@ -41,7 +41,7 @@ Every transaction of the testnet checks, including a rejection, an approval and 
 | [`contracts/mock-ft`](contracts/mock-ft) | tUSD, the testnet stablecoin |
 | [`apps/indexer`](apps/indexer) | Rust indexer: REST, WebSocket, risk verdicts, CSV export |
 | [`apps/agents`](apps/agents) | Spending agent with its guard |
-| [`apps/docs`](apps/docs) | Documentation site for docs.comatocard.xyz, generated from `docs/` |
+| [`apps/docs`](apps/docs) | Documentation site, generated from `docs/` |
 | [`apps/relayer`](apps/relayer) | Meta transaction relayer for owner actions |
 | [`apps/web`](apps/web) | Owner app and the HTTP 402 demo merchant (`/shop`) |
 | [`packages/sdk`](packages/sdk) | Types, event schemas, vault client and compliance helpers |

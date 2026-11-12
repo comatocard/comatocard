@@ -8,14 +8,15 @@ Rules for every coding agent (Claude Code, Codex, others) and every human contri
 - For one-off operational work, take the simplest direct end-to-end path. Add wrappers, control planes or automation only when a concrete blocker or a repeated need justifies them.
 - Bug fixes start by reproducing the bug end to end, as close to the user experience as possible.
 - Lint errors, failing tests and flaky tests are fixed when found, even if unrelated to the current task.
-- UI work is checked in the running app and held to a pixel-perfect standard.
+- UI work is checked in the running app and held to a pixel-perfect standard. The design source is `design/comatocard.pen` (open it with the pen.dev MCP; its assets and canvas shaders sit beside it).
+- In `apps/web`, every change of layout or position animates with GSAP through `src/lib/motion/` and honours `prefers-reduced-motion`; copy stays short, with longer explanations behind an info tip.
 - Never edit generated files (lockfiles by hand, ABI output, build artifacts) or `CHANGELOG.md`.
 - NEAR references are the official skills in `.agents/skills` (linked from `.claude/skills`), installed from https://github.com/near/agent-skills and pinned in `skills-lock.json`. Read the matching skill before touching contracts, near-api-js, the near CLI, NEAR Intents or NEAR AI Cloud. They are vendored: never edit them; refresh with `npx skills add near/agent-skills --skill <name>`.
 - Ask for explicit approval before starting any harness feature that spawns many subagents at once.
 
 ## Quality gates
 - Zero warnings and zero errors: rustc, clippy, rustfmt, cargo-deny, Biome, the SonarJS rules (ESLint with `@comatocard/config/eslint`), tsc, tests and install output stay clean. CI treats warnings as errors.
-- Root commands: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:integration`, `pnpm build`. Each workspace exposes the same script names.
+- Root commands: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:integration`, `pnpm test:e2e`, `pnpm build`. Each workspace exposes the same script names where they apply.
 
 ## Rust
 The rules are enforced by tooling, not prose: workspace lints in `Cargo.toml` (clippy `all` denied, `pedantic` warned, `#[expect(..., reason)]` instead of `#[allow]`, no `unwrap` or `expect` outside tests), `rustfmt.toml`, and `cargo deny check` (`deny.toml`) in CI. Keep modules single-purpose: one file per concern, `mod.rs` as the entry point that wires them. Prefer `near-sdk` and `near-contract-standards` types and interfaces over hand-written ones. The Rustacean synthesis (https://github.com/AgriciDaniel/rustacean, edition 2024) is the reference for idioms.
@@ -23,6 +24,7 @@ The rules are enforced by tooling, not prose: workspace lints in `Cargo.toml` (c
 ## Testing
 Every behaviour change ships with tests in the right layer.
 - Unit: next to the code (`#[cfg(test)] mod tests` in Rust, `*.test.ts` beside the module). No network, no chain, no database server.
+- End to end: `apps/web/e2e/` with Playwright at phone and desktop widths, run with `pnpm test:e2e`.
 - Integration: contracts in `contracts/<name>/tests/` against `near-sandbox`; TypeScript apps in `apps/<name>/test/integration/` against real dependencies run in-process; the Rust indexer in `apps/indexer/tests/` against Postgres started by testcontainers (needs Docker) and recorded blocks for neardata. Run with `pnpm test:integration`.
 - Regression: one test per fixed bug, named after its issue (`issue_42_*.rs`, `issue-42-*.test.ts`), plus golden snapshots for event JSON and API responses. A regression test is never deleted or loosened to make CI pass.
 

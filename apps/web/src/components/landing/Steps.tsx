@@ -8,14 +8,14 @@ const STEPS = [
     video: "/landing/insight-1.mp4",
     overlay: "bg-[rgba(206,223,235,0.25)]",
     title: "Create",
-    body: "Your card account, with a wallet",
+    body: "Your card account, from your wallet",
   },
   {
     height: "min-h-[350px]",
     video: "/landing/insight-2.mp4",
     overlay: "bg-[rgba(247,236,233,0.6)]",
     title: "Fund",
-    body: "Test tUSD from the faucet",
+    body: "Add money for your cards to spend",
   },
   {
     height: "min-h-[450px]",

@@ -55,7 +55,7 @@ test.describe("landing page", () => {
     await second.click();
     await expect(second).toHaveAttribute("aria-expanded", "true");
     await expect(first).toHaveAttribute("aria-expanded", "false");
-    await expect(page.getByText("A card key can only call pay. Limits")).toBeVisible();
+    await expect(page.getByText("An agent can only pay. Only you")).toBeVisible();
   });
 
   test("states facts the repo backs, not stronger ones", async ({ page }) => {
@@ -64,6 +64,28 @@ test.describe("landing page", () => {
     const text = (await page.locator("main").allTextContents()).join(" ");
     expect(text).not.toMatch(/audited/i);
     expect(text).toContain("1–2");
-    expect(text).toContain("Testnet only. No real funds.");
+    expect(text).toContain("Test network only. No real money.");
+  });
+
+  test("speaks plainly: no code and no technical terms", async ({ page }) => {
+    await openPage(page);
+    await expect(page.locator("main pre, main code")).toHaveCount(0);
+    const text = (await page.locator("main").allTextContents()).join(" ");
+    for (const term of [
+      /\bAPI\b/,
+      /\bTEE\b/,
+      /nonce/i,
+      /relayer/i,
+      /\bgas\b/i,
+      /registry/i,
+      /contract/i,
+      /tUSD/,
+      /testnet/i,
+      /mainnet/i,
+      /1Click/,
+      /\b40\d\b/,
+    ]) {
+      expect(text).not.toMatch(term);
+    }
   });
 });

@@ -11,17 +11,17 @@ const FAQS = [
   { q: "Who holds the money?", a: "You. Only your wallet controls the card account." },
   {
     q: "Can an agent raise its own limit?",
-    a: "No. A card key can only call pay. Limits change from your wallet alone.",
+    a: "No. An agent can only pay. Only you can change its limits.",
   },
   {
     q: "What if an agent gets tricked?",
-    a: "It still can't pay past its limits or to blocked accounts, and big payments wait for you. Freeze or revoke the card any time.",
+    a: "It still can't pay past its limits or to blocked accounts, and big payments wait for you. Freeze or cancel the card any time.",
   },
   {
-    q: "Do I need NEAR for gas?",
-    a: "Opening the card account takes 0.5 NEAR, which also covers card payment gas. Your other actions go through the relayer at no cost to you.",
+    q: "Does it cost anything to start?",
+    a: "Opening a card account takes 0.5 NEAR, which also covers your cards' payment fees. After that, your changes cost you nothing.",
   },
-  { q: "Is it live on mainnet?", a: "No. Testnet only, no real funds." },
+  { q: "Can I use real money?", a: "Not yet. It runs on a test network for now." },
 ] as const;
 
 const FOOTER = [
@@ -118,7 +118,7 @@ export function Closing() {
               Keep the keys.
             </h2>
             <p className="mb-[30px] text-[0.95rem] opacity-85">
-              Your agents spend. The contract decides.
+              Your agents spend. You set the rules.
             </p>
             <Link
               href={LINKS.app}
@@ -153,7 +153,7 @@ export function Closing() {
                 className="mb-[15px] size-6"
               />
               <p className="max-w-[240px] text-[0.85rem] leading-[1.6] text-[#888]">
-                Payment cards for agents, enforced on NEAR.
+                Payment cards for AI agents, on NEAR.
               </p>
             </div>
             {FOOTER.map((column) => (
@@ -176,7 +176,7 @@ export function Closing() {
           </div>
           <div className="flex flex-col items-center gap-[15px] border-t border-[#f0f0f0] pt-[25px] pb-[10px] text-[0.85rem] text-[#888] min-[480px]:flex-row min-[480px]:justify-between">
             <span>Comatocard, 2026 · MIT · Built at NEAR Hackathon</span>
-            <span>Testnet only. No real funds.</span>
+            <span>Test network only. No real money.</span>
           </div>
         </div>
       </footer>

@@ -1,100 +1,64 @@
 import { Check } from "lucide-react";
-import { InfoTip } from "../ui";
-
-const FACTS = [
-  {
-    value: "0.4.0",
-    label: "Reviewed vault contract",
-    tip: "Independently reviewed on 11 Nov 2026; every high and medium issue is fixed with a regression test.",
-  },
-  {
-    value: "v0.4.1",
-    label: "Reproducible release on testnet",
-    tip: "Built with cargo near build reproducible-wasm; the deployed code hash matches the release.",
-  },
-  {
-    value: "Gasless",
-    label: "Owner actions through the relayer",
-    tip: "You sign a delegate action; the relayer wraps it and pays the gas.",
-  },
-] as const;
+import { GUTTER, HEADLINE, INK, PAGE_BG } from "./links";
 
 const CHECKS = [
-  "Answer signed by the TEE",
-  "Intel TDX quote, signed by Intel",
-  "Fresh nonce, bound to the signing key",
-  "App inside is measured",
+  "A private assistant answers",
+  "Its answer is checked first",
+  "You sign every change",
 ] as const;
 
-/** The policy assistant, and why its answers can be trusted before you sign them. */
+/** Changing a card's limits in plain words, and why the answer can be trusted. */
 export function Proof() {
   return (
-    <section className="bg-[#0b0c0d] px-5 py-24 text-white lg:py-32">
-      <div className="mx-auto grid max-w-[1180px] items-center gap-14 lg:grid-cols-2">
+    <section className={`${GUTTER} ${PAGE_BG} py-24 lg:py-32`}>
+      <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-2">
         <div>
+          <p data-scroll className="text-[11px] tracking-[0.2em] text-[#18161B]/45 uppercase">
+            Just say it
+          </p>
+          <h2 data-scroll className={`mt-5 font-light ${INK}`} style={HEADLINE}>
+            Change limits in plain words
+          </h2>
           <p
             data-scroll
-            className="text-[12px] font-semibold tracking-[.18em] text-[#4ade80] uppercase"
+            className="mt-[30px] text-[15px] leading-relaxed text-[#18161B]/60 sm:text-base"
           >
-            Proof, not promises
+            Tell it what you want. See the change before you sign.
           </p>
-          <h2
-            data-scroll
-            className="mt-4 text-[36px] font-semibold leading-[1.05] tracking-[-.03em] lg:text-[52px]"
-          >
-            Change limits in plain words.
-          </h2>
-          <p data-scroll className="mt-4 text-[16px] text-white/60">
-            Every answer is verified in a TEE before you sign.
-          </p>
-          <ul className="mt-10 grid gap-6 sm:grid-cols-3">
-            {FACTS.map((f) => (
-              <li key={f.label} data-scroll>
-                <p className="text-[28px] font-semibold tracking-[-.02em]">{f.value}</p>
-                <p className="mt-1 flex items-start gap-1.5 text-[13px] text-white/55">
-                  {f.label}
-                  <InfoTip label={f.label}>{f.tip}</InfoTip>
-                </p>
-              </li>
-            ))}
-          </ul>
         </div>
 
         <figure
           data-scroll
-          className="m-0 space-y-3 rounded-[24px] border border-white/10 bg-white/[.04] p-5"
-          aria-label="Example: changing limits with the assistant"
+          aria-label="Example of changing a card's limits"
+          className="m-0 space-y-3 rounded-[28px] bg-white p-5 shadow-[0_20px_50px_-30px_rgba(0,0,0,.25)]"
         >
-          <p className="rounded-[16px] bg-white/[.06] px-4 py-3 text-[14px] text-white/85">
-            “Lower the daily limit to 40 and only allow comatocard-shop.testnet”
+          <p className="rounded-[18px] bg-[#18161B] px-5 py-3.5 text-[15px] font-light text-[#F4F0ED]">
+            “Lower the daily limit to 40 and only let it pay the shop”
           </p>
-          <dl className="space-y-2 text-[13px]">
-            <div className="flex items-center justify-between rounded-[14px] bg-white/[.04] px-4 py-3">
-              <dt className="text-white/50">Per day</dt>
+          <dl className="space-y-2 text-[14px]">
+            <div className="flex items-center justify-between rounded-[16px] bg-[#F4F0ED] px-4 py-3">
+              <dt className="text-[#18161B]/50">Per day</dt>
               <dd>
-                <span className="text-white/40 line-through">50 tUSD</span>
-                <span className="ml-2 font-semibold">40 tUSD</span>
+                <span className="text-[#18161B]/35 line-through">50</span>
+                <span className="ml-2 font-semibold">40</span>
               </dd>
             </div>
-            <div className="flex items-center justify-between gap-3 rounded-[14px] bg-white/[.04] px-4 py-3">
-              <dt className="text-white/50">Merchants</dt>
-              <dd className="text-right">
-                <span className="text-white/40 line-through">Any merchant</span>
-                <span className="ml-2 font-semibold">Only comatocard-shop.testnet</span>
+            <div className="flex items-center justify-between rounded-[16px] bg-[#F4F0ED] px-4 py-3">
+              <dt className="text-[#18161B]/50">Can pay</dt>
+              <dd>
+                <span className="text-[#18161B]/35 line-through">Anyone</span>
+                <span className="ml-2 font-semibold">Only the shop</span>
               </dd>
             </div>
           </dl>
-          <div className="rounded-[16px] border border-[#4ade80]/25 bg-[#4ade80]/[.07] p-4">
-            <p className="text-[13px] font-semibold text-[#4ade80]">Verified in TEE</p>
-            <ul className="mt-2 space-y-1.5">
-              {CHECKS.map((c) => (
-                <li key={c} className="flex items-center gap-2 text-[13px] text-white/75">
-                  <Check className="size-3.5 text-[#4ade80]" strokeWidth={3} />
-                  {c}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <ul className="space-y-1.5 px-1 pt-2">
+            {CHECKS.map((c) => (
+              <li key={c} className="flex items-center gap-2 text-[14px] text-[#18161B]/70">
+                <Check className="size-4 text-pos" strokeWidth={3} />
+                {c}
+              </li>
+            ))}
+          </ul>
         </figure>
       </div>
     </section>

@@ -106,8 +106,7 @@ export function Hero() {
           data-hero-line
           className="max-w-md text-[15px] leading-relaxed text-white/75 opacity-0 sm:text-base md:col-span-5 lg:col-span-4"
         >
-          Each agent gets its own card. The limits live in a contract on NEAR, and only you can
-          change them.
+          Each agent gets its own card, with limits only you can change.
         </p>
       </div>
     </section>

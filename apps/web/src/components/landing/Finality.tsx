@@ -1,14 +1,13 @@
 "use client";
 import { useRef } from "react";
 import { useCountUp } from "../../lib/motion/scroll";
-import { CurvedDivider } from "./CurvedDivider";
 import { HEADLINE, INK } from "./links";
 
 /** Each figure is a constant in the vault contract or the docs; change them together. */
 const STATS = [
-  { value: 0, suffix: "", label: "Card keys that can withdraw" },
-  { value: 24, suffix: " h", label: "For you to approve a waiting payment" },
-  { value: 10, suffix: "", label: "Payments waiting, at most" },
+  { value: 0, suffix: "", label: "Agents that can take money out" },
+  { value: 24, suffix: " h", label: "To approve a big payment" },
+  { value: 10, suffix: "", label: "Payments that can wait for you" },
 ] as const;
 
 function Stat({ value, suffix, label }: (typeof STATS)[number]) {
@@ -35,7 +34,7 @@ export function Finality() {
             data-scroll
             className="rounded-full border border-[#18161B]/10 bg-white px-4 py-2 text-[13px] text-[#18161B]/60"
           >
-            Finality
+            Speed
           </span>
           <h2 data-scroll className={`font-light ${INK}`} style={HEADLINE}>
             It settles before you look up
@@ -47,7 +46,7 @@ export function Finality() {
             1–2<span className="text-[#18161B]/40"> s</span>
           </span>
           <p data-scroll className="text-base text-[#18161B]/50 md:text-lg">
-            From pay to a recorded decision
+            From tap to done
           </p>
         </div>
         <div className="relative w-full max-w-[1080px]">
@@ -76,8 +75,6 @@ export function Finality() {
           ))}
         </div>
       </div>
-      <div className="h-[100px] md:h-[160px]" />
-      <CurvedDivider fill="#0b0c0d" />
     </section>
   );
 }

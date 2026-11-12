@@ -39,10 +39,10 @@ export function ToppedUp() {
             before it runs dry.
           </h2>
           <p data-scroll className={`${SUB} flex items-center gap-1.5`}>
-            Refilled through NEAR Intents.
+            Refilled before your agents need it.
             <InfoTip label="Top-ups">
-              When the cards may spend more than the account holds, a swap is planned with a 1Click
-              quote. It is a dry run by default; nothing moves until you sign.
+              When your cards could spend more than the account holds, a top-up is planned. Nothing
+              moves until you approve it.
             </InfoTip>
           </p>
         </div>
@@ -90,20 +90,8 @@ export function AskPay() {
             Pay.
           </h2>
           <p data-scroll className={SUB}>
-            Your agent asks. The card pays. The API unlocks.
+            Your agent asks to buy. The card pays. Done.
           </p>
-          <pre
-            data-scroll
-            className="mt-8 max-w-md rounded-[16px] bg-[#18161B] p-5 font-mono text-[11.5px] leading-[1.8] break-all whitespace-pre-wrap text-white/75 sm:text-[12px] sm:break-normal"
-          >
-            <span className="text-[#4ade80]">GET</span> /api/shop/report{"\n"}
-            <span className="text-[#fbbf24]">402</span>
-            {' { amount: "1000000", reference: "shop-8f2c…" }\n'}
-            pay(merchant, amount, reference) <span className="text-white/40">→ settled</span>
-            {"\n"}
-            <span className="text-[#4ade80]">200</span>
-            {" { gas_price, block_height, receipt }"}
-          </pre>
         </div>
       </div>
       <Image
@@ -159,16 +147,24 @@ export function AroundTheClock() {
 const PILLARS = [
   {
     title: "You hold it",
-    blurb: "Not us. Only your wallet controls the account.",
+    blurb: "Only your wallet controls the money",
     src: "/landing/profile.png",
   },
-  { title: "Limits it can't change", blurb: "A card key can only pay", src: "/landing/lock.png" },
+  {
+    title: "Limits it can't change",
+    blurb: "An agent can only pay, never take money out",
+    src: "/landing/lock.png",
+  },
   {
     title: "Every payment on record",
-    blurb: "Each attempt, with its reason, on chain",
+    blurb: "Paid, waiting or refused, with the reason",
     src: "/landing/network.png",
   },
-  { title: "Checks the payee", blurb: "Blocked accounts are refused", src: "/landing/shield.png" },
+  {
+    title: "Checks who gets paid",
+    blurb: "Anyone on the blocked list is refused",
+    src: "/landing/shield.png",
+  },
 ] as const;
 
 /** Four guarantees, each over its icon tile. */
@@ -179,7 +175,7 @@ export function Safety() {
         Safety
       </p>
       <h2 data-scroll className={`mt-5 max-w-3xl font-light ${INK}`} style={HEADLINE}>
-        The contract decides, not the prompt
+        Your rules, not the agent's
       </h2>
       <div className="mt-12 grid gap-5 sm:mt-16 sm:grid-cols-2 lg:grid-cols-4">
         {PILLARS.map((pillar, i) => (

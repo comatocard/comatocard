@@ -7,12 +7,12 @@ import { GUTTER, PAGE_BG } from "./links";
 
 /** An example exchange showing the three ways a payment can end. Illustrative, not live data. */
 const TRANSCRIPT = [
-  { speaker: "you", text: "pay for the weather API" },
-  { speaker: "card", text: "done. 2 tUSD from Research agent's card." },
-  { speaker: "you", text: "and the 40 tUSD dataset?" },
-  { speaker: "card", text: "above your threshold. it's waiting for you." },
-  { speaker: "you", text: "who is data.vendor.testnet?" },
-  { speaker: "card", text: "the registry flagged it. nothing was paid." },
+  { speaker: "you", text: "pay for the weather report" },
+  { speaker: "card", text: "done. $2 from your research agent's card." },
+  { speaker: "you", text: "and the $40 dataset?" },
+  { speaker: "card", text: "that's over your limit. it's waiting for you." },
+  { speaker: "you", text: "what about data-vendor?" },
+  { speaker: "card", text: "it's on the blocked list. nothing was paid." },
 ] as const;
 
 /**

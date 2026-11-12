@@ -2,9 +2,9 @@
 
 Programmable payment cards for people and AI agents, enforced by smart contracts on NEAR.
 
-[Docs](https://comatocard.github.io/comatocard/) · [Testnet deployment](docs/deployments.md)
+[Docs](https://docs.comatocard.xyz) · [Indexer API](https://indexer.comatocard.xyz/health) · [Testnet deployment](docs/deployments.md)
 
-The docs are live; the hosted app is being deployed, so until then everything below runs against NEAR testnet and locally.
+The docs and the testnet indexer are live; the hosted app is being deployed, so until then the steps below run against NEAR testnet and locally.
 
 ## What it is
 A Comatocard vault is a self-custodial NEAR account that holds stablecoins and issues cards. A card is a NEAR access key that can call only `pay`, with its own spending policy: limits per payment, day and 30-day period, merchant allow or deny lists, an approval threshold, a validity window and counterparty checks. The vault enforces the policy on every payment and records every attempt, including rejections and their reasons, as an on-chain event. An AI agent can spend on its own, inside limits it cannot change.

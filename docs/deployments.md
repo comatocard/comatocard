@@ -135,6 +135,13 @@ Every contract on testnet now runs the assets of [release v0.4.1](https://github
 | Owner issues a card checked by the registry | `7iP8drQZo1S5hFzHv2aLGvPm649uXgK9DSLpUpM5SXbb` | `card_created`, `nft_mint`, key added |
 | Card pays 1 tUSD with 100 Tgas | `7nK8SHcVnQWgDjeng4ozKgUA7ueGMRei5d6FSyZmbVmR` | Registry check, `payment_submitted`, `payment_settled` |
 
+### Indexer
+`https://indexer.comatocard.xyz` runs the image `ghcr.io/comatocard/comatocard-indexer:main` (published by `.github/workflows/indexer-image.yml`) on a VPS through Coolify, with its own Postgres 17. It indexes testnet from `factory.comatocard.testnet` and `registry.comatocard.testnet`.
+
+- `curl https://indexer.comatocard.xyz/health` shows the indexed height, the chain height and the lag.
+- `curl https://indexer.comatocard.xyz/vaults/v5.factory.comatocard.testnet/payments` lists the payments it has indexed since it started on 2026-11-12 (block 277410172); earlier events are not backfilled.
+- Routes: [Indexer API](specs/indexer-api.md).
+
 ### Get test funds
 1. Register: `near contract call-function as-transaction tusd.comatocard.testnet storage_deposit json-args '{"account_id":"<you>.testnet","registration_only":true}' prepaid-gas '30.0 Tgas' attached-deposit '0.00125 NEAR' sign-as <you>.testnet network-config testnet sign-with-legacy-keychain send`
 2. Mint up to 10,000 tUSD per call: `... tusd.comatocard.testnet mint json-args '{"account_id":"<you>.testnet","amount":"100000000"}' ... attached-deposit '0 NEAR' ...`

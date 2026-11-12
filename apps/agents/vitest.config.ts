@@ -6,7 +6,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**/*.ts"],
-      exclude: ["src/status.ts", "src/pay.ts", "src/submit.ts"],
+      exclude: ["src/status.ts", "src/pay.ts", "src/submit.ts", "src/treasury-cli.ts"],
       reporter: ["text", "lcov"],
     },
   },

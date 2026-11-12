@@ -43,7 +43,7 @@ Every transaction of the testnet checks, including a rejection, an approval and 
 | [`apps/agents`](apps/agents) | Spending agent with its guard |
 | [`apps/docs`](apps/docs) | Documentation site for docs.comatocard.xyz, generated from `docs/` |
 | [`apps/relayer`](apps/relayer) | Meta transaction relayer for owner actions |
-| [`apps/web`](apps/web), [`apps/merchant`](apps/merchant) | Owner app, demo merchant |
+| [`apps/web`](apps/web) | Owner app and the HTTP 402 demo merchant (`/shop`) |
 | [`packages/sdk`](packages/sdk) | Types, event schemas, vault client and compliance helpers |
 | [`packages/config`](packages/config) | Shared TypeScript and lint configuration |
 

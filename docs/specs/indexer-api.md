@@ -50,7 +50,7 @@ All responses are JSON unless noted. Lists use cursor pagination (`?cursor=&limi
 
 - `Card` and `Payment` are typed objects with camelCase fields; `payments` returns `{ items, nextCursor }`. Summaries (`vault`, `payment`, `approvals`, `analytics`, `risk`, `health`) are `JSON` in their REST shape.
 - Errors use the GraphQL `errors` array with the REST message, for example `invalid request: vault: invalid account id` or `vault not found`.
-- Queries deeper than 6 levels or above complexity 500 are rejected.
+- Queries deeper than 16 levels or above complexity 1000 are rejected; the schema has no nested types, so the depth cap only bounds introspection, with room for the query GraphiQL sends.
 - Example: `{ cards(vault: "v5.factory.comatocard.testnet") { cardId label status } payments(vault: "v5.factory.comatocard.testnet", limit: 5) { items { status amount merchant } nextCursor } }`
 
 ## Operations

@@ -26,7 +26,7 @@ Amounts are strings in the token's smallest unit; tUSD has 6 decimals, so `"2500
 - **Attach 100 Tgas to `pay`.** The card key allowance (default 1 NEAR) is charged with the prepaid gas of every transaction, about 100 payments per key. Rotate the key with `rotate_card_key` when the allowance runs low.
 - **Call `preview_payment` before signing.** It runs the same checks as `pay` without the registry call and costs nothing; agents should not sign payments that are already known to be rejected.
 - **Merchants must be registered with the token.** A payment to an unregistered account fails with `payment_failed` and cause `transfer_failed`; the vault releases the funds.
-- **Owner methods attach no deposit**, so they can go through the meta transaction relayer (receiver: a factory vault, allowlisted methods, zero deposit).
+- **Owner methods attach no deposit**, so they can go through the meta transaction relayer (receiver: a factory vault, allowlisted methods, zero deposit). Sign the owner call as a NEP-366 delegate action (near-api-js `Account.createSignedMetaTransaction`), then `POST /relay` with `{ "signed_delegate": <base64 of encodeSignedDelegate> }`; the answer is `relayResponse` from the SDK. Refusals and the method list are in `apps/relayer/README.md`.
 
 ## Approvals
 - Payments above the card `approval_threshold` are queued. The owner, or an approver set with `set_approver(account, max_amount)` whose limit covers the amount, calls `approve_payment` or `decline_payment`. Anyone can call `expire_payment` after the approval TTL (24 hours by default).

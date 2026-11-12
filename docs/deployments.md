@@ -74,6 +74,17 @@ Vault `audit.factory.comatocard.testnet`, code version 3, published from main at
 | Card pays 2 tUSD with 50 Tgas | refused before execution | `attach at least 80 Tgas`, nothing reserved (#58) |
 | Card pays 2 tUSD with 100 Tgas | `EYcoFo6RHbcvsjuZZSXzkhLgVovqefWvufKAvnssSzpi` | Registry check, `payment_settled`, `reserved` back to 0 |
 
+### Relayer check on 2026-11-12
+Relayer `riorblade-relayer-6393.testnet` from `apps/relayer` against vault `rio74936.factory.comatocard.testnet`, owner `riorblade-e2e-1794374914.testnet`. Commands from `apps/relayer/README.md`.
+
+| Command | Transaction | Result |
+|-|-|-|
+| `pnpm owner-call rio74936.factory.comatocard.testnet freeze_card '{"card_id":0}'` | `HL8jWfpmMZxVQHZrQpgnyEabQ9Y2oFW1CRXYcKMs4nQh` | relayed, card 0 `frozen`, owner balance unchanged, relayer paid about 0.00028 NEAR |
+| `pnpm owner-call rio74936.factory.comatocard.testnet unfreeze_card '{"card_id":0}'` | `9iNYXDCt7bUSewnhdwZVWBWw3A6ngtrYT3xdB5u3Kh7F` | relayed, card 0 `active`, owner balance unchanged |
+| same freeze signed by `comatocard-attacker-7786.testnet` | none | refused `not_authorized`, relayer balance unchanged |
+| `pay` through the relayer | none | refused `method_not_allowed` |
+| `ft_transfer` on `tusd.comatocard.testnet` | none | refused `not_a_vault` |
+
 ### Registry sanctions check on 2026-11-11
 Registry code from PR #74 deployed in place (`G9jRNm24QCbkxP9mir2AxFPyWdeW2SDCYZJSjiWUs8ji`). Existing state reads back unchanged: `list_curators` returns `comatocard.testnet` and statuses still resolve. A curator `sanctions` report with evidence `ipfs://not-a-list` is refused with `sanctions evidence must be sanctions:<LIST>:<YYYY-MM-DD>[:<reference>]`, and the same report with valid evidence from a non-curator is refused with `only curators file sanctions reports`. No sanctions report was filed on testnet, so no account carries a false sanctions record.
 

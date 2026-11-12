@@ -28,6 +28,7 @@ Requirements: Node 24 with pnpm, Rust from `rust-toolchain.toml` with [cargo-nea
 3. **See a payment that settled.** Open `https://testnet.nearblocks.io/txns/7nK8SHcVnQWgDjeng4ozKgUA7ueGMRei5d6FSyZmbVmR`: a card paid 1 tUSD after an on-chain registry check (`payment_submitted`, `payment_settled`).
 4. **Index it yourself.** `docker compose -f apps/indexer/docker-compose.yml up --build` starts Postgres and the indexer on testnet; `curl localhost:4000/health` shows the indexed height and the lag. Events from then on appear under `/vaults/<vault>/payments` and in `/vaults/<vault>/export.csv`.
 5. **Pay from an agent.** `apps/agents` holds a card key and pays through its guard (preview, risk verdict, human confirmation on warn). See [apps/agents](apps/agents/README.md).
+6. **Act as an owner without NEAR.** `apps/relayer` sponsors owner calls signed as delegate actions: `pnpm owner-call <vault> freeze_card '{"card_id":0}'` freezes a card while the owner balance stays unchanged, and refuses card payments, other contracts and senders that are not the owner. See [apps/relayer](apps/relayer/README.md).
 
 Every transaction of the testnet checks, including a rejection, an approval and a card handover, is listed in [docs/deployments.md](docs/deployments.md).
 
@@ -40,7 +41,8 @@ Every transaction of the testnet checks, including a rejection, an approval and 
 | [`contracts/mock-ft`](contracts/mock-ft) | tUSD, the testnet stablecoin |
 | [`apps/indexer`](apps/indexer) | Rust indexer: REST, WebSocket, risk verdicts, CSV export |
 | [`apps/agents`](apps/agents) | Spending agent with its guard |
-| [`apps/web`](apps/web), [`apps/merchant`](apps/merchant), [`apps/relayer`](apps/relayer) | Owner app, demo merchant, owner meta transaction relayer |
+| [`apps/relayer`](apps/relayer) | Meta transaction relayer for owner actions |
+| [`apps/web`](apps/web), [`apps/merchant`](apps/merchant) | Owner app, demo merchant |
 | [`packages/sdk`](packages/sdk) | Types, event schemas, vault client and compliance helpers |
 | [`packages/config`](packages/config) | Shared TypeScript and lint configuration |
 

@@ -10,6 +10,7 @@ Rules for every coding agent (Claude Code, Codex, others) and every human contri
 - Lint errors, failing tests and flaky tests are fixed when found, even if unrelated to the current task.
 - UI work is checked in the running app and held to a pixel-perfect standard.
 - Never edit generated files (lockfiles by hand, ABI output, build artifacts) or `CHANGELOG.md`.
+- NEAR references are the official skills in `.agents/skills` (linked from `.claude/skills`), installed from https://github.com/near/agent-skills and pinned in `skills-lock.json`. Read the matching skill before touching contracts, near-api-js, the near CLI, NEAR Intents or NEAR AI Cloud. They are vendored: never edit them; refresh with `npx skills add near/agent-skills --skill <name>`.
 - Ask for explicit approval before starting any harness feature that spawns many subagents at once.
 
 ## Quality gates

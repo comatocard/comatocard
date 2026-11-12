@@ -1,6 +1,13 @@
 import type { Card } from "@comatocard/sdk";
 import { describe, expect, it } from "vitest";
-import { cardNumber, currentSpend, expiryLabel, keyTail, remainingToday } from "../src/lib/cards";
+import {
+  cardNumber,
+  currentSpend,
+  expiryLabel,
+  keyTail,
+  remainingToday,
+  spentToday,
+} from "../src/lib/cards";
 import { paymentDetail, reasonText } from "../src/lib/payments";
 
 const DAY_MS = 86_400_000;
@@ -81,5 +88,16 @@ describe("payment wording", () => {
     expect(paymentDetail({ ...row, status: "settled", approver_id: "council.testnet" })).toBe(
       "approved by council.testnet",
     );
+  });
+
+  it("adds up today's spend over the cards that can still pay", () => {
+    const frozen: Card = { ...card, id: 4, status: "frozen" };
+    const revoked: Card = { ...card, id: 5, status: "revoked" };
+    const stale: Card = { ...card, id: 6, spend: { ...card.spend, day: 20_768 } };
+    expect(spentToday([card, frozen, revoked, stale], now)).toEqual({
+      spent: "10000000",
+      limit: "150000000",
+    });
+    expect(spentToday([], now)).toEqual({ spent: "0", limit: "0" });
   });
 });

@@ -1,6 +1,7 @@
 import type { Card } from "@comatocard/sdk";
 import { describe, expect, it } from "vitest";
 import {
+  cardChips,
   cardNumber,
   currentSpend,
   expiryLabel,
@@ -99,5 +100,12 @@ describe("payment wording", () => {
       limit: "150000000",
     });
     expect(spentToday([], now)).toEqual({ spent: "0", limit: "0" });
+  });
+
+  it("names a card's status, holder and screening in its chips", () => {
+    expect(cardChips(card)).toEqual(["Active", "Agent", "Registry check"]);
+    expect(
+      cardChips({ ...card, status: "frozen", policy: { ...card.policy, risk_mode: "off" } }),
+    ).toEqual(["Frozen", "Agent"]);
   });
 });

@@ -65,6 +65,15 @@ export function spentToday(
   return { spent: spent.toString(), limit: limit.toString() };
 }
 
+const STATUS_LABEL = { active: "Active", frozen: "Frozen", revoked: "Revoked" } as const;
+
+/** The chips under a card: its status, who holds it, and whether payees are screened. */
+export function cardChips(card: Card): string[] {
+  const chips: string[] = [STATUS_LABEL[card.status], KIND_LABEL[card.kind]];
+  if (card.policy.risk_mode !== "off") chips.push("Registry check");
+  return chips;
+}
+
 export const KIND_LABEL = { human: "Person", agent: "Agent", treasury: "Treasury" } as const;
 
 /** A merchant rule in words: "Any merchant", "Only a, b", "All but c". */

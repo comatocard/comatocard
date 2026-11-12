@@ -1,0 +1,26 @@
+{
+  "index": {
+    "title": "Comatocard Documentation",
+    "description": "Programmable payment cards for people and AI agents, enforced by smart contracts on NEAR."
+  },
+  "start": {
+    "title": "Get Started",
+    "description": "What Comatocard is, how it fits together and how to try it on NEAR testnet."
+  },
+  "build": {
+    "title": "Build",
+    "description": "Integrate cards into an app, a merchant checkout or an agent."
+  },
+  "contracts": {
+    "title": "Contracts",
+    "description": "The vault, factory and registry contracts and their interfaces."
+  },
+  "agents": {
+    "title": "Agents",
+    "description": "AI agents that hold cards: the guard, the treasury on NEAR Intents and the policy assistant."
+  },
+  "security": {
+    "title": "Security",
+    "description": "Threat model, audit, compliance readiness and the research behind it."
+  }
+}

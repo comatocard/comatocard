@@ -5,7 +5,7 @@
   font-weight: 100;
   font-style: normal;
   font-display: swap;
-  src: url("/fonts/inter/inter-thin.ttf") format("truetype");
+  src: url("./fonts/inter/inter-thin.ttf") format("truetype");
 }
 
 @font-face {
@@ -13,7 +13,7 @@
   font-weight: 200;
   font-style: normal;
   font-display: swap;
-  src: url("/fonts/inter/inter-extra-light.ttf") format("truetype");
+  src: url("./fonts/inter/inter-extra-light.ttf") format("truetype");
 }
 
 @font-face {
@@ -21,7 +21,7 @@
   font-weight: 300;
   font-style: normal;
   font-display: swap;
-  src: url("/fonts/inter/inter-light.ttf") format("truetype");
+  src: url("./fonts/inter/inter-light.ttf") format("truetype");
 }
 
 @font-face {
@@ -29,7 +29,7 @@
   font-weight: 400;
   font-style: normal;
   font-display: swap;
-  src: url("/fonts/inter/inter-regular.ttf") format("truetype");
+  src: url("./fonts/inter/inter-regular.ttf") format("truetype");
 }
 
 @font-face {
@@ -37,7 +37,7 @@
   font-weight: 500;
   font-style: normal;
   font-display: swap;
-  src: url("/fonts/inter/inter-medium.ttf") format("truetype");
+  src: url("./fonts/inter/inter-medium.ttf") format("truetype");
 }
 
 @font-face {
@@ -45,7 +45,7 @@
   font-weight: 600;
   font-style: normal;
   font-display: swap;
-  src: url("/fonts/inter/inter-semi-bold.ttf") format("truetype");
+  src: url("./fonts/inter/inter-semi-bold.ttf") format("truetype");
 }
 
 @font-face {
@@ -53,7 +53,7 @@
   font-weight: 700;
   font-style: normal;
   font-display: swap;
-  src: url("/fonts/inter/inter-bold.ttf") format("truetype");
+  src: url("./fonts/inter/inter-bold.ttf") format("truetype");
 }
 
 @font-face {
@@ -61,7 +61,7 @@
   font-weight: 800;
   font-style: normal;
   font-display: swap;
-  src: url("/fonts/inter/inter-extra-bold.ttf") format("truetype");
+  src: url("./fonts/inter/inter-extra-bold.ttf") format("truetype");
 }
 
 @font-face {
@@ -69,7 +69,7 @@
   font-weight: 900;
   font-style: normal;
   font-display: swap;
-  src: url("/fonts/inter/inter-black.ttf") format("truetype");
+  src: url("./fonts/inter/inter-black.ttf") format("truetype");
 }
 
 /* Roboto Mono Font Family */
@@ -80,7 +80,7 @@
   font-style: normal;
   font-display: swap;
   font-variant-numeric: slashed-zero;
-  src: url("/fonts/roboto/roboto-mono-variable-font-wght.ttf") format("truetype");
+  src: url("./fonts/roboto/roboto-mono-variable-font-wght.ttf") format("truetype");
 }
 
 @font-face {
@@ -89,13 +89,13 @@
   font-style: italic;
   font-display: swap;
   font-variant-numeric: slashed-zero;
-  src: url("/fonts/roboto/roboto-mono-italic-variable-font-wght.ttf") format("truetype");
+  src: url("./fonts/roboto/roboto-mono-italic-variable-font-wght.ttf") format("truetype");
 }
 
 /* Inter Font Family specific for questions marks */
 
 @font-face {
   font-family: "QuestionMark";
-  src: url("/fonts/inter/inter-regular.ttf") format("truetype");
+  src: url("./fonts/inter/inter-regular.ttf") format("truetype");
   unicode-range: U+00BF, U+0003F; /* Unicodes for "¿" and "?" */
 }

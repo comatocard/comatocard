@@ -5,9 +5,6 @@
     "build": {
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/docs/**", "$TURBO_ROOT$/**/README.md"],
       "outputs": ["out/**", ".next/**", "!.next/cache/**"]
-    },
-    "typecheck": {
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/docs/**", "$TURBO_ROOT$/**/README.md"]
     }
   }
 }

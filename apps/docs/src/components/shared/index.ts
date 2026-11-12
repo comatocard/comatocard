@@ -8,7 +8,6 @@ export * from "./components/Icons";
 export * from "./components/Layout";
 export * from "./components/Link";
 export * from "./components/NavigationSection";
-export * from "./components/PreloadedFonts";
 export * from "./components/SectionTitle";
 export * from "./components/ThemeToggle";
 export * from "./components/TOC";

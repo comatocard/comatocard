@@ -411,3 +411,66 @@ body {
     animation: cc-fade-pulse 1.6s ease infinite;
   }
 }
+
+/* ── Landing: the closing call to action's drifting gradient ─────────────────
+   Declaring the stop positions as <percentage> properties lets the browser
+   interpolate them, so the soft blobs drift instead of jumping. Decorative and
+   constant, so it is a CSS animation off the main thread; reduced motion stills it. */
+@property --lg-x1 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 10%;
+}
+@property --lg-y1 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 10%;
+}
+@property --lg-x2 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 90%;
+}
+@property --lg-y2 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 90%;
+}
+.landing-gradient {
+  background-color: #1b1a1f;
+  background-image:
+    radial-gradient(circle at var(--lg-x1) var(--lg-y1), #cedfeb 0, transparent 55%),
+    radial-gradient(circle at var(--lg-x2) var(--lg-y2), #f7ece9 0, transparent 55%),
+    radial-gradient(circle at 90% 10%, #b8c6d9 0, transparent 50%),
+    radial-gradient(circle at 10% 90%, #e8dfe0 0, transparent 50%);
+  animation:
+    landing-blob-1 9s ease-in-out infinite,
+    landing-blob-2 11s ease-in-out infinite;
+}
+@keyframes landing-blob-1 {
+  0%,
+  100% {
+    --lg-x1: 5%;
+    --lg-y1: 5%;
+  }
+  50% {
+    --lg-x1: 40%;
+    --lg-y1: 45%;
+  }
+}
+@keyframes landing-blob-2 {
+  0%,
+  100% {
+    --lg-x2: 95%;
+    --lg-y2: 95%;
+  }
+  50% {
+    --lg-x2: 60%;
+    --lg-y2: 40%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-gradient {
+    animation: none;
+  }
+}

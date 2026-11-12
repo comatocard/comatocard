@@ -5,12 +5,12 @@ import { useNearWallet } from "near-connect-hooks";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { FloatingCard } from "../components/onboarding/FloatingCard";
-import { PanelGlow, Wordmark } from "../components/onboarding/SetupLayout";
-import { InfoTip, Toast } from "../components/ui";
-import { Loader } from "../components/ui/Loader";
-import { useSession } from "../hooks/useSession";
-import { useReveal } from "../lib/motion/useReveal";
+import { FloatingCard } from "../../components/onboarding/FloatingCard";
+import { PanelGlow, Wordmark } from "../../components/onboarding/SetupLayout";
+import { InfoTip, Toast } from "../../components/ui";
+import { Loader } from "../../components/ui/Loader";
+import { useSession } from "../../hooks/useSession";
+import { useReveal } from "../../lib/motion/useReveal";
 
 /** Wallets offered by name on a desktop; any other one is still in the connector's own list. */
 const WALLETS = [

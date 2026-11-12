@@ -3,7 +3,8 @@ import { type Payment, vaultCalls } from "@comatocard/sdk";
 import { type ReactNode, useState } from "react";
 import { DaoDecision } from "../../../components/approvals/DaoDecision";
 import { ActionStatus } from "../../../components/form/ActionStatus";
-import { Card, PageHeader } from "../../../components/ui";
+import { Card, InfoTip, PageHeader } from "../../../components/ui";
+import { PagedPanel, Pager, usePaged } from "../../../components/ui/Pager";
 import { ApprovalSkeleton } from "../../../components/ui/ScreenSkeletons";
 import { useApprovals, useCards, useToken } from "../../../hooks/data";
 import { useDaoPolicy, useDaoProposals } from "../../../hooks/useDao";
@@ -47,7 +48,7 @@ export default function ApprovalsPage() {
       <PageHeader
         className="mb-5"
         title="Approvals"
-        description="Payments waiting for you. Nothing moves until you decide."
+        description="Nothing moves until you decide."
       />
       {/* The queue swaps skeleton, requests and empty state; its height follows smoothly. */}
       <SmoothHeight>
@@ -134,7 +135,30 @@ function Queue({
       </Card>
     );
   }
-  return <div className="space-y-3">{items.map(render)}</div>;
+  return <PagedQueue items={items} render={render} />;
+}
+
+/**
+ * One request at a time with a pager, so a long queue never stacks on a phone. The count says how
+ * many wait; deciding one moves the next into view.
+ */
+function PagedQueue({ items, render }: { items: Payment[]; render: (row: Payment) => ReactNode }) {
+  const paged = usePaged(items, 1);
+  return (
+    <div>
+      <div className="mx-1 mb-3 flex min-h-8 items-center justify-between">
+        <span className="text-[13px] font-medium text-muted">{items.length} waiting</span>
+        <Pager page={paged.page} count={paged.count} onPage={paged.go} label="requests" />
+      </div>
+      <PagedPanel panel={paged.panel}>{paged.items.map(render)}</PagedPanel>
+      <p className="mx-1 mt-3 flex items-center gap-1.5 text-[12.5px] font-medium text-muted">
+        Gasless
+        <InfoTip label="Gasless">
+          Your decision is signed in your wallet and sent by the relayer, which pays the gas.
+        </InfoTip>
+      </p>
+    </div>
+  );
 }
 
 function Decide({

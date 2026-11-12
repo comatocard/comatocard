@@ -2,36 +2,21 @@
 import { vaultCalls } from "@comatocard/sdk";
 import { useParams, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { PaymentList } from "../../../../components/activity/PaymentList";
 import { CardArtwork } from "../../../../components/card/CardArtwork";
 import { AssistantSheet } from "../../../../components/cards/AssistantSheet";
+import { CardActions, type CardSheet } from "../../../../components/cards/CardActions";
+import { CardDetails } from "../../../../components/cards/CardDetails";
 import { EditPolicySheet } from "../../../../components/cards/EditPolicySheet";
 import { RotateKeySheet } from "../../../../components/cards/RotateKeySheet";
-import { SpendBar } from "../../../../components/cards/SpendBar";
-import { ActionStatus } from "../../../../components/form/ActionStatus";
 import { CardFolder } from "../../../../components/motion/card-folder";
-import {
-  ActionPill,
-  ActionRow,
-  BottomSheet,
-  Button,
-  Card,
-  SubHeader,
-} from "../../../../components/ui";
+import { BottomSheet, Button, SubHeader } from "../../../../components/ui";
 import { CardScreenSkeleton } from "../../../../components/ui/ScreenSkeletons";
 import { useCards, usePayments, useToken } from "../../../../hooks/data";
 import { useNow } from "../../../../hooks/useNow";
-import { type ActionState, useOwnerAction } from "../../../../hooks/useOwnerAction";
+import { useOwnerAction } from "../../../../hooks/useOwnerAction";
 import { useOwnership } from "../../../../hooks/useOwnership";
 import { useVault } from "../../../../hooks/useVault";
-import {
-  cardNumber,
-  currentSpend,
-  expiryLabel,
-  keyTail,
-  merchantsText,
-} from "../../../../lib/cards";
-import { displayUnits } from "../../../../lib/units";
+import { cardChips, cardNumber, expiryLabel, keyTail } from "../../../../lib/cards";
 
 export default function CardPage() {
   return (
@@ -100,16 +85,16 @@ function CardScreen() {
 
   const symbol = token.data?.symbol ?? "";
   const decimals = token.data?.decimals ?? 0;
-  const spend = now ? currentSpend(card, now) : { today: "0", period: "0" };
   const p = card.policy;
   const calls = vaultCalls(vaultId);
   const live = card.status !== "revoked";
+  const chips = cardChips(card);
 
   return (
     <div className="mx-auto w-full max-w-[560px]">
       <SubHeader title={card.label} />
 
-      <div className="mt-6 mb-[22px] flex justify-center">
+      <div className="mt-6 mb-4 flex justify-center">
         <CardFolder
           title={card.label}
           ariaLabel={`Card ${card.label}`}
@@ -134,6 +119,17 @@ function CardScreen() {
         />
       </div>
 
+      <ul className="mb-5 flex flex-wrap justify-center gap-1.5" aria-label="Card status">
+        {chips.map((chip, i) => (
+          <li
+            key={chip}
+            className={`rounded-full px-2.5 py-1 text-[12px] font-semibold ${i === 0 && card.status === "active" ? "bg-pos/10 text-pos" : "bg-pill text-pill-ink"}`}
+          >
+            {chip}
+          </li>
+        ))}
+      </ul>
+
       {live ? (
         <CardActions
           isOwner={isOwner}
@@ -149,59 +145,17 @@ function CardScreen() {
         />
       ) : null}
 
-      <h2 className="mx-1 mt-[22px] mb-2 text-sm font-medium text-muted">Limits</h2>
-      <Card className="space-y-4 px-5 py-4">
-        <SpendBar
-          label="Today"
-          spent={spend.today}
-          limit={p.daily_limit}
-          decimals={decimals}
-          symbol={symbol}
-        />
-        <SpendBar
-          label="30 days"
-          spent={spend.period}
-          limit={p.monthly_limit}
-          decimals={decimals}
-          symbol={symbol}
-        />
-        <dl className="grid grid-cols-2 gap-y-3 border-t border-line pt-4 text-[13px]">
-          <dt className="text-muted">Per payment</dt>
-          <dd className="text-right font-semibold tabular-nums">
-            {displayUnits(p.per_tx_limit, decimals)} {symbol}
-          </dd>
-          <dt className="text-muted">Ask me above</dt>
-          <dd className="text-right font-semibold tabular-nums">
-            {p.approval_threshold === null
-              ? "Never"
-              : `${displayUnits(p.approval_threshold, decimals)} ${symbol}`}
-          </dd>
-          <dt className="text-muted">Merchants</dt>
-          <dd className="text-right font-semibold">{merchantsText(p.merchants)}</dd>
-          <dt className="text-muted">Counterparty check</dt>
-          <dd className="text-right font-semibold">
-            {{ off: "Off", block_only: "Refuse blocked", strict: "Strict" }[p.risk_mode]}
-          </dd>
-          <dt className="text-muted">Held by</dt>
-          <dd className="truncate text-right font-semibold">{card.holder ?? "You"}</dd>
-          <dt className="text-muted">Status</dt>
-          <dd className="text-right font-semibold capitalize">{card.status}</dd>
-        </dl>
-      </Card>
+      <CardDetails card={card} payments={payments} now={now} decimals={decimals} symbol={symbol} />
 
-      <h2 className="mx-1 mt-[22px] mb-2 text-sm font-medium text-muted">Payments</h2>
-      <Card className="px-5 pb-2 pt-1">
-        <PaymentList
-          rows={payments.data?.items}
-          cards={undefined}
-          loading={payments.isLoading}
-          error={payments.error ? payments.error.message : null}
-          decimals={decimals}
-          symbol={symbol}
-          now={now}
-          emptyDescription={`Every payment ${card.label} tries, including refused ones, shows here.`}
-        />
-      </Card>
+      {isOwner && live ? (
+        <button
+          type="button"
+          onClick={() => setSheet("revoke")}
+          className="mx-auto mt-6 block text-[13px] font-semibold text-neg"
+        >
+          Revoke card
+        </button>
+      ) : null}
 
       {live ? (
         <AssistantSheet
@@ -261,48 +215,5 @@ function CardScreen() {
         </p>
       ) : null}
     </div>
-  );
-}
-
-type CardSheet = "policy" | "rotate" | "revoke" | "assistant";
-
-/** The owner's controls for a card; anyone else can still ask the assistant. */
-function CardActions({
-  isOwner,
-  frozen,
-  onToggleFreeze,
-  onOpen,
-  state,
-  onDirect,
-}: {
-  isOwner: boolean;
-  frozen: boolean;
-  onToggleFreeze: () => void;
-  onOpen: (sheet: CardSheet) => void;
-  state: ActionState;
-  onDirect: () => void;
-}) {
-  if (!isOwner) {
-    return (
-      <ActionRow className="mb-2">
-        <ActionPill primary onClick={() => onOpen("assistant")}>
-          Ask the assistant
-        </ActionPill>
-      </ActionRow>
-    );
-  }
-  return (
-    <>
-      <ActionRow className="mb-2">
-        <ActionPill primary onClick={onToggleFreeze}>
-          {frozen ? "Unfreeze" : "Freeze"}
-        </ActionPill>
-        <ActionPill onClick={() => onOpen("policy")}>Edit limits</ActionPill>
-        <ActionPill onClick={() => onOpen("assistant")}>Ask the assistant</ActionPill>
-        <ActionPill onClick={() => onOpen("rotate")}>New key</ActionPill>
-        <ActionPill onClick={() => onOpen("revoke")}>Revoke</ActionPill>
-      </ActionRow>
-      <ActionStatus state={state} onDirect={onDirect} />
-    </>
   );
 }

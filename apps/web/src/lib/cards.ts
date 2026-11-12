@@ -47,6 +47,33 @@ export function remainingToday(policy: Policy, spend: Spend): string {
   return period.toString();
 }
 
+/**
+ * What the cards that can still pay spent today, against the sum of their day limits: the
+ * "Spent today 5 of 80" line under the balance. Frozen cards count, revoked ones do not.
+ */
+export function spentToday(
+  cards: readonly Card[],
+  nowMs: number,
+): { spent: string; limit: string } {
+  let spent = 0n;
+  let limit = 0n;
+  for (const card of cards) {
+    if (card.status === "revoked") continue;
+    spent += BigInt(currentSpend(card, nowMs).today);
+    limit += BigInt(card.policy.daily_limit);
+  }
+  return { spent: spent.toString(), limit: limit.toString() };
+}
+
+const STATUS_LABEL = { active: "Active", frozen: "Frozen", revoked: "Revoked" } as const;
+
+/** The chips under a card: its status, who holds it, and whether payees are screened. */
+export function cardChips(card: Card): string[] {
+  const chips: string[] = [STATUS_LABEL[card.status], KIND_LABEL[card.kind]];
+  if (card.policy.risk_mode !== "off") chips.push("Registry check");
+  return chips;
+}
+
 export const KIND_LABEL = { human: "Person", agent: "Agent", treasury: "Treasury" } as const;
 
 /** A merchant rule in words: "Any merchant", "Only a, b", "All but c". */

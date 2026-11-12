@@ -11,11 +11,14 @@ export function AvailableHero({
   reserved,
   decimals,
   symbol,
+  today,
 }: {
   available: string | undefined;
   reserved: string | undefined;
   decimals: number | undefined;
   symbol: string;
+  /** Today's spend over the cards that can pay, against their day limits. */
+  today?: { spent: string; limit: string } | null;
 }) {
   const known = available !== undefined && decimals !== undefined;
   return (
@@ -37,11 +40,25 @@ export function AvailableHero({
       ) : (
         <div className="mt-2 text-[clamp(32px,12vw,54px)] font-semibold leading-none">—</div>
       )}
-      {known && reserved !== undefined && reserved !== "0" ? (
-        <div className="mt-1.5 text-[13px] text-muted">
-          {displayUnits(reserved, decimals)} {symbol} reserved for payments in flight
-        </div>
+      {known ? (
+        <SubLine
+          parts={[
+            today && today.limit !== "0"
+              ? `Spent today ${displayUnits(today.spent, decimals)} of ${displayUnits(today.limit, decimals)}`
+              : null,
+            reserved !== undefined && reserved !== "0"
+              ? `Reserved ${displayUnits(reserved, decimals)}`
+              : null,
+          ]}
+        />
       ) : null}
     </div>
   );
+}
+
+/** The quiet line under the figure: today's spend and what is reserved, when there is any. */
+function SubLine({ parts }: { parts: (string | null)[] }) {
+  const shown = parts.filter((p): p is string => p !== null);
+  if (shown.length === 0) return null;
+  return <div className="mt-1.5 text-[13px] text-muted tabular-nums">{shown.join(" · ")}</div>;
 }

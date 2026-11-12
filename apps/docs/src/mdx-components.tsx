@@ -1,10 +1,11 @@
 import { useMDXComponents as getNextraComponents, type MDXComponents } from "nextra/mdx-components";
 
-import { Code, Heading, HeadingLink, Pre } from "~/components/shared";
+import { Anchor, Code, Heading, HeadingLink, Pre } from "~/components/shared";
 
 const text = "text-base leading-[160%] text-grey-400 dark:text-grey-300";
 
 const components: MDXComponents = {
+  a: Anchor,
   table: (props) => (
     <div className="overflow-x-auto mt-8 first:mt-0">
       <table {...props} />

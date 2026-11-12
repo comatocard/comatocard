@@ -1,3 +1,4 @@
+export * from "./components/Anchor";
 export * from "./components/CodeBlock";
 export * from "./components/Error";
 export * from "./components/Footer";

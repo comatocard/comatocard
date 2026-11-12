@@ -74,6 +74,15 @@ Vault `audit.factory.comatocard.testnet`, code version 3, published from main at
 | Card pays 2 tUSD with 50 Tgas | refused before execution | `attach at least 80 Tgas`, nothing reserved (#58) |
 | Card pays 2 tUSD with 100 Tgas | `EYcoFo6RHbcvsjuZZSXzkhLgVovqefWvufKAvnssSzpi` | Registry check, `payment_settled`, `reserved` back to 0 |
 
+### Policy assistant check on 2026-11-12
+Vault `rio74936.factory.comatocard.testnet`, card 0, model `Qwen/Qwen3.8-27B` on NEAR AI Cloud. Commands from `apps/agents/README.md`.
+
+| Step | Result |
+|-|-|
+| `pnpm policy 0 "Lower the daily limit to 40 tUSD and only allow paying comatocard-shop.testnet"` | Proposal changes `daily_limit` to 40 tUSD and `merchants` to `{"allow":["comatocard-shop.testnet"]}`; response signature, TDX quote chain to the Intel root, key and nonce binding and compose measurement all pass for signer `89154a43...`, compose hash `e8416a02...` |
+| Owner runs the printed `owner-call ... update_policy` through the relayer | tx `69EiPYCkxsb6J4ePq5GqcUVjsX4uL5yycjhZjkTsiSAi`, `card_policy_updated` with the proposed policy |
+| Owner restores the previous policy for the attack demo | tx `3CPtg8qGE1cNoYaCViJvHqb6cA1JoDURgy8JYHPp2FKv`, `merchants` back to `any`, daily limit 50 tUSD |
+
 ### Treasury dry run on 2026-11-12
 Vault `rio74936.factory.comatocard.testnet`; `TREASURY_ACCOUNT=near` only as an existing mainnet account for the quote. Card 1 (30 tUSD per day) was added through the relayer, tx `B3FVCC7k6MnoJwqty5aDgZpMtSsAzRGxQzQ8e6pRDUbj`.
 

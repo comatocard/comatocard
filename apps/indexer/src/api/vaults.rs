@@ -14,7 +14,7 @@ use crate::rpc::Chain;
 /// Statuses that hold or spent a reservation.
 pub const RESERVED_STATUSES: [&str; 4] = ["submitted", "queued", "approved", "settled"];
 
-#[derive(Debug, Serialize, sqlx::FromRow)]
+#[derive(Debug, Serialize, sqlx::FromRow, async_graphql::SimpleObject)]
 #[expect(
     clippy::struct_field_names,
     reason = "field names are the API response keys"

@@ -21,6 +21,10 @@ FACTORY_FUNDING="${FACTORY_FUNDING:-30.3 NEAR}"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WASM_DIR="${REPO_ROOT}/target/near"
+# Set RELEASE_WASM to a directory of release assets (vault.wasm, ...) to deploy a reproducible
+# build instead of building locally.
+RELEASE_WASM="${RELEASE_WASM:-}"
+wasm() { if [[ -n "${RELEASE_WASM}" ]]; then echo "${RELEASE_WASM}/$1.wasm"; else echo "${WASM_DIR}/$1/$1.wasm"; fi; }
 
 log() { printf '\n==> %s\n' "$*"; }
 
@@ -79,8 +83,10 @@ call_as_root() {
     sign-as "${ROOT_ACCOUNT}" network-config "${NETWORK}" sign-with-legacy-keychain send
 }
 
-log "Building contracts"
-(cd "${REPO_ROOT}" && pnpm turbo run build --filter='./contracts/*' --output-logs=errors-only)
+if [[ -z "${RELEASE_WASM}" ]]; then
+  log "Building contracts"
+  (cd "${REPO_ROOT}" && pnpm turbo run build --filter='./contracts/*' --output-logs=errors-only)
+fi
 
 log "Creating accounts under ${ROOT_ACCOUNT}"
 create_subaccount "${TOKEN}" "${TOKEN_FUNDING}"
@@ -88,9 +94,9 @@ create_subaccount "${REGISTRY}" "${REGISTRY_FUNDING}"
 create_subaccount "${FACTORY}" "${FACTORY_FUNDING}"
 
 log "Deploying contracts"
-deploy "${TOKEN}" "${WASM_DIR}/mock_ft/mock_ft.wasm" '{}'
-deploy "${REGISTRY}" "${WASM_DIR}/registry/registry.wasm" "{\"owner\":\"${ROOT_ACCOUNT}\"}"
-deploy "${FACTORY}" "${WASM_DIR}/factory/factory.wasm" \
+deploy "${TOKEN}" "$(wasm mock_ft)" '{}'
+deploy "${REGISTRY}" "$(wasm registry)" "{\"owner\":\"${ROOT_ACCOUNT}\"}"
+deploy "${FACTORY}" "$(wasm factory)" \
   "{\"owner\":\"${ROOT_ACCOUNT}\",\"default_tokens\":[\"${TOKEN}\"],\"default_registry\":\"${REGISTRY}\"}"
 
 log "Appointing ${ROOT_ACCOUNT} as registry curator"
@@ -101,11 +107,11 @@ else
 fi
 
 log "Publishing the vault code as a global contract"
-expected_hash="$(python3 -I "${REPO_ROOT}/scripts/code-hash.py" "${WASM_DIR}/vault/vault.wasm" | cut -d" " -f1)"
+expected_hash="$(python3 -I "${REPO_ROOT}/scripts/code-hash.py" "$(wasm vault)" | cut -d" " -f1)"
 if view "${FACTORY}" get_config '{}' | grep -q "\"${expected_hash}\""; then
   echo "vault code ${expected_hash} already published"
 else
-  call_as_root "${FACTORY}" publish_vault_code file-args "${WASM_DIR}/vault/vault.wasm"
+  call_as_root "${FACTORY}" publish_vault_code file-args "$(wasm vault)"
 fi
 
 log "Done"

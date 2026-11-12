@@ -7,6 +7,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
+use futures_util::StreamExt;
 use sqlx::PgPool;
 use tokio_util::sync::CancellationToken;
 
@@ -18,6 +19,9 @@ use crate::neardata::{Block, BlockSource, Tracked, extract_logs};
 
 const CURSOR_ID: &str = "main";
 const UNSET: u64 = u64::MAX;
+/// Blocks fetched ahead of the one being indexed. neardata latency, not throughput, bounds a
+/// sequential fetch; with an API key this multiplies the catch-up rate.
+const PREFETCH: usize = 8;
 
 /// Ingestion progress shared with the health endpoint.
 #[derive(Debug)]
@@ -200,8 +204,16 @@ impl<S: BlockSource> Runner<S> {
     async fn catch_up(&self, next: &mut u64, shutdown: &CancellationToken) -> anyhow::Result<()> {
         let head = self.source.final_height().await?;
         self.progress.set(None, Some(head));
+        // Fetch up to PREFETCH blocks concurrently; `buffered` yields them in height order, so
+        // indexing, the cursor and the progress stay strictly sequential.
+        let mut blocks = futures_util::stream::iter(*next..=head)
+            .map(|height| self.source.block(height))
+            .buffered(PREFETCH);
         while *next <= head && !shutdown.is_cancelled() {
-            let block = self.source.block(*next).await?;
+            let Some(block) = blocks.next().await else {
+                break;
+            };
+            let block = block?;
             let (result, published) =
                 index_block(&self.pool, &self.tracked, *next, block.as_ref()).await?;
             for event in published {

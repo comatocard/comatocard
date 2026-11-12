@@ -1,30 +1,19 @@
-import { useRouter } from "next/router";
-import { type PropsWithChildren, useEffect, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
+"use client";
+
+import { type PropsWithChildren, useEffect, useState } from "react";
 
 import { useNormalizedRoute } from "~/hooks/useIsHomePage";
-import { selectDirectoriesByRoute } from "~/lib/directories/directories.selectors";
+import { isMainRoute } from "~/lib/site";
 
-import { mainNavRoutes } from "../../Layout";
 import { getHeadings, type Heading } from "../TOC.helpers";
 import { TableOfContents } from "./TableOfContents";
 
 type TableOfContentsWrapperProps = PropsWithChildren;
 
 export const TableOfContentsWrapper: React.FC<TableOfContentsWrapperProps> = ({ children }) => {
-  const { route } = useRouter();
-  const normalizedRoute = useNormalizedRoute();
-  const directoriesByRoute = useSelector(selectDirectoriesByRoute);
-
   const [headings, setHeadings] = useState<Heading[]>([]);
 
-  const isMainPage = useMemo(() => mainNavRoutes.includes(normalizedRoute), [normalizedRoute]);
-  const isSubCategoryPage = useMemo(
-    () => directoriesByRoute[route]?.frontMatter?.pageType === "sub-category",
-    [directoriesByRoute, route],
-  );
-
-  const shouldRenderTOC = !isMainPage && !isSubCategoryPage;
+  const shouldRenderTOC = !isMainRoute(useNormalizedRoute());
 
   // No dependency list: the headings are read from the rendered page after every render, and
   // state only changes when they differ, so navigation updates the TOC without a render loop.

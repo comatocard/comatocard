@@ -1,44 +1,15 @@
-interface GetRevealPropsArgs {
-  y?: number;
-  x?: number;
-  delay?: number;
-  opacity?: number;
-  scale?: number;
-  transitionType?: string;
-  duration?: number;
-}
+import type { MotionProps } from "motion/react";
 
-export const getRevealProps = ({
-  y = 24,
-  x = 0,
-  delay = 0.1,
-  opacity = 1,
-  scale = 1,
-  transitionType = "spring",
-}: GetRevealPropsArgs) => ({
+/** Fades an element in the first time it scrolls into view. */
+export const reveal: MotionProps = {
   viewport: { once: true, margin: "-60px" },
   initial: "hidden",
   whileInView: "visible",
   variants: {
-    hidden: {
-      opacity: 0,
-      y,
-      x,
-      scale,
-    },
+    hidden: { opacity: 0 },
     visible: {
-      opacity,
-      y: 0,
-      x: 0,
-      scale: 1,
-      transition: {
-        type: transitionType,
-        stiffness: 500,
-        damping: 200,
-        delay,
-      },
+      opacity: 1,
+      transition: { type: "spring", stiffness: 500, damping: 200, delay: 0.1 },
     },
   },
-});
-
-// oposite of reveal props
+};

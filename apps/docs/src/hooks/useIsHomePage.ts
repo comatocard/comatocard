@@ -1,40 +1,10 @@
-import { useRouter } from "next/router";
-import { useMemo } from "react";
+"use client";
 
-const stripLocaleSuffix = (segment: string, locale?: string) => {
-  if (!locale) return segment;
+import { usePathname } from "next/navigation";
 
-  const suffix = `.${locale}`;
-  return segment.endsWith(suffix) ? segment.slice(0, -suffix.length) : segment;
-};
+import { normalizeRoute } from "~/lib/site";
 
-const buildNormalizedRoute = (route: string, locale?: string) => {
-  if (!route || route === "/") return "/";
+/** The current route without a trailing slash, for example `/build/integration`. */
+export const useNormalizedRoute = () => normalizeRoute(usePathname() ?? "/");
 
-  const segments = route
-    .split("/")
-    .filter(Boolean)
-    .map((segment) => stripLocaleSuffix(segment, locale));
-
-  if (!segments.length) return "/";
-
-  if (segments[segments.length - 1] === "index") {
-    segments.pop();
-  }
-
-  if (!segments.length) return "/";
-
-  return `/${segments.join("/")}`;
-};
-
-export const useNormalizedRoute = () => {
-  const { route, locale } = useRouter();
-
-  return useMemo(() => buildNormalizedRoute(route, locale), [route, locale]);
-};
-
-export const useIsHomePage = () => {
-  const normalizedRoute = useNormalizedRoute();
-
-  return normalizedRoute === "/";
-};
+export const useIsHomePage = () => useNormalizedRoute() === "/";

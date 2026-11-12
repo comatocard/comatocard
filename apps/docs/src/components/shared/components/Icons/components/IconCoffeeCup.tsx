@@ -1,11 +1,11 @@
 import clsx from "clsx";
 import type { SVGProps } from "react";
 
-const IconCoffeeCup = <T,>({
+const IconCoffeeCup = ({
   color,
   size = 24,
   ...otherProps
-}: SVGProps<T, SVGSVGElement> & { color?: string; size?: number }) => (
+}: SVGProps<SVGSVGElement> & { color?: string; size?: number }) => (
   <svg
     aria-hidden="true"
     width={size}

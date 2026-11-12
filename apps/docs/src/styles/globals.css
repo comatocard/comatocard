@@ -1,69 +1,129 @@
+@layer theme, base, mui, components, utilities;
+
 @import "./fonts.css";
+@import "tailwindcss";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@config "../../tailwind.config.cjs";
 
-@layer utilities {
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  .no-scrollbar::-webkit-scrollbar {
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  body {
+    @apply antialiased font-primary text-black dark:text-white bg-grey-50 dark:bg-grey-900 min-w-[320px];
+    scrollbar-gutter: stable;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  ::selection {
+    @apply text-black dark:text-white bg-[#00A5C6]/20 dark:bg-[#B0FF61]/20;
+  }
+
+  ::-webkit-scrollbar {
+    @apply block overflow-auto w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-grey-300 dark:bg-grey-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-corner {
+    background-color: transparent;
+  }
+}
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
     display: none;
   }
-  /* Hide scrollbar for IE, Edge and Firefox */
-  .no-scrollbar {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+}
+
+/* Rendered page content. */
+.docs-layout {
+  @apply overflow-x-clip bg-grey-50 dark:bg-grey-900 relative;
+
+  table {
+    @apply border-collapse w-full;
+  }
+
+  table tbody tr:nth-of-type(even) {
+    @apply bg-[#FBFBFB] dark:bg-[#1B1F25];
+  }
+
+  table tr {
+    @apply border-t-0 border-b border-grey-200 dark:border-grey-600;
+  }
+
+  table th,
+  table td {
+    @apply px-6 border-none text-left text-base leading-[130%] text-grey-400 dark:text-grey-300;
+  }
+
+  table th {
+    @apply py-2 font-semibold;
+  }
+
+  table td {
+    @apply py-4 sm:py-6;
+  }
+
+  a[href] {
+    @apply hover:text-[#00A5C6]/80 dark:hover:text-[#B0FF61]/80 transition-all;
+    text-decoration: none;
+  }
+
+  input {
+    @apply focus:outline focus:outline-1 focus:outline-grey-200 dark:focus:outline-grey-600;
+  }
+
+  img {
+    @apply rounded-lg mt-8;
+  }
+
+  /* Code blocks: one 20px grid row per line with 16px side padding, as with Nextra 2. */
+  pre code {
+    @apply grid p-0 leading-5 rounded-none;
+  }
+
+  pre code [data-line] {
+    @apply block px-4;
   }
 }
 
+/* Syntax colours for Shiki's CSS-variables theme, the values the Nextra 2 site rendered. */
 :root {
-  /**
-   * Polyfill Nextra Shiki Theme Colors
-   * @see https://nextra.site/docs/guide/syntax-highlighting#customize-the-theme
-   * @see https://shiki.matsu.io/guide/theme-colors#css-variables-theme
-   */
-  --shiki-foreground: var(--shiki-color-text);
-  --shiki-background: var(--shiki-color-background);
-
-  /* Only required if using lang: 'ansi' */
-  --shiki-ansi-black: var(--shiki-color-ansi-black);
-  --shiki-ansi-black-dim: var(--shiki-color-ansi-black-dim);
-  --shiki-ansi-red: var(--shiki-color-ansi-red);
-  --shiki-ansi-red-dim: var(--shiki-color-ansi-red-dim);
-  --shiki-ansi-green: var(--shiki-color-ansi-green);
-  --shiki-ansi-green-dim: var(--shiki-color-ansi-green-dim);
-  --shiki-ansi-yellow: var(--shiki-color-ansi-yellow);
-  --shiki-ansi-yellow-dim: var(--shiki-color-ansi-yellow-dim);
-  --shiki-ansi-blue: var(--shiki-color-ansi-blue);
-  --shiki-ansi-blue-dim: var(--shiki-color-ansi-blue-dim);
-  --shiki-ansi-magenta: var(--shiki-color-ansi-magenta);
-  --shiki-ansi-magenta-dim: var(--shiki-color-ansi-magenta-dim);
-  --shiki-ansi-cyan: var(--shiki-color-ansi-cyan);
-  --shiki-ansi-cyan-dim: var(--shiki-color-ansi-cyan-dim);
-  --shiki-ansi-white: var(--shiki-color-ansi-white);
-  --shiki-ansi-white-dim: var(--shiki-color-ansi-white-dim);
-  --shiki-ansi-bright-black: var(--shiki-color-ansi-bright-black);
-  --shiki-ansi-bright-black-dim: var(--shiki-color-ansi-bright-black-dim);
-  --shiki-ansi-bright-red: var(--shiki-color-ansi-bright-red);
-  --shiki-ansi-bright-red-dim: var(--shiki-color-ansi-bright-red-dim);
-  --shiki-ansi-bright-green: var(--shiki-color-ansi-bright-green);
-  --shiki-ansi-bright-green-dim: var(--shiki-color-ansi-bright-green-dim);
-  --shiki-ansi-bright-yellow: var(--shiki-color-ansi-bright-yellow);
-  --shiki-ansi-bright-yellow-dim: var(--shiki-color-ansi-bright-yellow-dim);
-  --shiki-ansi-bright-blue: var(--shiki-color-ansi-bright-blue);
-  --shiki-ansi-bright-blue-dim: var(--shiki-color-ansi-bright-blue-dim);
-  --shiki-ansi-bright-magenta: var(--shiki-color-ansi-bright-magenta);
-  --shiki-ansi-bright-magenta-dim: var(--shiki-color-ansi-bright-magenta-dim);
-  --shiki-ansi-bright-cyan: var(--shiki-color-ansi-bright-cyan);
-  --shiki-ansi-bright-cyan-dim: var(--shiki-color-ansi-bright-cyan-dim);
-  --shiki-ansi-bright-white: var(--shiki-color-ansi-bright-white);
-  --shiki-ansi-bright-white-dim: var(--shiki-color-ansi-bright-white-dim);
+  --shiki-foreground: lab(27.53% 0 0);
+  --shiki-token-keyword: lab(47.89% 63.03 42.31);
+  --shiki-token-string: lab(49.14% -42.04 31.86);
+  --shiki-token-string-expression: lab(49.14% -42.04 31.86);
+  --shiki-token-function: lab(39.03% 41.19 -60.58);
+  --shiki-token-constant: lab(48.4% 0.65 -55.57);
+  --shiki-token-comment: lab(69.61% 0 0);
+  --shiki-token-parameter: lab(72.74% 33.91 77.36);
+  --shiki-token-punctuation: lab(12.74% 0 0);
+  --shiki-token-link: lab(49.14% -42.04 31.86);
 }
 
-html.dark .initial-overlay {
-  background-color: #000;
+.dark {
+  --shiki-foreground: lab(83.84% 0 0);
+  --shiki-token-keyword: lab(65.91% 52.49 18.13);
+  --shiki-token-string: lab(77.53% 27.42 43.24);
+  --shiki-token-string-expression: lab(66.47% -48.73 44.73);
+  --shiki-token-function: lab(66.45% 27.23 -43.26);
+  --shiki-token-constant: lab(72.68% -5.94 -41.83);
+  --shiki-token-comment: lab(47.98% -1.63 -6.06);
+  --shiki-token-parameter: lab(72.74% 33.91 77.36);
+  --shiki-token-punctuation: lab(75.88% 0 0);
+  --shiki-token-link: lab(77.53% 27.42 43.24);
 }
 
-html.light .initial-overlay {
-  background-color: #fff;
+/* Search results from Pagefind. */
+.docs-search mark {
+  @apply bg-transparent font-semibold text-[#00BC8D];
 }

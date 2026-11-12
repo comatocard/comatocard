@@ -1,14 +1,15 @@
+"use client";
+
 import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
 import clsx from "clsx";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import Link from "next/link";
-import type { Page } from "nextra";
-import { getPagesUnderRoute } from "nextra/context";
 import { type PropsWithChildren, useCallback, useEffect, useState } from "react";
 
 import { useCurrentBreakpoint } from "~/hooks/useCurrentBreakpoint";
-import { getRevealProps } from "~/lib/helpers/animations";
+import { reveal } from "~/lib/helpers/animations";
+import { sections } from "~/lib/site";
 
 import { Footer } from "../../Footer";
 import { IconDocsLogo } from "../../Icons";
@@ -29,12 +30,8 @@ export const NavigationLayout: React.FC<NavigationLayoutProps> = ({ isMainPage, 
 
   const closeMobileDrawer = useCallback(() => !upSm && setIsLeftDrawerOpen(false), [upSm]);
 
-  // Sidebar pages of a section; index and overview pages stay reachable through their routes.
-  const getNavSectionPages = useCallback(
-    (route: string): Page[] =>
-      getPagesUnderRoute(route).filter((page) => page.name !== "index" && page.name !== "overview"),
-    [],
-  );
+  // Sidebar pages of a section; overview pages stay reachable through the section link.
+  const sectionPages = (route: string) => sections.find((s) => s.route === route)?.pages ?? [];
 
   // To prevent a flash of the drawer on first render given that useCurrentBreakpoint has an issue always returning false for the first render for upLg and others
   useEffect(() => {
@@ -48,7 +45,7 @@ export const NavigationLayout: React.FC<NavigationLayoutProps> = ({ isMainPage, 
         className={clsx("fixed z-[99] top-0 left-0 h-full", {
           "w-screen sm:w-[200px]": isLeftDrawerOpen,
         })}
-        {...getRevealProps({ y: 0 })}
+        {...reveal}
       >
         <LeftNavDrawer
           variant="permanent"
@@ -78,7 +75,7 @@ export const NavigationLayout: React.FC<NavigationLayoutProps> = ({ isMainPage, 
                 <div key={items[0].url} className="flex flex-col">
                   <List className="w-full font-medium">
                     {items.map((item) => {
-                      const navSectionPages = item.url ? getNavSectionPages(item.url) : [];
+                      const navSectionPages = item.url ? sectionPages(item.url) : [];
 
                       return (
                         <div key={item.url}>
@@ -93,10 +90,8 @@ export const NavigationLayout: React.FC<NavigationLayoutProps> = ({ isMainPage, 
                               {navSectionPages.map((page) => (
                                 <div key={page.route} className="px-3 pl-12 sm:pr-6 pb-3 sm:pb-2">
                                   <NavigationAccordionLink
-                                    key={page.route}
                                     page={page}
                                     onClick={closeMobileDrawer}
-                                    isTopLevelPage
                                   />
                                 </div>
                               ))}
@@ -135,7 +130,7 @@ export const NavigationLayout: React.FC<NavigationLayoutProps> = ({ isMainPage, 
         />
 
         <motion.div
-          {...getRevealProps({ y: 0 })}
+          {...reveal}
           className="relative flex-grow text-black dark:text-white pt-[62px] sm:pt-0"
         >
           {children}

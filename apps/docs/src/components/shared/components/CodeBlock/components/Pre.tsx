@@ -1,4 +1,6 @@
-import cn, { clsx } from "clsx";
+"use client";
+
+import { clsx } from "clsx";
 import type { ComponentProps, ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
 
@@ -13,13 +15,14 @@ const MIN_LINES_TO_WRAP = 2;
 export const Pre = ({
   children,
   className,
-  hasCopyCode,
-  filename,
+  "data-filename": filename,
+  "data-copy": copy,
   ...props
 }: ComponentProps<"pre"> & {
-  filename?: string;
-  hasCopyCode?: boolean;
+  "data-filename"?: string;
+  "data-copy"?: string;
 }): ReactElement => {
+  const hasCopyCode = copy !== undefined;
   const [showWrapButton, setShowWrapButton] = useState(false);
   const [isWordWrapEnabled, setIsWordWrapEnabled] = useState(false);
   const preRef = useRef<HTMLPreElement | null>(null);
@@ -39,8 +42,8 @@ export const Pre = ({
       )}
 
       <pre
-        className={cn(
-          "bg-grey-100 dark:bg-grey-900 overflow-x-auto rounded-lg nx-subpixel-antialiased text-base leading-[160%] text-black dark:text-white",
+        className={clsx(
+          "bg-grey-100 dark:bg-grey-900 overflow-x-auto rounded-lg text-base leading-[160%] text-black dark:text-white",
           filename ? "px-4 pt-[90px] pb-8" : "px-4 py-8",
           className,
         )}
@@ -52,7 +55,7 @@ export const Pre = ({
       </pre>
 
       <div
-        className={cn(
+        className={clsx(
           "opacity-0 transition-all [div:hover>&]:opacity-100 focus-within:opacity-100",
           "flex flex-col items-center gap-1 absolute right-8",
           filename ? "top-[90px]" : "top-8",

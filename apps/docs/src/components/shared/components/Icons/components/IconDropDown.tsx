@@ -1,10 +1,7 @@
 import clsx from "clsx";
 import type { SVGProps } from "react";
 
-const IconDropDown = <T,>({
-  color,
-  ...otherProps
-}: SVGProps<T, SVGSVGElement> & { color?: string }) => (
+const IconDropDown = ({ color, ...otherProps }: SVGProps<SVGSVGElement> & { color?: string }) => (
   <svg
     aria-hidden="true"
     width="16"

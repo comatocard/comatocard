@@ -1,3 +1,5 @@
+"use client";
+
 import { type CSSObject, styled, type Theme } from "@mui/material";
 import MuiDrawer, { type DrawerProps } from "@mui/material/Drawer";
 import type { ComponentProps } from "react";
@@ -73,15 +75,4 @@ export const navMainItems: NavItem[][] = [
   [{ label: "Agents", icon: IconServer, url: "/agents", clickUrl: "/agents/overview" }],
   [{ label: "Security", icon: IconAbout, url: "/security", clickUrl: "/security/overview" }],
   [{ label: "GitHub", icon: IconCommunity, url: "https://github.com/comatocard/comatocard" }],
-];
-
-/**
- * @description List of main/top-level routes. Used to render conditional components/styles for Articles or Sub-Category pages.
- */
-export const mainNavRoutes = [
-  "/",
-  ...[...navMainItems]
-    .flat()
-    .flatMap((item) => [item.url, item.clickUrl])
-    .filter(Boolean),
 ];

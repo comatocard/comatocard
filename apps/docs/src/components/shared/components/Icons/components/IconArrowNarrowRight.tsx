@@ -1,10 +1,10 @@
 import clsx from "clsx";
 import type { SVGProps } from "react";
 
-const IconArrowNarrowRight = <T,>({
+const IconArrowNarrowRight = ({
   color,
   ...otherProps
-}: SVGProps<T, SVGSVGElement> & { color?: string }) => (
+}: SVGProps<SVGSVGElement> & { color?: string }) => (
   <svg
     aria-hidden="true"
     width={32}

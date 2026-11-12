@@ -1,0 +1,156 @@
+{
+  "home": {
+    "title": "Comatocard Documentation",
+    "description": "Programmable payment cards for people and AI agents, enforced by smart contracts on NEAR."
+  },
+  "sections": [
+    {
+      "slug": "start",
+      "title": "Get Started",
+      "description": "What Comatocard is, how it fits together and how to try it on NEAR testnet.",
+      "hero": "/img/pages/start.svg",
+      "pages": [
+        {
+          "slug": "introduction",
+          "source": "README.md",
+          "title": "Introduction",
+          "description": "Programmable payment cards for people and AI agents, enforced by smart contracts on NEAR."
+        },
+        {
+          "slug": "architecture",
+          "source": "docs/architecture.md",
+          "title": "Architecture",
+          "description": "Vaults, cards, the factory, the registry, the indexer and the agents, and how a payment flows through them."
+        },
+        {
+          "slug": "deployments",
+          "source": "docs/deployments.md",
+          "title": "Testnet Deployment",
+          "description": "Contract accounts, code hashes and the recorded end-to-end checks on NEAR testnet."
+        }
+      ]
+    },
+    {
+      "slug": "build",
+      "title": "Build",
+      "description": "Integrate cards into an app, a merchant checkout or an agent.",
+      "hero": "/img/pages/build.svg",
+      "pages": [
+        {
+          "slug": "integration",
+          "source": "docs/integration.md",
+          "title": "Integration Guide",
+          "description": "Accept card payments as a merchant and pay from a card in an app or agent."
+        },
+        {
+          "slug": "sdk",
+          "source": "packages/sdk/README.md",
+          "title": "TypeScript SDK",
+          "description": "Types, event schemas, the vault client and compliance helpers in @comatocard/sdk."
+        },
+        {
+          "slug": "events",
+          "source": "docs/specs/events.md",
+          "title": "Events",
+          "description": "The NEP-297 events every vault, registry and factory emits."
+        },
+        {
+          "slug": "indexer-api",
+          "source": "docs/specs/indexer-api.md",
+          "title": "Indexer API",
+          "description": "REST, WebSocket, risk verdicts and the accountant CSV export."
+        },
+        {
+          "slug": "indexer",
+          "source": "apps/indexer/README.md",
+          "title": "Run the Indexer",
+          "description": "Run the Rust indexer with Postgres against NEAR testnet."
+        }
+      ]
+    },
+    {
+      "slug": "contracts",
+      "title": "Contracts",
+      "description": "The vault, factory and registry contracts and their interfaces.",
+      "hero": "/img/pages/tools.svg",
+      "pages": [
+        {
+          "slug": "vault-spec",
+          "source": "docs/specs/vault-contract.md",
+          "title": "Vault Specification",
+          "description": "State, policies, payments, approvals and card tokens of the vault contract."
+        },
+        {
+          "slug": "vault",
+          "source": "contracts/vault/README.md",
+          "title": "Vault",
+          "description": "Modules, build and tests of the vault contract."
+        },
+        {
+          "slug": "factory",
+          "source": "contracts/factory/README.md",
+          "title": "Factory",
+          "description": "Publishes the vault code as a global contract and creates vaults."
+        },
+        {
+          "slug": "registry",
+          "source": "contracts/registry/README.md",
+          "title": "Registry",
+          "description": "Counterparty registry with reports, curators and sanctions listings."
+        },
+        {
+          "slug": "mock-ft",
+          "source": "contracts/mock-ft/README.md",
+          "title": "tUSD",
+          "description": "The testnet stablecoin with a public faucet."
+        }
+      ]
+    },
+    {
+      "slug": "agents",
+      "title": "Agents",
+      "description": "AI agents that hold cards: the guard, the treasury on NEAR Intents and the policy assistant.",
+      "hero": "/img/pages/use.svg",
+      "pages": [
+        {
+          "slug": "agents",
+          "source": "apps/agents/README.md",
+          "title": "Agents",
+          "description": "Spending agent and guard, treasury top-ups through NEAR Intents, the policy assistant and the attack demo."
+        },
+        {
+          "slug": "relayer",
+          "source": "apps/relayer/README.md",
+          "title": "Relayer",
+          "description": "Gasless owner actions through NEP-366 meta transactions."
+        }
+      ]
+    },
+    {
+      "slug": "security",
+      "title": "Security",
+      "description": "Threat model, audit, compliance readiness and the research behind it.",
+      "hero": "/img/pages/about.svg",
+      "pages": [
+        {
+          "slug": "model",
+          "source": "docs/security.md",
+          "title": "Security Model",
+          "description": "Principles, threat model, audit results and engineering practice."
+        },
+        {
+          "slug": "compliance",
+          "source": "docs/compliance.md",
+          "title": "Compliance Readiness",
+          "description": "Roles and custody, the controls in the product and the rules they map to."
+        },
+        {
+          "slug": "compliance-research",
+          "source": "docs/compliance-research.md",
+          "title": "Compliance Research",
+          "description": "Indonesian and global rules for stablecoin payments, AML, sanctions, privacy and AI."
+        }
+      ]
+    }
+  ]
+}

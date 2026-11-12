@@ -1,148 +1,66 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { type PropsWithChildren, useMemo } from "react";
-import { useSelector } from "react-redux";
-import { usePrevious } from "react-use";
+import type { PropsWithChildren } from "react";
 
 import { useNormalizedRoute } from "~/hooks/useIsHomePage";
+import { usePreviousRoute } from "~/hooks/usePreviousRoute";
 import { basePath } from "~/lib/app.constants";
-import {
-  selectDirectoriesByRoute,
-  selectFlatDirectories,
-} from "~/lib/directories/directories.selectors";
-import { countRouteSegments, getValidParentDirectory } from "~/lib/helpers/nextra";
+import { home, isMainRoute, nextPage, pageAt } from "~/lib/site";
+
 import { IconArrowNarrowRight, IconSpeechBubble } from "../../Icons";
 import { NavigationSection } from "../../NavigationSection";
-import { mainNavRoutes } from "../Layout.constants";
 
-type PrevNextNavigationWrapperProps = PropsWithChildren;
+const segments = (route: string) => route.split("/").filter(Boolean).length;
 
 /**
- * @description Main content wrapper to navigate to a previous doc (top page link) or the next doc (bottom nav section)
- * @todo Add optional "tutorial" link in the bottom Continue Learning section
+ * Back link to the page the reader came from (or the home page) above the content, and the next
+ * page in reading order with a feedback box below it.
  */
-export const PrevNextNavigationWrapper: React.FC<PrevNextNavigationWrapperProps> = ({
-  children,
-}) => {
-  const normalizedRoute = useNormalizedRoute();
+export const PrevNextNavigationWrapper: React.FC<PropsWithChildren> = ({ children }) => {
+  const route = useNormalizedRoute();
+  const previousRoute = usePreviousRoute(route);
+  const page = pageAt(route);
+  const next = page && nextPage(page);
 
-  const prevNormalizedRoute = usePrevious(normalizedRoute);
+  // A previous page counts unless it is deeper than this one or the page that comes next.
+  const visited = previousRoute ? pageAt(previousRoute) : undefined;
+  const back =
+    visited && segments(visited.route) <= segments(route) && visited.route !== next?.route
+      ? visited
+      : home;
 
-  const flatDirectories = useSelector(selectFlatDirectories);
-  const directoriesByRoute = useSelector(selectDirectoriesByRoute);
-
-  const { prevPage, nextPage, relatedTutorial } = useMemo(() => {
-    const currentDirectory = directoriesByRoute[normalizedRoute];
-
-    if (!normalizedRoute || !currentDirectory) return { prevPage: null, nextPage: null };
-
-    const isPrevRouteCurrent = prevNormalizedRoute === normalizedRoute;
-    const isPrevRouteChildren = prevNormalizedRoute
-      ? countRouteSegments(prevNormalizedRoute) > countRouteSegments(normalizedRoute)
-      : false;
-    const isPrevRouteValid = prevNormalizedRoute && !isPrevRouteCurrent && !isPrevRouteChildren;
-    const prevDirectory = isPrevRouteValid ? directoriesByRoute[prevNormalizedRoute] : null;
-
-    const nextPage = flatDirectories[currentDirectory.index + 1] || null;
-
-    let prevPage = null;
-
-    if (prevDirectory && prevDirectory.route !== nextPage?.route) {
-      prevPage = {
-        title: directoriesByRoute[prevDirectory.route].meta?.title,
-        route: prevDirectory.route,
-      };
-    } else {
-      const parentDirectory = getValidParentDirectory({
-        directoriesByRoute,
-        currentRoute: currentDirectory.route,
-      });
-      const parentRoute = parentDirectory?.route || "/";
-
-      prevPage = {
-        title: directoriesByRoute[parentRoute].meta?.title,
-        route: directoriesByRoute[parentRoute].route,
-      };
-    }
-
-    const { frontMatter, meta } = currentDirectory;
-
-    const relatedTutorialUrl = frontMatter?.relatedTutorialUrl ?? meta?.relatedTutorialUrl;
-    const relatedTutorialRoute = relatedTutorialUrl ? String(relatedTutorialUrl) : undefined;
-
-    const relatedTutorial = relatedTutorialRoute ? directoriesByRoute[relatedTutorialRoute] : null;
-
-    return {
-      prevPage,
-      nextPage,
-      relatedTutorial,
-    };
-  }, [flatDirectories, directoriesByRoute, normalizedRoute, prevNormalizedRoute]);
-
-  const isMainPage = useMemo(() => mainNavRoutes.includes(normalizedRoute), [normalizedRoute]);
-
-  const isSubCategoryPage = useMemo(
-    () => directoriesByRoute[normalizedRoute]?.frontMatter?.pageType === "sub-category",
-    [directoriesByRoute, normalizedRoute],
-  );
-
-  const continueLearningNavItems = useMemo(() => {
-    const navItems = [];
-
-    if (nextPage) {
-      navItems.push({
-        topTitle: "Next",
-        title: nextPage.meta?.title || "Next Page",
-        description: nextPage.meta?.description,
-        readTime: nextPage.meta?.readTime,
-        readType: nextPage.meta?.readType,
-        href: nextPage.route,
-        withScrollToTop: true,
-      });
-    }
-
-    if (relatedTutorial) {
-      navItems.push({
-        topTitle: "Tutorial",
-        title: relatedTutorial.meta?.title || "Related Tutorial",
-        description: relatedTutorial.meta?.description,
-        readTime: relatedTutorial.meta?.readTime,
-        readType: relatedTutorial.meta?.readType,
-        href: relatedTutorial.route,
-        withScrollToTop: true,
-      });
-    }
-
-    return navItems;
-  }, [nextPage, relatedTutorial]);
-
-  const shouldRenderPrevLink = !isMainPage && !!prevPage;
-  const shouldRenderNextSection =
-    !isMainPage && !isSubCategoryPage && !!continueLearningNavItems.length;
+  if (!page || isMainRoute(route)) return <>{children}</>;
 
   return (
     <>
-      {shouldRenderPrevLink && (
-        <div className="mb-8 sm:mb-10 md:mb-20 leading-[0]">
-          <Link
-            href={prevPage.route}
-            className="inline-flex items-center gap-2 text-lg leading-[130%] text-grey-400 dark:text-grey-300 hover:!text-green-100 dark:hover:!text-green-100 transition-all"
-          >
-            <IconArrowNarrowRight className="text-current" />
-            {prevPage.title || "Previous Page"}
-          </Link>
-        </div>
-      )}
+      <div className="mb-8 sm:mb-10 md:mb-20 leading-[0]">
+        <Link
+          href={back.route}
+          className="inline-flex items-center gap-2 text-lg leading-[130%] text-grey-400 dark:text-grey-300 hover:!text-green-100 dark:hover:!text-green-100 transition-all"
+        >
+          <IconArrowNarrowRight className="text-current" />
+          {back.title}
+        </Link>
+      </div>
 
       {children}
 
-      {shouldRenderNextSection && (
+      {next && (
         <>
           <div className="mb-16 mt-20 sm:mt-[120px]">
             <NavigationSection
               title="Continue Learning"
               description="Continue with the next part or try a related tutorial"
-              navItems={continueLearningNavItems}
+              navItems={[
+                {
+                  topTitle: "Next",
+                  title: next.title,
+                  description: next.description,
+                  href: next.route,
+                },
+              ]}
             />
           </div>
           <div className="pt-4">

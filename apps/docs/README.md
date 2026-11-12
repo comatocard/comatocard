@@ -1,17 +1,17 @@
 # apps/docs
 
-The documentation site at https://docs.comatocard.xyz/: Nextra 2 on Next.js, exported as static files.
+The documentation site at https://docs.comatocard.xyz/: Next.js App Router with Nextra 4, exported as static files, searched with Pagefind.
 
-The pages are not written here. `scripts/sync-content.mjs` turns the repository Markdown (`docs/` and the READMEs) into the site sections on every `dev`, `build` and `typecheck`, so `docs/` stays the single source. The section list, titles and descriptions live in `SECTIONS` in that script; the home page is `src/pages/index.mdx`.
+The pages are not written here. `src/site.json` lists the sections and the repository Markdown each page shows (`docs/` and the READMEs); at build time `src/app/[[...mdxPath]]/page.tsx` reads that file, converts it with `src/lib/markdown.mjs` and compiles it with Nextra, so `docs/` stays the single source. The layout, navigation, hero and cards read the same `site.json` through `src/lib/site.ts`.
 
 ## Run locally
 1. `pnpm install` at the repository root.
 2. `pnpm --filter @comatocard/docs dev` and open http://localhost:3001.
-3. Edit a file under `docs/` and restart `dev` to see it on the site.
+3. Edit a file under `docs/` and reload the page. Search needs a build, since Pagefind indexes the built HTML.
 
 ## Build and test
-- `pnpm --filter @comatocard/docs build` writes the static site to `apps/docs/out/`, ready for any static host.
-- `pnpm --filter @comatocard/docs test` checks the Markdown to MDX conversion and the link rewrites.
+- `pnpm --filter @comatocard/docs build` writes the static site with its search index to `apps/docs/out/`, ready for any static host.
+- `pnpm --filter @comatocard/docs test` checks the Markdown to MDX conversion, the link rewrites and that every page source in `site.json` exists and converts.
 - `pnpm --filter @comatocard/docs lint` runs Biome and the SonarJS rules.
 
 ## Deploy

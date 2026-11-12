@@ -1,6 +1,7 @@
+"use client";
+
 import clsx from "clsx";
 import type { PropsWithChildren } from "react";
-import tw, { styled } from "twin.macro";
 
 import { useCurrentBreakpoint } from "~/hooks/useCurrentBreakpoint";
 
@@ -9,53 +10,43 @@ import { handleHeadingLinkClick } from "../TOC.helpers";
 
 type HeadingLinkProps = PropsWithChildren<{
   tag: "h2" | "h3" | "h4" | "h5" | "h6";
+  /** Set by Nextra from the heading text. */
+  id?: string;
 }>;
 
-const StyledLink = styled.a`
-  ${tw`!text-black dark:!text-white`}
-
-  &&:hover {
-    ${tw`!text-black dark:!text-white`}
-
-    .icon-link {
-      ${tw`text-green-100 dark:text-green-100`}
-    }
-  }
-`;
-
-export const HeadingLink: React.FC<HeadingLinkProps> = ({ tag: Tag, children }) => {
+export const HeadingLink: React.FC<HeadingLinkProps> = ({ tag: Tag, id, children }) => {
   const { isSmallDevice } = useCurrentBreakpoint();
 
   if (!children) return null;
 
-  const generatedId = children.toString().toLowerCase().replace(/\s+/g, "-");
+  const headingId = id ?? String(children).toLowerCase().replace(/\s+/g, "-");
 
   return (
     <Tag
-      id={generatedId}
+      id={headingId}
       className={clsx("heading-link first:mt-0", {
         "mt-20 sm:mt-[136px]": Tag === "h2",
-        "mt-8": Tag === "h3" || Tag === "h4" || Tag === "h5" || Tag === "h6",
+        "mt-8": Tag !== "h2",
       })}
     >
-      <StyledLink
-        href={`#${generatedId}`}
-        className={clsx("inline-block relative", {
+      <a
+        href={`#${headingId}`}
+        className={clsx("group inline-block relative !text-black dark:!text-white", {
           "text-2xl tracking-[-0.48px] font-medium": Tag === "h2",
           "text-xl font-medium": Tag === "h3",
           "text-lg font-medium": Tag === "h4",
           "text-base leading-[160%] font-semibold": Tag === "h5" || Tag === "h6",
         })}
         onClick={(event) =>
-          handleHeadingLinkClick({ event, id: generatedId, isMobile: isSmallDevice })
+          handleHeadingLinkClick({ event, id: headingId, isMobile: isSmallDevice })
         }
       >
         <span className="mr-1">{children}</span>
 
         <span className="inline-block align-bottom">
-          <IconLink className="text-grey-300 dark:text-grey-400 icon-link transition-all" />
+          <IconLink className="text-grey-300 dark:text-grey-400 group-hover:text-green-100 transition-all" />
         </span>
-      </StyledLink>
+      </a>
     </Tag>
   );
 };

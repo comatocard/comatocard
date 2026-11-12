@@ -7,11 +7,10 @@ allowBuilds:
   esbuild: true
   lefthook: true
 
-# apps/docs runs Nextra 2.13.4 and twin.macro 3.1.0, the latest releases of those lines; they
-# still depend on these. Remove once the docs site moves to Nextra 4 (App Router).
+# Nextra 4.6.1, the latest release, renders LaTeX through better-react-mathjax, which still
+# depends on mathjax-full 3. Remove once Nextra moves to MathJax 4.
 allowedDeprecatedVersions:
-  intersection-observer: "0.12"
-  lodash.get: "4"
+  mathjax-full: "3"
 
 savePrefix: ""
 

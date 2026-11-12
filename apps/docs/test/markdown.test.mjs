@@ -1,14 +1,18 @@
 import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { SECTIONS, toMdx } from "../scripts/sync-content.mjs";
+import { toMdx } from "../src/lib/markdown.mjs";
+import site from "../src/site.json" with { type: "json" };
+
+const repoFile = (path) => new URL(`../../../${path}`, import.meta.url);
 
 test("drops the H1 and escapes JSX and expressions in prose only", () => {
   const out = toMdx(
     "# Title\n\nPay <amount> with {fee}.\n\n```rust\nfn x<T>() {}\n```\n",
     "docs/a.md",
   );
-  assert.equal(out, "Pay &lt;amount> with \\{fee\\}.\n\n```rust\nfn x<T>() {}\n```\n");
+  assert.equal(out, "Pay &lt;amount> with \\{fee\\}.\n\n```rust\nfn x<T>() {}\n```");
 });
 
 test("leaves inline code untouched", () => {
@@ -35,11 +39,23 @@ test("rewrites links to synced pages as routes and others to GitHub", () => {
   );
 });
 
-test("every page has a unique slug and a description", () => {
-  for (const section of SECTIONS) {
-    const slugs = section.pages.map(([slug]) => slug);
+test("every page has a unique slug, a description and a source that exists", () => {
+  for (const section of site.sections) {
+    const slugs = section.pages.map((page) => page.slug);
     assert.equal(new Set(slugs).size, slugs.length, section.slug);
     assert.ok(!slugs.includes("overview"), `${section.slug} reserves overview`);
-    for (const [, , title, description] of section.pages) assert.ok(title && description);
+    for (const page of section.pages) {
+      assert.ok(page.title && page.description, page.slug);
+      assert.ok(existsSync(repoFile(page.source)), page.source);
+    }
+  }
+});
+
+test("converts every source without leaving a raw tag or brace in prose", () => {
+  for (const page of site.sections.flatMap((s) => s.pages)) {
+    const prose = toMdx(readFileSync(repoFile(page.source), "utf8"), page.source)
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/`[^`\n]*`/g, "");
+    assert.doesNotMatch(prose, /<[a-z]|(?<!\\)[{}]/i, page.source);
   }
 });

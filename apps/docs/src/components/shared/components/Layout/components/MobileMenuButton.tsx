@@ -1,5 +1,7 @@
+"use client";
+
 import clsx from "clsx";
-import { motion, type Transition, type Variants } from "framer-motion";
+import { motion, type Transition, type Variants } from "motion/react";
 
 type PathProps = { d?: string; variants: Variants; transition?: Transition };
 

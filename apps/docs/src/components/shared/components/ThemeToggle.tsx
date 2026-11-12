@@ -1,5 +1,7 @@
+"use client";
+
 import clsx from "clsx";
-import { useTheme } from "nextra-theme-docs";
+import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
 import { HeroIconMoon, HeroIconSun } from "./Icons";

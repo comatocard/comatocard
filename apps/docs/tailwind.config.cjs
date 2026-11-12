@@ -1,10 +1,10 @@
-const twDefaultTheme = require("tailwindcss/defaultTheme");
+// Design tokens shared with the MUI theme (src/lib/theme/mui.ts); loaded by globals.css @config.
 const shared = require("./src/styles/tailwind.theme.json");
+
+const sans = ["Inter", "ui-sans-serif", "system-ui", "sans-serif"];
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: "class",
-  content: ["./src/**/*.{ts,tsx,js,jsx,md,mdx}"],
   theme: {
     screens: { ...shared.screens, xl: "1512px" },
     colors: {
@@ -18,10 +18,9 @@ module.exports = {
       screens: shared.extend.screens,
       boxShadow: shared.extend.boxShadow,
       fontFamily: {
-        primary: ["Inter", ...twDefaultTheme.fontFamily.sans],
-        inter: ["Inter", ...twDefaultTheme.fontFamily.sans],
-        roobert: ["Inter", ...twDefaultTheme.fontFamily.sans],
-        mono: ["Roboto Mono", ...twDefaultTheme.fontFamily.mono],
+        primary: sans,
+        inter: sans,
+        mono: ["Roboto Mono", "ui-monospace", "SFMono-Regular", "monospace"],
       },
     },
   },

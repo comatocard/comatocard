@@ -1,6 +1,8 @@
-import { useTheme } from "@emotion/react";
+"use client";
+
 import { useMediaQuery } from "@mui/material";
 import type { Breakpoint } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
 
 type UseCurrentBreakpoint = () => {
   currentBreakpoint: Breakpoint | "";

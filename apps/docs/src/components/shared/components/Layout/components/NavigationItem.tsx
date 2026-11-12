@@ -1,7 +1,11 @@
+"use client";
+
 import { ListItem } from "@mui/material";
 import clsx from "clsx";
-import { useRouter } from "next/router";
+import { usePathname } from "next/navigation";
 import { createElement, useMemo } from "react";
+
+import { normalizeRoute } from "~/lib/site";
 
 import type { NavItem } from "../Layout.constants";
 import { NavigationItemWrapper } from "./NavigationItemWrapper";
@@ -24,19 +28,19 @@ export const NavigationItem = ({
 }: NavigationItemProps) => {
   const { label, url, icon } = item;
 
-  const router = useRouter();
+  const pathname = normalizeRoute(usePathname() ?? "/");
 
   const isSelected = useMemo(() => {
     if (!url) {
       return false;
     }
 
-    if (router.pathname === "/" || url === "/") {
-      return url === router.pathname;
+    if (pathname === "/" || url === "/") {
+      return url === pathname;
     }
 
-    return router.pathname.startsWith(url);
-  }, [url, router.pathname]);
+    return pathname.startsWith(url);
+  }, [url, pathname]);
 
   return (
     <ListItem

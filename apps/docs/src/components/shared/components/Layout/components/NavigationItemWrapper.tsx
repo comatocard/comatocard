@@ -1,3 +1,5 @@
+"use client";
+
 import { ListItemButton } from "@mui/material";
 import Link from "next/link";
 import { useMemo } from "react";

@@ -16,7 +16,7 @@
   "dependencies": {
     "@comatocard/sdk": "workspace:*",
     "borsh": "2.0.0",
-    "near-api-js": "7.4.0",
+    "near-api-js": "7.5.3",
     "pino": "10.4.0",
     "zod": "4.6.7"
   },

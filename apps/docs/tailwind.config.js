@@ -5,7 +5,6 @@ const shared = require("./src/styles/tailwind.theme.json");
 module.exports = {
   darkMode: "class",
   content: ["./src/**/*.{ts,tsx,js,jsx,md,mdx}"],
-  plugins: [require("@tailwindcss/line-clamp")],
   theme: {
     screens: { ...shared.screens, xl: "1512px" },
     colors: {

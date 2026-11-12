@@ -60,7 +60,8 @@ test.describe("landing page", () => {
 
   test("states facts the repo backs, not stronger ones", async ({ page }) => {
     await openPage(page);
-    const text = await page.locator("body").innerText();
+    // The page content only: the body would also hold inline scripts.
+    const text = (await page.locator("main").allTextContents()).join(" ");
     expect(text).not.toMatch(/audited/i);
     expect(text).toContain("1–2");
     expect(text).toContain("Testnet only. No real funds.");

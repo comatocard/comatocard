@@ -474,3 +474,19 @@ body {
     animation: none;
   }
 }
+
+/* ── Lenis (landing page) ─────────────────────────────────────────────────────
+   Lenis scrolls the window, so the document must grow past the viewport: the
+   `h-full` on html and the 100% height on body would otherwise make body its own
+   scroll container and the wheel would move nothing. Unlayered on purpose, so it
+   wins over the utilities while Lenis is mounted. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}

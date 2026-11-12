@@ -35,10 +35,18 @@ const loadPagefind = () => {
   return pagefind;
 };
 
+const ENTITIES: Record<string, string> = {
+  "&amp;": "&",
+  "&lt;": "<",
+  "&gt;": ">",
+  "&quot;": '"',
+  "&#39;": "'",
+};
+
 /** Excerpt text with Pagefind's `<mark>` highlights, as text nodes instead of injected HTML. */
 const Excerpt = ({ html }: { html: string }) => {
-  const text = (part: string) =>
-    new DOMParser().parseFromString(part, "text/html").body.textContent;
+  // Pagefind escapes only these entities; decoding them by hand keeps the spaces around marks.
+  const text = (part: string) => part.replace(/&(?:amp|lt|gt|quot|#39);/g, (e) => ENTITIES[e] ?? e);
   return (
     <>
       {html.split(/<\/?mark>/).map((part, i) =>

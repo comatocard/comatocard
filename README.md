@@ -2,7 +2,7 @@
 
 Programmable payment cards for people and AI agents, enforced by smart contracts on NEAR.
 
-[Docs](https://docs.comatocard.xyz) · [Indexer API](https://indexer.comatocard.xyz/health) · [Testnet deployment](docs/deployments.md)
+[Docs](https://docs.comatocard.xyz) · [Indexer GraphQL](https://indexer.comatocard.xyz/graphql) · [Testnet deployment](docs/deployments.md)
 
 The docs and the testnet indexer are live; the hosted app is being deployed, so until then the steps below run against NEAR testnet and locally.
 
@@ -26,9 +26,10 @@ Requirements: Node 24 with pnpm, Rust from `rust-toolchain.toml` with [cargo-nea
 1. **Build and test everything.** `pnpm install && pnpm build && pnpm test` builds the contracts and apps and runs the unit tests. `pnpm test:integration` runs the near-sandbox and Postgres tests.
 2. **See a vault on testnet.** `near contract call-function as-read-only v5.factory.comatocard.testnet get_config json-args '{}' network-config testnet now` returns the owner, the registry and `contract_version` `0.4.0`. Its code is the reproducible build attached to [release v0.4.1](https://github.com/comatocard/comatocard/releases/tag/v0.4.1).
 3. **See a payment that settled.** Open `https://testnet.nearblocks.io/txns/7nK8SHcVnQWgDjeng4ozKgUA7ueGMRei5d6FSyZmbVmR`: a card paid 1 tUSD after an on-chain registry check (`payment_submitted`, `payment_settled`).
-4. **Index it yourself.** `docker compose -f apps/indexer/docker-compose.yml up --build` starts Postgres and the indexer on testnet; `curl localhost:4000/health` shows the indexed height and the lag. Events from then on appear under `/vaults/<vault>/payments` and in `/vaults/<vault>/export.csv`.
-5. **Pay from an agent.** `apps/agents` holds a card key and pays through its guard (preview, risk verdict, human confirmation on warn). See [apps/agents](apps/agents/README.md).
-6. **Act as an owner without NEAR.** `apps/relayer` sponsors owner calls signed as delegate actions: `pnpm owner-call <vault> freeze_card '{"card_id":0}'` freezes a card while the owner balance stays unchanged, and refuses card payments, other contracts and senders that are not the owner. See [apps/relayer](apps/relayer/README.md).
+4. **Query the live indexer.** Open https://indexer.comatocard.xyz/graphql and run `{ cards(vault: "v5.factory.comatocard.testnet") { cardId label status } payments(vault: "v5.factory.comatocard.testnet") { items { status amount merchant reference } } }`: card 0 is active and the payment above is `settled`. The same data is at `https://indexer.comatocard.xyz/vaults/v5.factory.comatocard.testnet/payments`.
+5. **Index it yourself.** `docker compose -f apps/indexer/docker-compose.yml up --build` starts Postgres and the indexer on testnet; `curl localhost:4000/health` shows the indexed height and the lag. Events from then on appear under `/vaults/<vault>/payments` and in `/vaults/<vault>/export.csv`.
+6. **Pay from an agent.** `apps/agents` holds a card key and pays through its guard (preview, risk verdict, human confirmation on warn). See [apps/agents](apps/agents/README.md).
+7. **Act as an owner without NEAR.** `apps/relayer` sponsors owner calls signed as delegate actions: `pnpm owner-call <vault> freeze_card '{"card_id":0}'` freezes a card while the owner balance stays unchanged, and refuses card payments, other contracts and senders that are not the owner. See [apps/relayer](apps/relayer/README.md).
 
 Every transaction of the testnet checks, including a rejection, an approval and a card handover, is listed in [docs/deployments.md](docs/deployments.md).
 

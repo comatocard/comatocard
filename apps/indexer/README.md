@@ -12,6 +12,9 @@ Workstream A. Specification: [indexer API](../../docs/specs/indexer-api.md).
 
 Container: `docker compose -f apps/indexer/docker-compose.yml up --build` runs Postgres and the indexer against testnet. The image is built from the repository root with `apps/indexer/Dockerfile`.
 
+## Deploy
+Every push to `main` that changes the indexer, the contracts it parses or the Rust toolchain runs `.github/workflows/indexer-image.yml`: it publishes `ghcr.io/comatocard/comatocard-indexer` (tags `main` and the commit SHA), then asks Coolify to redeploy https://indexer.comatocard.xyz and waits until `/health` answers `ok`. The `COOLIFY_DEPLOY_TOKEN` secret is a Coolify token limited to deploy and read. The live instance and its configuration are in [deployments](../../docs/deployments.md).
+
 ## Footprint
 Measured on testnet on 2026-11-11 while following the chain: 6 to 9 MB resident memory and under 1.5% of one CPU. The TypeScript indexer it replaced used 80 to 100 MB.
 

@@ -8,7 +8,6 @@ use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
-use async_graphql::http::GraphiQLSource;
 use async_graphql::{
     Context, EmptyMutation, EmptySubscription, Json, Object, Schema, SimpleObject,
 };
@@ -45,13 +44,11 @@ pub async fn execute<C: Chain + 'static>(
     schema.execute(request.into_inner()).await.into()
 }
 
+/// The `GraphiQL` explorer, opened on the query list with an example over the testnet demo vault.
+const GRAPHIQL: &str = include_str!("graphiql.html");
+
 pub async fn graphiql() -> impl IntoResponse {
-    Html(
-        GraphiQLSource::build()
-            .endpoint("/graphql")
-            .title("Comatocard indexer")
-            .finish(),
-    )
+    Html(GRAPHIQL)
 }
 
 pub struct QueryRoot<C>(PhantomData<C>);

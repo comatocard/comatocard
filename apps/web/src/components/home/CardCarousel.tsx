@@ -10,9 +10,9 @@ import { SpendBar } from "../cards/SpendBar";
 import { Skeleton } from "../ui";
 
 /**
- * The vault's cards as a row that snaps one card at a time, the next one peeking in. Under it, the
- * card in view: its name and today's spend, swapping with a GSAP slide as the row moves. Native
- * scroll snap does the dragging, so a swipe feels like the system's own.
+ * The vault's cards as a row that snaps one card at a time, the next one peeking in. Under it, on
+ * phones, the card in view: its name and today's spend, swapping with a GSAP slide as the row
+ * moves. Native scroll snap does the dragging, so a swipe feels like the system's own.
  */
 export function CardCarousel({
   cards,
@@ -128,8 +128,9 @@ export function CardCarousel({
           </Link>
         ))}
       </div>
+      {/* On desktop the Cards list beside the carousel carries this summary already. */}
       {card ? (
-        <div className="mt-3 overflow-hidden">
+        <div className="mt-3 overflow-hidden lg:hidden">
           <div ref={info} className="rounded-[18px] bg-card px-4 py-3.5">
             <div className="mb-2 flex items-center justify-between gap-3">
               <span className="truncate text-[15px] font-semibold">{card.label}</span>

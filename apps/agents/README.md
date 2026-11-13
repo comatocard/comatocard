@@ -58,4 +58,4 @@ An LLM agent on NEAR AI Cloud pays `demo/invoice.txt`, whose hidden footer tells
 2. `pnpm attack --no-guard`: stands for an agent whose own code is compromised and signs without the guard. The vault asks the registry and the transaction emits `payment_failed` with cause `merchant_blocked`; the funds stay in the vault.
 
 ## Tests
-`pnpm test`: configuration, card lookup, the indexer risk client, the terminal prompt, every branch of the guard, card buffers, treasury plans, the treasury execution (deposit transaction, polling, refunds, timeout), the 1Click client, TDX quote and response signature checks on recorded NEAR AI traffic (`test/fixtures/near-ai-qwen.json`) the policy assistant, the chat client and the agent loop, with no network.
+`pnpm test`: configuration, card lookup, the indexer risk client, the terminal prompt, every branch of the guard, card buffers, treasury plans, the treasury execution (deposit transaction, polling, refunds, timeout), the 1Click client, TDX quote and response signature checks on recorded NEAR AI traffic (`test/fixtures/near-ai-qwen.json`), the policy assistant, the chat client and the agent loop, with no network.

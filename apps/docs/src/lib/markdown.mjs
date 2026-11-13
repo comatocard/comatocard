@@ -38,14 +38,14 @@ function prose(text, source) {
 }
 
 /**
- * Converts one Markdown file found at `source` (a repository path): drops the H1, since the
- * page hero shows the title, and escapes prose.
+ * Converts one Markdown file found at `source` (a repository path): drops the H1 and any HTML
+ * lines above it, such as the README logo, since the page hero shows the title; escapes prose.
  * @param {string} markdown
  * @param {string} source
  * @returns {string}
  */
 export function toMdx(markdown, source) {
-  const lines = markdown.replace(/^# .*\n+/, "").split("\n");
+  const lines = markdown.replace(/^(?:<[^\n]*>\s*\n)*# .*\n+/, "").split("\n");
   let fenced = false;
   return lines
     .map((line) => {

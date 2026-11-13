@@ -182,10 +182,7 @@ pub fn router<C: Chain + 'static>(state: AppState<C>) -> Router {
         .route("/stream", get(stream::stream::<C>))
         .with_state(Arc::clone(&state));
     let graphql = Router::new()
-        .route(
-            "/graphql",
-            get(graphql::graphiql).post(graphql::execute::<C>),
-        )
+        .route("/graphql", get(graphql::graphiql).post(graphql::execute))
         .with_state(graphql::schema(state));
     rest.merge(graphql).fallback(not_found)
 }

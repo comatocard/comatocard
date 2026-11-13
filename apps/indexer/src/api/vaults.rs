@@ -14,22 +14,24 @@ use crate::rpc::Chain;
 /// Statuses that hold or spent a reservation.
 pub const RESERVED_STATUSES: [&str; 4] = ["submitted", "queued", "approved", "settled"];
 
-#[derive(Debug, Serialize, sqlx::FromRow, async_graphql::SimpleObject)]
+#[derive(Debug, Serialize, serde::Deserialize, sqlx::FromRow, async_graphql::SimpleObject)]
+#[graphql(complex)]
 #[expect(
     clippy::struct_field_names,
     reason = "field names are the API response keys"
 )]
 pub struct Card {
-    vault_id: String,
-    card_id: i32,
-    public_key: Option<String>,
-    holder_id: Option<String>,
-    label: String,
-    kind: String,
-    status: String,
-    policy: Value,
-    created_at: String,
-    updated_at: String,
+    pub(super) vault_id: String,
+    pub(super) card_id: i32,
+    pub(super) public_key: Option<String>,
+    pub(super) holder_id: Option<String>,
+    pub(super) label: String,
+    pub(super) kind: String,
+    pub(super) status: String,
+    #[graphql(skip)]
+    pub(super) policy: Value,
+    pub(super) created_at: String,
+    pub(super) updated_at: String,
 }
 
 macro_rules! card_columns {

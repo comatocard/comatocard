@@ -70,7 +70,7 @@ async fn serves_graphiql_on_get() {
     assert_eq!(status, StatusCode::OK);
     assert!(body.contains("graphiql@3.9.0/graphiql.min.js"), "{body}");
     assert!(body.contains("visiblePlugin: explorer"));
-    assert!(body.contains(r#"cards(vault: "v5.factory.comatocard.testnet")"#));
+    assert!(body.contains(r#"vault(id: "v5.factory.comatocard.testnet")"#));
     // Every script and stylesheet from the CDN is pinned and checked.
     assert_eq!(
         body.matches("https://unpkg.com/").count(),
@@ -83,49 +83,141 @@ async fn answers_with_the_rest_data() {
     let app = app().await;
     let query = format!(
         r#"{{
-            health
-            vault(id: "{VAULT}")
-            cards(vault: "{VAULT}") {{ cardId label status policy }}
+            health {{ status indexedHeight chainHeight lag }}
+            vault(id: "{VAULT}") {{ vaultId ownerId factoryId codeVersion cardCount indexedBalances {{ token available reserved }} }}
+            cards(vault: "{VAULT}") {{ cardId label status policy {{ token dailyLimit merchants riskMode }} }}
             payments(vault: "{VAULT}", limit: 2) {{ items {{ id paymentId status amount }} nextCursor }}
-            approvals(vault: "{VAULT}")
+            approvals(vault: "{VAULT}") {{ items {{ id status }} approvers {{ accountId maxAmount }} }}
         }}"#
     );
     let data = graphql(&app, &query).await["data"].clone();
 
-    assert_eq!(data["health"]["lag"], json!(2));
-    let mut summary = rest(&app, &format!("/vaults/{VAULT}")).await;
-    let mut gql_summary = data["vault"].clone();
-    summary["spent_today"] = json!(null);
-    gql_summary["spent_today"] = json!(null);
-    assert_eq!(gql_summary, summary);
+    assert_eq!(
+        data["health"],
+        json!({ "status": "ok", "indexedHeight": 108, "chainHeight": 110, "lag": 2 })
+    );
+
+    let summary = rest(&app, &format!("/vaults/{VAULT}")).await;
+    assert_eq!(data["vault"]["vaultId"], summary["vault_id"]);
+    assert_eq!(data["vault"]["ownerId"], summary["owner_id"]);
+    assert_eq!(data["vault"]["cardCount"], summary["card_count"]);
+    assert_eq!(
+        data["vault"]["indexedBalances"],
+        summary["indexed_balances"]
+    );
 
     let cards = rest(&app, &format!("/vaults/{VAULT}/cards")).await;
     let expected: Vec<Value> = cards
         .as_array()
         .unwrap()
         .iter()
-        .map(|c| json!({ "cardId": c["card_id"], "label": c["label"], "status": c["status"], "policy": c["policy"] }))
+        .map(|c| {
+            let p = &c["policy"];
+            json!({
+                "cardId": c["card_id"], "label": c["label"], "status": c["status"],
+                "policy": { "token": p["token"], "dailyLimit": p["daily_limit"], "merchants": p["merchants"], "riskMode": p["risk_mode"] },
+            })
+        })
         .collect();
     assert_eq!(data["cards"], Value::Array(expected));
 
     let page = rest(&app, &format!("/vaults/{VAULT}/payments?limit=2")).await;
-    let ids: Vec<Value> = page["items"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|p| p["id"].clone())
-        .collect();
-    let gql_ids: Vec<Value> = data["payments"]["items"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|p| p["id"].clone())
-        .collect();
-    assert_eq!(gql_ids, ids);
+    let ids = |items: &Value| -> Vec<Value> {
+        items
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|p| p["id"].clone())
+            .collect()
+    };
+    assert_eq!(ids(&data["payments"]["items"]), ids(&page["items"]));
     assert_eq!(data["payments"]["nextCursor"], page["next_cursor"]);
+
+    let approvals = rest(&app, &format!("/vaults/{VAULT}/approvals")).await;
+    assert_eq!(ids(&data["approvals"]["items"]), ids(&approvals["items"]));
+    let approvers: Vec<Value> = approvals["approvers"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|a| json!({ "accountId": a["account_id"], "maxAmount": a["max_amount"] }))
+        .collect();
+    assert_eq!(data["approvals"]["approvers"], Value::Array(approvers));
+}
+
+#[tokio::test]
+async fn nests_vaults_cards_and_payments_like_a_subgraph() {
+    let app = app().await;
+    let query = format!(
+        r#"{{
+            vault(id: "{VAULT}") {{
+                cards {{ cardId vault {{ vaultId }} payments(limit: 1) {{ items {{ cardId }} }} }}
+                payments(limit: 3) {{ items {{ paymentId cardId card {{ cardId label }} vault {{ vaultId }} events {{ event blockHeight }} }} }}
+                analytics {{ byCard {{ cardId token total }} rejections {{ reason count }} }}
+            }}
+        }}"#
+    );
+    let body = graphql(&app, &query).await;
+    assert!(body["errors"].is_null(), "{body}");
+    let vault = &body["data"]["vault"];
+
+    for card in vault["cards"].as_array().unwrap() {
+        assert_eq!(card["vault"]["vaultId"], json!(VAULT));
+        for payment in card["payments"]["items"].as_array().unwrap() {
+            assert_eq!(payment["cardId"], card["cardId"]);
+        }
+    }
+
+    let payments = vault["payments"]["items"].as_array().unwrap();
+    assert!(!payments.is_empty());
+    for payment in payments {
+        assert_eq!(payment["card"]["cardId"], payment["cardId"]);
+        assert_eq!(payment["vault"]["vaultId"], json!(VAULT));
+        let events = payment["events"].as_array().unwrap();
+        if payment["paymentId"].is_null() {
+            assert!(events.is_empty());
+        } else {
+            let id = payment["paymentId"].as_i64().unwrap();
+            let detail = rest(&app, &format!("/vaults/{VAULT}/payments/{id}")).await;
+            let expected: Vec<Value> = detail["events"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|e| json!({ "event": e["event"], "blockHeight": e["block_height"] }))
+                .collect();
+            assert_eq!(*events, expected);
+        }
+    }
+
+    let analytics = rest(&app, &format!("/analytics/{VAULT}")).await;
+    let by_card: Vec<Value> = analytics["by_card"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| json!({ "cardId": c["card_id"], "token": c["token"], "total": c["total"] }))
+        .collect();
+    assert_eq!(vault["analytics"]["byCard"], Value::Array(by_card));
+}
+
+#[tokio::test]
+async fn types_the_risk_assessment() {
+    let app = app().await;
+    let body = graphql(
+        &app,
+        &format!(r#"{{ risk(account: "shop.testnet", vault: "{VAULT}") {{ accountId verdict reasons {{ code level }} signals {{ registryStatus reportCount sanctionsLists }} }} }}"#),
+    )
+    .await;
+    assert!(body["errors"].is_null(), "{body}");
+    let rest_risk = rest(&app, &format!("/risk/shop.testnet?vault={VAULT}")).await;
+    let risk = &body["data"]["risk"];
+    assert_eq!(risk["accountId"], rest_risk["account_id"]);
+    assert_eq!(risk["verdict"], rest_risk["verdict"]);
     assert_eq!(
-        data["approvals"],
-        rest(&app, &format!("/vaults/{VAULT}/approvals")).await
+        risk["signals"]["registryStatus"],
+        rest_risk["signals"]["registry_status"]
+    );
+    assert_eq!(
+        risk["signals"]["reportCount"],
+        rest_risk["signals"]["report_count"]
     );
 }
 
@@ -139,7 +231,7 @@ async fn maps_request_errors() {
     );
     let body = graphql(
         &app,
-        r#"{ vault(id: "nobody.factory.comatocard.testnet") }"#,
+        r#"{ vault(id: "nobody.factory.comatocard.testnet") { vaultId } }"#,
     )
     .await;
     assert_eq!(body["errors"][0]["message"], json!("vault not found"));

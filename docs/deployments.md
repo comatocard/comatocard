@@ -139,7 +139,9 @@ Every contract on testnet now runs the assets of [release v0.4.1](https://github
 `https://indexer.comatocard.xyz` runs the image `ghcr.io/comatocard/comatocard-indexer:main` (published by `.github/workflows/indexer-image.yml`) on a VPS through Coolify, with its own Postgres 17. It indexes testnet from `factory.comatocard.testnet` and `registry.comatocard.testnet`.
 
 - `curl https://indexer.comatocard.xyz/health` shows the indexed height, the chain height and the lag.
-- `curl https://indexer.comatocard.xyz/vaults/v5.factory.comatocard.testnet/payments` lists the payments it has indexed since it started on 2026-11-12 (block 277410172); earlier events are not backfilled.
+- It indexes from block 277330100 (`START_BLOCK`), just before `v5.factory.comatocard.testnet` was created; the older demo vaults are not indexed.
+- `curl https://indexer.comatocard.xyz/vaults/v5.factory.comatocard.testnet/payments` lists the v5 payments, including the settled 1 tUSD check payment (reference `v5-check`).
+- https://indexer.comatocard.xyz/graphql opens GraphiQL over the same data, for example `{ cards(vault: "v5.factory.comatocard.testnet") { cardId label status } payments(vault: "v5.factory.comatocard.testnet") { items { status amount merchant reference } } }`.
 - Routes: [Indexer API](specs/indexer-api.md).
 
 ### Get test funds

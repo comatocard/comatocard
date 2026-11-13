@@ -15,6 +15,16 @@ test("drops the H1 and escapes JSX and expressions in prose only", () => {
   assert.equal(out, "Pay &lt;amount> with \\{fee\\}.\n\n```rust\nfn x<T>() {}\n```");
 });
 
+test("issue 152: drops the logo above the H1 with the H1", () => {
+  const out = toMdx(
+    '<img src="logo.svg" alt="Logo" width="72">\n\n# Title\n\nBody.\n',
+    "README.md",
+  );
+  assert.equal(out, "Body.");
+  const readme = toMdx(readFileSync(repoFile("README.md"), "utf8"), "README.md");
+  assert.doesNotMatch(readme, /&lt;img|^# /m);
+});
+
 test("leaves inline code untouched", () => {
   assert.equal(toMdx("Call `get<T>({})` now.", "docs/a.md"), "Call `get<T>({})` now.");
 });

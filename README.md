@@ -1,3 +1,5 @@
+<img src="apps/web/public/comatocard-icon.svg" alt="Comatocard" width="72" height="72">
+
 # Comatocard
 
 Programmable payment cards for people and AI agents, enforced by smart contracts on NEAR.

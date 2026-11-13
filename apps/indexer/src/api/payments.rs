@@ -25,6 +25,7 @@ const DEFAULT_LIMIT: i64 = 50;
 const MAX_LIMIT: i64 = 100;
 
 #[derive(Debug, Serialize, serde::Deserialize, sqlx::FromRow, async_graphql::SimpleObject)]
+#[graphql(complex)]
 #[expect(
     clippy::struct_field_names,
     reason = "field names are the API response keys"

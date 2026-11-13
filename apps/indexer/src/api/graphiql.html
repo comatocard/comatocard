@@ -51,28 +51,34 @@
 # tick them to build a query, or press the run button to try this one.
 
 {
-  health
-  vault(id: "v5.factory.comatocard.testnet")
-  cards(vault: "v5.factory.comatocard.testnet") {
-    cardId
-    label
-    kind
-    status
-    policy
-  }
-  payments(vault: "v5.factory.comatocard.testnet", limit: 10) {
-    items {
-      paymentId
+  vault(id: "v5.factory.comatocard.testnet") {
+    vaultId
+    ownerId
+    cardCount
+    spentToday
+    indexedBalances { token available reserved }
+    cards {
       cardId
-      merchant
-      amount
+      label
+      kind
       status
-      reference
-      txHash
-      createdAt
+      policy { token perTxLimit dailyLimit monthlyLimit riskMode }
     }
-    nextCursor
+    payments(limit: 10) {
+      items {
+        paymentId
+        merchant
+        amount
+        status
+        reference
+        txHash
+        card { label }
+        events { event blockHeight txHash }
+      }
+      nextCursor
+    }
   }
+  health { indexedHeight lag }
 }
 `;
       const explorer = GraphiQLPluginExplorer.explorerPlugin();

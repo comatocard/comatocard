@@ -49,3 +49,47 @@ jobs:
             org.opencontainers.image.licenses=MIT
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to indexer.comatocard.xyz
+    needs: image
+    runs-on: ubuntu-latest
+    environment:
+      name: indexer
+      url: https://indexer.comatocard.xyz/graphql
+    env:
+      COOLIFY_URL: https://cool.ifajar.dev
+      APP_UUID: ct37vto4rrz9v1xu4n9jdhfn
+    steps:
+      - name: Trigger the Coolify deployment and wait for it
+        env:
+          TOKEN: ${{ secrets.COOLIFY_DEPLOY_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::error::COOLIFY_DEPLOY_TOKEN is not set"
+            exit 1
+          fi
+          auth="Authorization: Bearer $TOKEN"
+          deployment=$(curl -fsS -X POST "$COOLIFY_URL/api/v1/deploy" -H "$auth" \
+            -H 'Content-Type: application/json' --data "{\"uuid\":\"$APP_UUID\",\"force\":true}" \
+            | jq -r '.deployments[0].deployment_uuid')
+          echo "deployment $deployment"
+          for _ in $(seq 1 60); do
+            status=$(curl -fsS "$COOLIFY_URL/api/v1/deployments/$deployment" -H "$auth" | jq -r .status)
+            echo "status $status"
+            case "$status" in
+              finished) break ;;
+              failed | cancelled*) exit 1 ;;
+            esac
+            sleep 10
+          done
+          [ "$status" = finished ]
+      - name: Check the live indexer
+        run: |
+          for _ in $(seq 1 30); do
+            if curl -fsS https://indexer.comatocard.xyz/health | tee /dev/stderr | jq -e '.status == "ok"' >/dev/null; then
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1

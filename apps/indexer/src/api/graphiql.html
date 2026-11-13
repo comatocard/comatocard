@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Comatocard indexer GraphQL</title>
+    <meta name="description" content="Query Comatocard vaults, cards and payments on NEAR testnet." />
+    <!-- Pinned versions with subresource integrity; GraphiQL 3 is the last release with a UMD build. -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/graphiql@3.9.0/graphiql.min.css"
+      integrity="sha384-QMux00XgRtwRLSYIY3kw2rj1ovk5AuuliAchk+HSQbqdbGFnz9GYuqIlOqxhwCE2"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@graphiql/plugin-explorer@3.2.6/dist/style.css"
+      integrity="sha384-YN9MumWidbWKuNj8VfH5ggrFvm9YqAoIOMnKYpeGL3dr7Eg1qnQ+SAqSthdNZCjz"
+      crossorigin="anonymous"
+    />
+    <style>
+      body { margin: 0; height: 100vh; overflow: hidden; }
+      #graphiql { height: 100vh; }
+    </style>
+  </head>
+  <body>
+    <div id="graphiql">Loading the GraphQL explorer...</div>
+    <script
+      src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"
+      integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"
+      integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://unpkg.com/graphiql@3.9.0/graphiql.min.js"
+      integrity="sha384-8NGfVj4CVlqHajlZj+bPJT4thxPMHMJYn7DWK2CvtopLd02E7qsPHazniBYvVjOO"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://unpkg.com/@graphiql/plugin-explorer@3.2.6/dist/index.umd.js"
+      integrity="sha384-5p6hGdlOTvUy6Wf0GauxCz+xM9YB/YYvcGG+bf9msr2eyd+KVIxgRkepHgUijedJ"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      const defaultQuery = `# Comatocard indexer on NEAR testnet.
+# The Explorer on the left lists every query with its arguments and fields;
+# tick them to build a query, or press the run button to try this one.
+
+{
+  health
+  vault(id: "v5.factory.comatocard.testnet")
+  cards(vault: "v5.factory.comatocard.testnet") {
+    cardId
+    label
+    kind
+    status
+    policy
+  }
+  payments(vault: "v5.factory.comatocard.testnet", limit: 10) {
+    items {
+      paymentId
+      cardId
+      merchant
+      amount
+      status
+      reference
+      txHash
+      createdAt
+    }
+    nextCursor
+  }
+}
+`;
+      const explorer = GraphiQLPluginExplorer.explorerPlugin();
+      ReactDOM.createRoot(document.getElementById("graphiql")).render(
+        React.createElement(GraphiQL, {
+          fetcher: GraphiQL.createFetcher({ url: new URL("/graphql", location.origin).toString() }),
+          defaultQuery,
+          plugins: [explorer],
+          visiblePlugin: explorer,
+          defaultEditorToolsVisibility: true,
+        }),
+      );
+    </script>
+  </body>
+</html>

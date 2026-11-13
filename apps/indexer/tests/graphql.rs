@@ -68,8 +68,14 @@ async fn serves_graphiql_on_get() {
     let app = app().await;
     let (status, body) = send(&app, Request::get("/graphql").body(Body::empty()).unwrap()).await;
     assert_eq!(status, StatusCode::OK);
-    assert!(body.contains("graphiql"), "{body}");
-    assert!(body.contains("Comatocard indexer"));
+    assert!(body.contains("graphiql@3.9.0/graphiql.min.js"), "{body}");
+    assert!(body.contains("visiblePlugin: explorer"));
+    assert!(body.contains(r#"cards(vault: "v5.factory.comatocard.testnet")"#));
+    // Every script and stylesheet from the CDN is pinned and checked.
+    assert_eq!(
+        body.matches("https://unpkg.com/").count(),
+        body.matches("integrity=\"sha384-").count()
+    );
 }
 
 #[tokio::test]

@@ -15,7 +15,16 @@ export const metadata: Metadata = {
   description: home.description,
   applicationName: siteName,
   appleWebApp: { title: siteName },
-  icons: { icon: { url: `${basePath}/favicon/favicon.svg`, type: "image/svg+xml" } },
+  icons: {
+    icon: [
+      { url: `${basePath}/favicon/favicon.svg`, type: "image/svg+xml" },
+      { url: `${basePath}/favicon/favicon-32x32.png`, sizes: "32x32", type: "image/png" },
+      { url: `${basePath}/favicon/favicon-16x16.png`, sizes: "16x16", type: "image/png" },
+      { url: `${basePath}/favicon.ico`, sizes: "any" },
+    ],
+    apple: `${basePath}/favicon/apple-touch-icon.png`,
+  },
+  manifest: `${basePath}/favicon/site.webmanifest`,
   openGraph: { siteName, type: "website", locale: "en" },
   twitter: { card: "summary" },
 };

@@ -41,6 +41,14 @@ A run is a dry run unless `--execute` is given: it prints the plan and never sig
 
 The swapped USDC lands in `TREASURY_ACCOUNT`. The testnet vault cannot receive mainnet tokens; on a mainnet vault the owner deposits it with `ft_transfer_call`.
 
+## Lending keeper
+Keeps enough of a vault's balance liquid for its cards and lends the rest through the vault's own `supply` and `recall` (vault 0.5.0, see [Idle funds in lending](../../docs/specs/vault-contract.md)). The target is `max(min_liquid, what the cards may still spend x KEEPER_BUFFER_BPS)`, with the same spend room as the treasury agent. The vault enforces `min_liquid` and never moves funds anywhere but its venue, so the keeper key can only time the moves.
+
+1. The owner sets the keeper: `set_yield_venue(venue, keeper)` and `set_yield_token(token, min_liquid, extra_decimals)` on the vault, and pays the vault's storage deposit at the venue once.
+2. Set `VAULT_ID`; optional `LENDING_TOKEN` (default `usdc.fakes.testnet`), `KEEPER_BUFFER_BPS` (default 15000, 1.5x), `KEEPER_MIN_MOVE` (default 1000000).
+3. `pnpm keeper` logs `keeper plan: supply`, `recall` or `hold` with the target, the available balance and what is lent. It never signs.
+4. `pnpm keeper --execute` with `KEEPER_ACCOUNT` and `KEEPER_PRIVATE_KEY` sends the call and logs the transaction and the lending view after it.
+
 ## Policy assistant
 An owner describes a policy change in plain language; a model running in a TEE on NEAR AI Cloud proposes the full new policy; the agent proves the answer came from that TEE and prints the `update_policy` call for the owner to sign. It never signs.
 
@@ -61,4 +69,4 @@ A proposal is offered for signing only when every check passes:
 Not checked: TCB level and revocation (Intel collateral), NVIDIA GPU evidence, and an allowlist of measurements; the compose hash is printed so a reviewer can compare it with the published compose.
 
 ## Tests
-`pnpm test`: configuration, card lookup, the indexer risk client, the terminal prompt, every branch of the guard, card buffers, treasury plans, the treasury execution (deposit transaction, polling, refunds, timeout), the 1Click client, TDX quote and response signature checks on recorded NEAR AI traffic (`test/fixtures/near-ai-qwen.json`) and the policy assistant and the MCP tools, with no network.
+`pnpm test`: configuration, card lookup, the indexer risk client, the terminal prompt, every branch of the guard, card buffers, treasury plans, the treasury execution (deposit transaction, polling, refunds, timeout), the 1Click client, TDX quote and response signature checks on recorded NEAR AI traffic (`test/fixtures/near-ai-qwen.json`) and the policy assistant, the MCP tools and the lending keeper plans, with no network.

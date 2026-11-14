@@ -160,6 +160,9 @@ A vault built from this branch (`cargo near build non-reproducible-wasm`, contra
 | Keeper supplies 30 more | refused | `supply would leave less than min_liquid available` |
 | `comatocard-shop.testnet` supplies 1 | refused | `only the owner or the keeper may call this method` |
 | Keeper recalls up to 1,000 | `GwHYnrkGhKyPYSA8AkdwHd6Qe5T2oWXYQg9vAGRTpgvj` | Burrow `withdraw_succeeded` for the 50 held, vault `yield_recalled`; available 100, supplied 0, equal to the vault's token balance |
+| `pnpm keeper --execute` with no cards | `BVFsohtKMDhAWMn2UMWAK3aKn6Yi75K3FEwhAPseYSwQ` | Plan `supply` 70 (target `min_liquid` 30); supplied 70 |
+| Owner issues a card with a daily limit of 80 | `HjvLpcBPNtFGq2GKVnAosbfqnZjMPJSGY8vFSX7xkBVP` | `card_created` |
+| `pnpm keeper --execute` again | `DnJwbMuD7CVQPCV9eNGWyncHctqRFC3B4PN1qqMtyjFX` | Plan `recall` 90 (target 80 x 1.5 = 120, available 30); the vault takes the 70 the venue holds; available 100, supplied 0 |
 
 Testnet USDC has no borrowers on this venue, so its supply APR is near zero; on mainnet, `contract.main.burrow.near` reported about 10.7 % for USDC on 2026-11-14 from its interest model.
 

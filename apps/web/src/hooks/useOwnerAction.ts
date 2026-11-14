@@ -2,8 +2,9 @@
 
 import type { FunctionCall } from "@comatocard/sdk";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { txUrl } from "../lib/config";
+import { refreshUntilSettled } from "../lib/settle";
 import { RelayError, useOwnerCall } from "./useOwnerCall";
 
 export type TxStatus = "signing" | "confirming" | "confirmed" | "failed";
@@ -31,19 +32,25 @@ const message = (error: unknown) =>
 /**
  * Runs owner actions and tracks their status. Owner methods go gasless through the relayer first;
  * if it refuses or is down, `direct()` signs the same call from the owner's wallet. Every vault
- * query is refreshed once the action lands.
+ * query is refreshed when the action lands and again until the change is final.
  */
 export function useOwnerAction(vault: string | null) {
   const { gasless, direct } = useOwnerCall();
   const queryClient = useQueryClient();
   const [state, setState] = useState<ActionState>(IDLE);
   const [pending, setPending] = useState<FunctionCall[] | null>(null);
+  const stopRefresh = useRef<(() => void) | null>(null);
+  useEffect(() => () => stopRefresh.current?.(), []);
 
   const done = useCallback(
     (via: "relayer" | "wallet", hash: string | null) => {
       setState({ ...IDLE, status: "confirmed", via, href: hash ? txUrl(hash) : null });
       setPending(null);
-      if (vault) void queryClient.invalidateQueries({ queryKey: ["vault", vault] });
+      if (!vault) return;
+      stopRefresh.current?.();
+      stopRefresh.current = refreshUntilSettled(() => {
+        void queryClient.invalidateQueries({ queryKey: ["vault", vault] });
+      });
     },
     [queryClient, vault],
   );

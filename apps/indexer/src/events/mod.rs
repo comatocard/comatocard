@@ -92,6 +92,8 @@ fn payload(event: &str, data: &Value) -> Result<EventData, ParseError> {
         "approver_set" => E::ApproverSet(typed(event, data)?),
         "deposit" => E::Deposit(typed(event, data)?),
         "withdrawal" => E::Withdrawal(typed(event, data)?),
+        "yield_supplied" => E::YieldSupplied(typed(event, data)?),
+        "yield_recalled" => E::YieldRecalled(typed(event, data)?),
         "payment_submitted" => E::PaymentSubmitted(typed(event, data)?),
         "payment_queued" => E::PaymentQueued(typed(event, data)?),
         "payment_approved" => E::PaymentApproved(typed(event, data)?),

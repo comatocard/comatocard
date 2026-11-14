@@ -1,4 +1,4 @@
-//! Token flows: deposits and withdrawals.
+//! Token flows: deposits, withdrawals, and lending to and from the venue.
 
 use sqlx::PgConnection;
 
@@ -31,6 +31,30 @@ pub(super) async fn apply(
                 "withdrawal",
                 e.token.as_str(),
                 e.receiver_id.as_str(),
+                e.amount.0,
+                e.success,
+            )
+            .await?;
+        }
+        EventData::YieldSupplied(e) => {
+            token_flow(
+                db,
+                origin,
+                "yield_supplied",
+                e.token.as_str(),
+                e.venue.as_str(),
+                e.accepted.0,
+                true,
+            )
+            .await?;
+        }
+        EventData::YieldRecalled(e) => {
+            token_flow(
+                db,
+                origin,
+                "yield_recalled",
+                e.token.as_str(),
+                e.venue.as_str(),
                 e.amount.0,
                 e.success,
             )

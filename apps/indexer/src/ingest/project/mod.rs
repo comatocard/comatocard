@@ -54,7 +54,9 @@ pub async fn project(
         | E::CardKeyRotated(_)
         | E::CardTransferred(_)
         | E::CardKeyRejected(_) => cards::apply(db, origin, event).await,
-        E::Deposit(_) | E::Withdrawal(_) => ledger::apply(db, origin, event).await,
+        E::Deposit(_) | E::Withdrawal(_) | E::YieldSupplied(_) | E::YieldRecalled(_) => {
+            ledger::apply(db, origin, event).await
+        }
         E::PaymentSubmitted(_)
         | E::PaymentQueued(_)
         | E::PaymentApproved(_)

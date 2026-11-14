@@ -102,6 +102,21 @@ export const tokenBalance = z.strictObject({
   reserved: u128,
 });
 
+/** `get_yield`: the lending venue, the keeper and each token's lending settings and position. */
+export const yieldView = z.strictObject({
+  venue: accountId.nullable(),
+  keeper: accountId.nullable(),
+  tokens: z.array(
+    z.strictObject({
+      token: accountId,
+      min_liquid: u128,
+      extra_decimals: z.number().int().min(0).max(24),
+      supplied: u128,
+      pending: z.boolean(),
+    }),
+  ),
+});
+
 export const approver = z.strictObject({ account_id: accountId, max_amount: u128 });
 
 export const vaultConfig = z.strictObject({
@@ -127,5 +142,6 @@ export type Payment = z.infer<typeof payment>;
 export type PaymentDecision = z.infer<typeof paymentDecision>;
 export type PaymentPreview = z.infer<typeof paymentPreview>;
 export type TokenBalance = z.infer<typeof tokenBalance>;
+export type YieldView = z.infer<typeof yieldView>;
 export type Approver = z.infer<typeof approver>;
 export type VaultConfig = z.infer<typeof vaultConfig>;

@@ -14,6 +14,7 @@ export default defineConfig({
         "src/policy-cli.ts",
         "src/mcp.ts",
         "src/keeper-cli.ts",
+        "src/attack.ts",
       ],
       reporter: ["text", "lcov"],
     },

@@ -27,6 +27,7 @@ async function connect(verdict: RiskAssessment["verdict"], fetch?: typeof global
   const submit = vi.fn<Submit>(async () => ({
     txHash: "tx1",
     result: { status: "submitted", payment_id: 3 },
+    logs: [],
   }));
   const preview: PaymentPreview = { status: "allowed" } as PaymentPreview;
   const client = {
@@ -75,7 +76,7 @@ describe("mcp tools", () => {
       arguments: { merchant: "shop.testnet", amount: "1000000", reference: "shop-1" },
     });
     expect(result.isError).toBeFalsy();
-    expect(body(result)).toMatchObject({ kind: "sent", txHash: "tx1" });
+    expect(body(result)).toMatchObject({ kind: "sent", txHash: "tx1", events: [] });
     expect(submit).toHaveBeenCalledOnce();
   });
 

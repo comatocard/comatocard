@@ -1,7 +1,8 @@
 "use client";
 import { ChevronLeft } from "lucide-react";
 import Image from "next/image";
-import type { ReactNode, RefObject } from "react";
+import { type ReactNode, type RefObject, useLayoutEffect, useRef } from "react";
+import { gsap, prefersReducedMotion } from "../../lib/motion/gsap";
 import { DONE_STEP } from "../../lib/setup-flow";
 import { cn } from "../../lib/utils";
 import { SetupProgress, SetupStepList } from "./SetupProgress";
@@ -18,19 +19,38 @@ export function Wordmark({ className }: { className?: string }) {
   );
 }
 
-/** The soft light behind the dark panel and the connect screen. */
+/**
+ * The backdrop of the dark panel and the connect screen: an embossed guilloche, the same rings
+ * the card face carries, lit from the top left. It turns very slowly so the panel is never a
+ * still picture; reduced motion keeps it still. The gradient keeps the headline readable.
+ */
 export function PanelGlow() {
+  const art = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const el = art.current;
+    if (!el || prefersReducedMotion()) return;
+    const tween = gsap.fromTo(
+      el,
+      { scale: 1.08, rotation: -1.5 },
+      { scale: 1.16, rotation: 1.5, duration: 24, ease: "sine.inOut", yoyo: true, repeat: -1 },
+    );
+    return () => {
+      tween.kill();
+    };
+  }, []);
   return (
-    <span aria-hidden="true" className="pointer-events-none absolute inset-0">
-      <Image
-        src="/onboarding/glow.jpg"
-        alt=""
-        fill
-        priority
-        sizes="(min-width: 1024px) 50vw, 100vw"
-        className="object-cover object-top opacity-50"
-      />
-      <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,12,13,0)_20%,rgba(11,12,13,.8)_55%,#0b0c0d_75%)]" />
+    <span aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+      <span ref={art} className="absolute inset-0 will-change-transform">
+        <Image
+          src="/onboarding/guilloche.webp"
+          alt=""
+          fill
+          priority
+          sizes="(min-width: 1024px) 50vw, 100vw"
+          className="object-cover object-[50%_35%]"
+        />
+      </span>
+      <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,12,13,.15)_0%,rgba(11,12,13,.2)_45%,rgba(11,12,13,.82)_72%,#0b0c0d_92%)]" />
     </span>
   );
 }

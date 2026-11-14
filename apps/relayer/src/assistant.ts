@@ -33,14 +33,13 @@ const fail = (status: number, error: string): AssistantReply => ({ status, body:
 
 /**
  * Policy assistant: proposes a card's new policy. It never signs; the owner signs `update_policy`
- * in the wallet. `deps` is null when no NEAR AI key is configured.
+ * in the wallet.
  */
 export async function assistant(
-  deps: AssistantDeps | null,
+  deps: AssistantDeps,
   body: unknown,
   clientKey: string,
 ): Promise<AssistantReply> {
-  if (deps === null) return fail(503, "The assistant is not configured.");
   if (!deps.allow(clientKey)) return fail(429, "Too many requests, try again in a minute.");
   const parsed = assistantRequest.safeParse(body);
   if (!parsed.success) return fail(400, "Describe the change in a few words.");

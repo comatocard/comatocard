@@ -1,6 +1,6 @@
 import { KeyPair } from "near-api-js";
 import { describe, expect, it } from "vitest";
-import { loadConfig } from "../../src/config.js";
+import { loadAssistantConfig, loadConfig } from "../../src/config.js";
 
 const key = KeyPair.fromRandom("ed25519");
 const env = {
@@ -28,20 +28,40 @@ describe("loadConfig", () => {
     );
   });
 
-  it("keeps the assistant off without a NEAR AI key and never echoes the key", () => {
-    expect(loadConfig(env).nearAi).toBeNull();
-    expect(loadConfig({ ...env, NEAR_AI_API_KEY: "" }).nearAi).toBeNull();
-    expect(loadConfig({ ...env, NEAR_AI_API_KEY: "sk-secret" }).nearAi).toEqual({
-      baseUrl: "https://cloud-api.near.ai/v1",
-      apiKey: "sk-secret",
-      model: "Qwen/Qwen3.8-27B",
+  it("never reads the NEAR AI key into the relayer", () => {
+    expect(JSON.stringify(loadConfig({ ...env, NEAR_AI_API_KEY: "sk-secret" }))).not.toContain(
+      "sk-secret",
+    );
+  });
+});
+
+describe("loadAssistantConfig", () => {
+  const assistantEnv = { FACTORY_ID: "factory.comatocard.testnet", NEAR_AI_API_KEY: "sk-secret" };
+
+  it("needs the NEAR AI key, applies defaults and never reads the relayer key", () => {
+    const config = loadAssistantConfig({ ...assistantEnv, RELAYER_PRIVATE_KEY: key.toString() });
+    expect(config).toEqual({
+      rpcUrl: "https://rpc.testnet.near.org",
+      factoryId: "factory.comatocard.testnet",
+      port: 4200,
+      logLevel: "info",
+      nearAi: {
+        baseUrl: "https://cloud-api.near.ai/v1",
+        apiKey: "sk-secret",
+        model: "Qwen/Qwen3.8-27B",
+      },
     });
-    expect(() =>
-      loadConfig({ ...env, NEAR_AI_API_KEY: "sk-secret", NEAR_AI_BASE_URL: "not a url" }),
-    ).toThrow(/NEAR_AI_BASE_URL/);
+    expect(() => loadAssistantConfig({ ...assistantEnv, NEAR_AI_API_KEY: undefined })).toThrow(
+      /NEAR_AI_API_KEY/,
+    );
+  });
+
+  it("rejects a bad base URL without echoing the key", () => {
     try {
-      loadConfig({ ...env, NEAR_AI_API_KEY: "sk-secret", NEAR_AI_BASE_URL: "not a url" });
+      loadAssistantConfig({ ...assistantEnv, NEAR_AI_BASE_URL: "not a url" });
+      expect.unreachable();
     } catch (error) {
+      expect(String(error)).toMatch(/NEAR_AI_BASE_URL/);
       expect(String(error)).not.toContain("sk-secret");
     }
   });

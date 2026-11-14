@@ -7,7 +7,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**/*.ts"],
-      exclude: ["src/main.ts", "src/owner-call.ts"],
+      exclude: ["src/main.ts", "src/assistant-main.ts", "src/owner-call.ts"],
       reporter: ["text", "lcov"],
     },
   },

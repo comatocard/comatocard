@@ -15,7 +15,8 @@
     "test": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "start": "node --env-file=.env dist/main.js",
-    "owner-call": "node --env-file=.env dist/owner-call.js"
+    "owner-call": "node --env-file=.env dist/owner-call.js",
+    "start:assistant": "node --env-file=.env.assistant dist/assistant-main.js"
   },
   "dependencies": {
     "@comatocard/agents": "workspace:*",

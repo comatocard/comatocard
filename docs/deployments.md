@@ -154,8 +154,21 @@ Every contract on testnet now runs the assets of [release v0.4.1](https://github
 | Owner issues a card checked by the registry | `7iP8drQZo1S5hFzHv2aLGvPm649uXgK9DSLpUpM5SXbb` | `card_created`, `nft_mint`, key added |
 | Card pays 1 tUSD with 100 Tgas | `7nK8SHcVnQWgDjeng4ozKgUA7ueGMRei5d6FSyZmbVmR` | Registry check, `payment_submitted`, `payment_settled` |
 
+### Release v0.5.0 on 2026-11-14
+`factory.comatocard.testnet` publishes the vault code of [release v0.5.0](https://github.com/comatocard/comatocard/releases/tag/v0.5.0) as code version 6, so every vault created in the app from now on runs `contract_version` 0.5.0 and can lend. Existing vaults keep their code. The vault code hash equals the release `CODE_HASHES`: `Dy7N2F5XwXCEAUudrJMJFWBmingVuhVNGWTN9PCGqzb`. Factory, registry and tUSD keep the v0.4.1 code.
+
+| Step | Transaction | Result |
+|-|-|-|
+| Factory publishes the release vault code | `3NJ56jiQaDgpUD646SSG1hypfW9ZcdzXpVwY9rqetkif` | `vault_code_published`, code version 6 |
+| Factory creates `v6.factory.comatocard.testnet` accepting tUSD and USDC.e | `8Tz6wwooCiphxZiuqqiPByPJYFbrqb6MYQgk9r5s8EiZ` | `vault_created`, code version 6; `get_config` reports `0.5.0` |
+| Owner deposits 20 tUSD and issues a card (5 per payment, 10 per day) | `G6C6ZPEy6CLdHQJ9cXpk4EheBKuUxAvpwcuy4joqAcrM`, `G8ssaTftrWdEYtbweTv8czron22FC18xQKHkQ5Fp2GHR` | `deposit`, `card_created`, `nft_mint` |
+| Card pays the demo shop 1 tUSD through the agent guard | `DqZ3Wa6DmLEMiSrBd7VHcd8vbi9FkhBK5dSiPU3TXBN` | Guard verdict `allow`; the indexer shows it `settled` (reference `v6-check`) |
+| Owner recalls with nothing lent | `DbhUjwS48cfSPZAvfMYraN7L38PeYmSivJAXeEz5epZy` | `yield_recalled` with `success: false`, nothing moves |
+| Owner deposits 20 USDC.e, supplies 15 to `contract.burrow.testnet` (`min_liquid` 5) | `xw6uDt4PYdTemBfza6fGEBv37qPaLmzhKUw1TpJEEpj`, `F7EUXq8fvxkMmgNmLrMywKA9f3qTdjhzayWLZnmWqpr5` | Burrow `deposit`, vault `yield_supplied` accepted 15 |
+| Owner recalls 15 | `44wv8MobNVmNwfTG9vjfL3qDZcMQ1DQCs84ZERCG1tPd` | Burrow `withdraw_succeeded`, vault `yield_recalled`; available 20 USDC.e and 19 tUSD, the same figures the indexer serves |
+
 ### Vault lending on testnet (0.5.0) on 2026-11-14
-A vault built from this branch (`cargo near build non-reproducible-wasm`, contract version 0.5.0) runs standalone at `lend.comatocard.testnet`, owner `comatocard.testnet`, keeper `comatocard-agent.testnet`, accepting `usdc.fakes.testnet` (6 decimals). It lends to the Rhea (Burrow) testnet deployment `contract.burrow.testnet`, whose USDC asset reports 12 extra decimals; the vault reads them from the venue on every recall. The factory still publishes the v0.4.1 code, so vaults made in the app are unchanged.
+A vault built from this branch (`cargo near build non-reproducible-wasm`, contract version 0.5.0) runs standalone at `lend.comatocard.testnet`, owner `comatocard.testnet`, keeper `comatocard-agent.testnet`, accepting `usdc.fakes.testnet` (6 decimals). It lends to the Rhea (Burrow) testnet deployment `contract.burrow.testnet`, whose USDC asset reports 12 extra decimals; the vault reads them from the venue on every recall. It ran before the release; since release v0.5.0 the factory publishes the same code.
 
 | Step | Transaction | Result |
 |-|-|-|

@@ -10,9 +10,9 @@ import { SpendBar } from "../cards/SpendBar";
 import { Skeleton } from "../ui";
 
 /**
- * The vault's cards as a row that snaps one card at a time, the next one peeking in. Under it, on
- * phones, the card in view: its name and today's spend, swapping with a GSAP slide as the row
- * moves. Native scroll snap does the dragging, so a swipe feels like the system's own.
+ * The vault's cards as a row that snaps one card at a time, the next one peeking in; a single card
+ * sits centred. Under it, on phones, the card in view: its name and today's spend, swapping with a
+ * GSAP slide as the row moves. Native scroll snap does the dragging, so a swipe feels like the system's own.
  */
 export function CardCarousel({
   cards,
@@ -115,7 +115,9 @@ export function CardCarousel({
             href={`/cards/${c.id}?vault=${encodeURIComponent(vault)}`}
             aria-label={`Open ${c.label}`}
             aria-current={i === active ? "true" : undefined}
-            className="aspect-[1.586] w-[86%] max-w-[340px] shrink-0 snap-center overflow-hidden rounded-[18px] [box-shadow:0_24px_40px_-24px_rgba(0,0,0,.55)] lg:w-full"
+            className={`aspect-[1.586] max-w-[340px] shrink-0 snap-center overflow-hidden rounded-[18px] [box-shadow:0_24px_40px_-24px_rgba(0,0,0,.55)] lg:w-full ${
+              live.length === 1 ? "mx-auto w-full" : "w-[86%]"
+            }`}
           >
             <CardArtwork
               label={c.label}

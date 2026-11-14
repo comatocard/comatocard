@@ -79,7 +79,7 @@ export function Choice<T extends string>({
   onChange: (value: T) => void;
 }) {
   return (
-    <fieldset className="m-0 border-0 p-0">
+    <fieldset className="min-w-0 border-0 p-0">
       <legend className="mb-1.5 block p-0 text-[13px] font-medium text-muted">{label}</legend>
       <div className="flex flex-wrap gap-1.5">
         {options.map((o) => (

@@ -13,6 +13,15 @@ Workstream B. Card keys are read from environment variables, never from files in
    - The indexer at `INDEXER_URL` answers `GET /risk/<merchant>?vault=<vault>` with `block`: refused. With `warn`: a human confirms on the terminal; without a terminal, or on Ctrl+C or Ctrl+D, it is refused. Unreachable indexer or invalid answer: refused.
    - Otherwise the agent signs `pay` with the card key and logs the decision (`submitted` or `queued`) and the transaction hash. Refusals exit with code 1.
 
+## MCP server
+`dist/mcp.js` serves the card as MCP tools over stdio, with the same configuration as `pnpm pay`: `card_status`, `preview_payment`, `check_merchant`, `payment_history` and `pay`. `pay` runs the guard above; a `warn` verdict is refused, because an MCP client cannot stand in for the human confirmation. Logs go to stderr.
+
+1. Build as above, then register `node <repo>/apps/agents/dist/mcp.js` with your MCP client and pass `VAULT_ID`, `CARD_PRIVATE_KEY` and `INDEXER_URL` in its `env`. `pnpm mcp` runs it with `.env`.
+2. Ask the client to check the card: `card_status` returns the vault config and the card, or `"card": null` for a key no card is bound to.
+3. `check_merchant` on `comatocard-attacker-7786.testnet` returns `block` with `registry_blocked`; `pay` to it is refused before signing.
+
+The agent skill in [`skills/comatocard`](../../skills/comatocard/SKILL.md) tells a model how to use these tools.
+
 ## Treasury agent
 Keeps enough stablecoin in the vault for what its cards may still spend. Each active card needs what it may still spend today, capped by what is left of its period limit, with the vault's own day and period windows. When the vault's available balance is below the total, the agent asks NEAR Intents 1Click for an `EXACT_OUTPUT` quote of the deficit with a slippage limit and refuses a plan above a USD cap.
 
@@ -52,4 +61,4 @@ A proposal is offered for signing only when every check passes:
 Not checked: TCB level and revocation (Intel collateral), NVIDIA GPU evidence, and an allowlist of measurements; the compose hash is printed so a reviewer can compare it with the published compose.
 
 ## Tests
-`pnpm test`: configuration, card lookup, the indexer risk client, the terminal prompt, every branch of the guard, card buffers, treasury plans, the treasury execution (deposit transaction, polling, refunds, timeout), the 1Click client, TDX quote and response signature checks on recorded NEAR AI traffic (`test/fixtures/near-ai-qwen.json`) and the policy assistant, with no network.
+`pnpm test`: configuration, card lookup, the indexer risk client, the terminal prompt, every branch of the guard, card buffers, treasury plans, the treasury execution (deposit transaction, polling, refunds, timeout), the 1Click client, TDX quote and response signature checks on recorded NEAR AI traffic (`test/fixtures/near-ai-qwen.json`) and the policy assistant and the MCP tools, with no network.

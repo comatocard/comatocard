@@ -18,7 +18,17 @@ const schema = z.object({
   RELAYER_PRIVATE_KEY: z.string().startsWith("ed25519:", "must be an ed25519:<base58> secret key"),
   PORT: z.coerce.number().int().positive().default(4100),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
+  NEAR_AI_API_KEY: z.preprocess(unsetIfEmpty, z.string().min(1).optional()),
+  NEAR_AI_BASE_URL: z.preprocess(unsetIfEmpty, z.url().default("https://cloud-api.near.ai/v1")),
+  POLICY_MODEL: z.preprocess(unsetIfEmpty, z.string().min(1).default("Qwen/Qwen3.8-27B")),
 });
+
+export interface NearAiConfig {
+  baseUrl: string;
+  /** Holds the secret; never pass it to a logger. */
+  apiKey: string;
+  model: string;
+}
 
 export interface Config {
   network: "testnet" | "mainnet";
@@ -30,6 +40,8 @@ export interface Config {
   relayerKey: KeyPair;
   port: number;
   logLevel: z.infer<typeof schema>["LOG_LEVEL"];
+  /** The policy assistant's model on NEAR AI Cloud; null keeps `/assistant` off. */
+  nearAi: NearAiConfig | null;
 }
 
 /** Reads and validates the configuration from environment variables. */
@@ -55,5 +67,13 @@ export function loadConfig(env: Record<string, string | undefined>): Config {
     relayerKey,
     port: value.PORT,
     logLevel: value.LOG_LEVEL,
+    nearAi:
+      value.NEAR_AI_API_KEY === undefined
+        ? null
+        : {
+            baseUrl: value.NEAR_AI_BASE_URL,
+            apiKey: value.NEAR_AI_API_KEY,
+            model: value.POLICY_MODEL,
+          },
   };
 }

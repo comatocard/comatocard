@@ -1,10 +1,14 @@
 import { createServer, type IncomingMessage, type Server } from "node:http";
+import { type AssistantDeps, assistant } from "./assistant.js";
 import { type RelayDeps, relay } from "./relay.js";
 
 const MAX_BODY_BYTES = 16 * 1024;
 
-/** `POST /relay` and `GET /health`; any other route is 404. */
-export function createRelayServer(deps: RelayDeps): Server {
+/** `POST /relay`, `POST /assistant` and `GET /health`; any other route is 404. */
+export function createRelayServer(
+  deps: RelayDeps,
+  assistantDeps: AssistantDeps | null = null,
+): Server {
   return createServer(async (req, res) => {
     const reply = (status: number, body: unknown) => {
       res.writeHead(status, { "content-type": "application/json" });
@@ -12,6 +16,13 @@ export function createRelayServer(deps: RelayDeps): Server {
     };
     try {
       if (req.method === "GET" && req.url === "/health") return reply(200, { status: "ok" });
+      if (req.method === "POST" && req.url === "/assistant") {
+        // Read before the body: an oversized body ends the stream and detaches the socket.
+        const client = clientKey(req);
+        const body = await readJson(req);
+        const result = await assistant(assistantDeps, body ?? null, client);
+        return reply(result.status, result.body);
+      }
       if (req.method !== "POST" || req.url !== "/relay") return reply(404, { error: "not found" });
       const body = await readJson(req);
       if (body === undefined) {
@@ -27,6 +38,13 @@ export function createRelayServer(deps: RelayDeps): Server {
       return reply(502, { error: "relay failed" });
     }
   });
+}
+
+/** The peer as the proxy in front reports it, else the socket address. */
+function clientKey(req: IncomingMessage): string {
+  const forwarded = req.headers["x-forwarded-for"];
+  const first = (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.split(",")[0]?.trim();
+  return first || req.socket.remoteAddress || "unknown";
 }
 
 async function readJson(req: IncomingMessage): Promise<unknown> {

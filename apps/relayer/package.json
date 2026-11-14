@@ -13,10 +13,12 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "biome check . && eslint . --max-warnings 0",
     "test": "vitest run --coverage",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "start": "node --env-file=.env dist/main.js",
     "owner-call": "node --env-file=.env dist/owner-call.js"
   },
   "dependencies": {
+    "@comatocard/agents": "workspace:*",
     "@comatocard/sdk": "workspace:*",
     "borsh": "2.0.0",
     "near-api-js": "7.5.3",

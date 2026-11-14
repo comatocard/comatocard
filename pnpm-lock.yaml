@@ -305,6 +305,9 @@ importers:
 
   apps/relayer:
     dependencies:
+      '@comatocard/agents':
+        specifier: workspace:*
+        version: link:../agents
       '@comatocard/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk

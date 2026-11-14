@@ -74,6 +74,15 @@ Vault `audit.factory.comatocard.testnet`, code version 3, published from main at
 | Card pays 2 tUSD with 50 Tgas | refused before execution | `attach at least 80 Tgas`, nothing reserved (#58) |
 | Card pays 2 tUSD with 100 Tgas | `EYcoFo6RHbcvsjuZZSXzkhLgVovqefWvufKAvnssSzpi` | Registry check, `payment_settled`, `reserved` back to 0 |
 
+### Live relayer on 2026-11-14
+`https://comatocard-relayer.201.18.211.8.sslip.io` runs `apps/relayer` on the team VPS (`apps/relayer/deploy/compose.yaml`), relayer account `comatocard-relayer.testnet`. Steps in `apps/relayer/README.md`.
+
+| Check | Result |
+|-|-|
+| `curl https://comatocard-relayer.201.18.211.8.sslip.io/health` | `{"status":"ok"}` |
+| `RELAYER_URL=<live relayer> pnpm owner-call rio74936.factory.comatocard.testnet freeze_card '{"card_id":0}'` | relayed, tx `HVnfX7c7XcvpwTU9rZLAVbVDBEvNmRMN7kofB1cnP6dR` |
+| same with `unfreeze_card` | relayed, tx `44Leie1iAAFc36KWwmXCZEMDpUFsypGNskbNvfthwwxA`; owner balance unchanged across both |
+
 ### Policy assistant check on 2026-11-12
 Vault `rio74936.factory.comatocard.testnet`, card 0, model `Qwen/Qwen3.8-27B` on NEAR AI Cloud. Commands from `apps/agents/README.md`.
 

@@ -74,10 +74,6 @@ export default function ConnectPage() {
         <PanelGlow />
         <header className="relative flex items-center justify-between">
           <Wordmark />
-          <span className="flex h-7 items-center gap-1.5 rounded-full border border-white/10 bg-white/[.08] px-3 text-[12px] font-semibold text-white/80">
-            <span className="size-1.5 rounded-full bg-[#4ade80]" />
-            Testnet
-          </span>
         </header>
         <div className="relative flex flex-1 items-center py-10">
           <FloatingCard />

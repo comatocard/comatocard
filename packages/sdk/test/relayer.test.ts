@@ -11,6 +11,11 @@ describe("relayer schemas", () => {
     expect(
       relayResponse.parse({ status: "refused", reason: "not_authorized", detail: "x" }),
     ).toMatchObject({ reason: "not_authorized" });
+    for (const reason of ["expired", "nonce_used"]) {
+      expect(relayResponse.safeParse({ status: "refused", reason, detail: "x" }).success).toBe(
+        true,
+      );
+    }
     expect(
       relayResponse.safeParse({ status: "refused", reason: "nope", detail: "x" }).success,
     ).toBe(false);

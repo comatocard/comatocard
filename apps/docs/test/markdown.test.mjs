@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { toMdx } from "../src/lib/markdown.mjs";
+import { llmsFullTxt, llmsTxt, toMdx } from "../src/lib/markdown.mjs";
 import site from "../src/site.json" with { type: "json" };
 
 const repoFile = (path) => new URL(`../../../${path}`, import.meta.url);
@@ -76,4 +76,26 @@ test("converts every source without leaving a raw tag or brace in prose", () => 
       .replace(/`[^`\n]*`/g, "");
     assert.doesNotMatch(prose, /<[a-z]|(?<!\\)[{}]/i, page.source);
   }
+});
+
+const ORIGIN = "https://docs.example";
+const pageCount = site.sections.reduce((n, s) => n + s.pages.length, 0);
+
+test("llms.txt links every page with its description", () => {
+  const out = llmsTxt(ORIGIN);
+  assert.match(out, /^# Comatocard\n\n> /);
+  assert.equal(
+    out.match(/^- \[[^\]]+\]\(https:\/\/docs\.example\/[a-z0-9-]+\/[a-z0-9-]+\/\): \S/gm)?.length,
+    pageCount,
+  );
+});
+
+test("llms-full.txt holds every page with absolute links only", () => {
+  const out = llmsFullTxt(ORIGIN, (source) => readFileSync(repoFile(source), "utf8"));
+  assert.equal(out.match(/^Source: https:\/\/docs\.example\//gm)?.length, pageCount);
+  const relative = [...out.matchAll(/\]\(([^)\s]+)\)/g)]
+    .map((m) => m[1])
+    .filter((t) => !/^(https?:|mailto:|#)/.test(t));
+  assert.deepEqual(relative, []);
+  assert.doesNotMatch(out, /img\.shields\.io|<img /);
 });

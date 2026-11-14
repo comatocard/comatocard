@@ -37,6 +37,13 @@ function prose(text, source) {
     .join("");
 }
 
+/** The page body: without the H1, the HTML lines above it and lines made only of badges. */
+function body(markdown) {
+  return markdown
+    .replace(/^(?:<[^\n]*>\s*\n)*# .*\n+/, "")
+    .replace(/^(?:\[!\[[^\]]*\]\([^)\s]*\)\]\([^)\s]*\) ?)+\n+/gm, "");
+}
+
 /**
  * Converts one Markdown file found at `source` (a repository path): drops the H1 and any HTML
  * lines above it, such as the README logo, since the page hero shows the title, and lines made
@@ -46,10 +53,7 @@ function prose(text, source) {
  * @returns {string}
  */
 export function toMdx(markdown, source) {
-  const lines = markdown
-    .replace(/^(?:<[^\n]*>\s*\n)*# .*\n+/, "")
-    .replace(/^(?:\[!\[[^\]]*\]\([^)\s]*\)\]\([^)\s]*\) ?)+\n+/gm, "")
-    .split("\n");
+  const lines = body(markdown).split("\n");
   let fenced = false;
   return lines
     .map((line) => {
@@ -61,4 +65,39 @@ export function toMdx(markdown, source) {
     })
     .join("\n")
     .trim();
+}
+
+/**
+ * The site as an llms.txt index (https://llmstxt.org): one link per page with its description.
+ * @param {string} origin site URL without a trailing slash, for example `https://docs.comatocard.xyz`
+ * @returns {string}
+ */
+export function llmsTxt(origin) {
+  const sections = site.sections.map((s) => {
+    const items = s.pages.map(
+      (p) => `- [${p.title}](${origin}/${s.slug}/${p.slug}/): ${p.description}`,
+    );
+    return `## ${s.title}\n\n${items.join("\n")}`;
+  });
+  const intro = `# Comatocard\n\n> ${site.home.description}\n\nEvery page in one file: ${origin}/llms-full.txt`;
+  return `${[intro, ...sections].join("\n\n")}\n`;
+}
+
+/**
+ * Every page as Markdown in one file, links made absolute, for a model to read at once.
+ * @param {string} origin site URL without a trailing slash
+ * @param {(source: string) => string} read returns the Markdown of a repository path
+ * @returns {string}
+ */
+export function llmsFullTxt(origin, read) {
+  const pages = site.sections.flatMap((s) =>
+    s.pages.map((p) => {
+      const text = body(read(p.source)).replace(/\]\(([^)\s]+)\)/g, (_, target) => {
+        const to = link(target, p.source);
+        return `](${to.startsWith("/") ? origin + to : to})`;
+      });
+      return `# ${p.title}\n\nSource: ${origin}/${s.slug}/${p.slug}/\n\n${text.trim()}\n`;
+    }),
+  );
+  return pages.join("\n");
 }

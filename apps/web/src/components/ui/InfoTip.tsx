@@ -1,10 +1,14 @@
 "use client";
 import { Info } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { useShowHide } from "../../lib/motion/useShowHide";
 
 const DROPPED = { y: -4, scale: 0.97 };
 const TIP_TIMING = { enter: 0.18, exit: 0.18 };
+/** Space kept between the tip and the edges of the screen. */
+const EDGE = 16;
+/** Space between the icon and the tip. */
+const GAP = 8;
 
 /**
  * A small ⓘ beside a label that explains it on demand, so the screen keeps its short labels and
@@ -20,6 +24,23 @@ export function InfoTip({ label, children }: { label: string; children: React.Re
   const ref = useRef<HTMLSpanElement>(null);
   const id = useId();
   const tip = useRef<HTMLSpanElement>(null);
+
+  // Keep the tip on screen: it opens under the icon, slides left when it would cross the right
+  // edge, and opens above when there is no room below. Runs before the show tween reads it.
+  useLayoutEffect(() => {
+    const anchor = ref.current;
+    const el = tip.current;
+    if (!open || !anchor || !el) return;
+    const icon = anchor.getBoundingClientRect();
+    const right = document.documentElement.clientWidth - EDGE - el.offsetWidth;
+    const left = Math.max(EDGE, Math.min(icon.left - 6, right));
+    const roomBelow = window.innerHeight - EDGE - icon.bottom - GAP;
+    const above = el.offsetHeight > roomBelow && icon.top - GAP - el.offsetHeight >= EDGE;
+    el.style.left = `${left - icon.left}px`;
+    el.style.top = above ? "auto" : "";
+    el.style.bottom = above ? `calc(100% + ${GAP}px)` : "";
+    el.style.transformOrigin = `${icon.left + icon.width / 2 - left}px ${above ? "100%" : "0"}`;
+  }, [open]);
   useShowHide(tip, open, DROPPED, TIP_TIMING);
 
   useEffect(() => {
@@ -70,7 +91,7 @@ export function InfoTip({ label, children }: { label: string; children: React.Re
         ref={tip}
         id={id}
         role="tooltip"
-        className="invisible absolute top-[calc(100%+8px)] left-[-6px] z-30 block w-[min(260px,calc(100vw-48px))] origin-top-left rounded-[14px] bg-ink px-3.5 py-2.5 text-left text-[12.5px] leading-[1.45] font-normal tracking-normal text-white opacity-0 shadow-[0_12px_28px_-12px_rgba(0,0,0,.45)]"
+        className="invisible absolute top-[calc(100%+8px)] left-[-6px] z-30 block w-[min(260px,calc(100vw-32px))] origin-top-left rounded-[14px] bg-ink px-3.5 py-2.5 text-left text-[12.5px] leading-[1.45] font-normal tracking-normal text-white opacity-0 shadow-[0_12px_28px_-12px_rgba(0,0,0,.45)]"
       >
         {children}
       </span>

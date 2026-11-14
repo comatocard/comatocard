@@ -23,7 +23,9 @@ When the chain still rejects the wrapping transaction because the delegate expir
 `pay`, `nft_transfer`, `set_card_key`, `propose_owner` and `accept_owner` are never relayed. Request and response schemas are `relayRequest` and `relayResponse` in `@comatocard/sdk`.
 
 ## Policy assistant
-`POST /assistant` with `{ "vault", "cardId", "request" }` asks a model in a TEE on NEAR AI Cloud for the card's new policy and checks the answer's signature and attestation (`proposePolicy` and `verifiedChat` from [apps/agents](../agents/README.md)). It answers the proposal with the `update_policy` call for the owner to sign; it never signs. The NEAR AI key stays in the relayer env, so the web app only proxies.
+`POST /assistant` with `{ "vault", "cardId", "request" }` asks a model in a TEE on NEAR AI Cloud for the card's new policy and checks the answer's signature and attestation (`proposePolicy` and `verifiedChat` from [apps/agents](../agents/README.md)). It answers the proposal with the `update_policy` call for the owner to sign; it never signs.
+
+It runs as its own service, `dist/assistant-main.js`, from the same image (#188): the relayer process holds only the gas key and the assistant process only the NEAR AI key, so a flaw on the public, free-text assistant path cannot reach the key that pays gas, and each can be limited and scaled on its own. The assistant answers only `POST /assistant` and `GET /health` (port 4200), the relayer only `POST /relay` and `GET /health`. The web app proxies to `<RELAYER_URL>/assistant`, which Caddy routes to the assistant service.
 
 | Answer | When |
 |-|-|
@@ -32,24 +34,24 @@ When the chain still rejects the wrapping transaction because the delegate expir
 | 404 | The vault is not a vault of `FACTORY_ID`, or it has no such card |
 | 429 | More than 10 requests a minute from one client, or 30 a minute in total |
 | 502 | NEAR AI Cloud did not answer or the answer failed verification |
-| 503 | `NEAR_AI_API_KEY` is not set; relaying is unaffected |
 
 ## Run locally
 1. `cp apps/relayer/.env.example apps/relayer/.env` and set `RELAYER_ACCOUNT_ID` and `RELAYER_PRIVATE_KEY` (any funded testnet account, for example one from `near account create-account sponsor-by-faucet-service`).
 2. `pnpm turbo run build --filter=@comatocard/relayer`, then from `apps/relayer`: `pnpm start`. `curl localhost:4100/health` shows `{"status":"ok"}`.
 3. Set `OWNER_ACCOUNT_ID` and `OWNER_PRIVATE_KEY` to the owner of a factory vault, then `pnpm owner-call <vault> freeze_card '{"card_id":0}'`. It prints `{"status":"relayed","tx_hash":"...","failure":null}`; `get_card` shows `frozen` and the owner balance is unchanged. `pnpm owner-call <vault> unfreeze_card '{"card_id":0}'` reverts it.
 4. The same command signed by an account that is not the owner prints `{"status":"refused","reason":"not_authorized",...}` and the relayer balance is unchanged.
+5. Assistant: `cp apps/relayer/.env.assistant.example apps/relayer/.env.assistant`, set `NEAR_AI_API_KEY`, then `pnpm start:assistant`. `curl localhost:4200/health` shows `{"status":"ok"}`; it refuses to start without the key.
 
 ## Deployment
 Live at `https://relayer.comatocard.xyz` (relayer account `comatocard-relayer.testnet`), on the team VPS behind its shared Caddy; `https://comatocard-relayer.201.18.211.8.sslip.io` serves the same container. The web app reaches it through `RELAYER_URL`.
 
 1. Code: `git clone https://github.com/comatocard/comatocard.git /opt/comatocard`.
-2. Secrets, never through git or the image: `apps/relayer/deploy/.env` with `NETWORK`, `FACTORY_ID`, `INDEXER_URL=https://indexer.comatocard.xyz`, `RELAYER_ACCOUNT_ID` and `RELAYER_PRIVATE_KEY`, plus `NEAR_AI_API_KEY` for the policy assistant, mode 600.
-3. Start: `cd /opt/comatocard && docker compose -f apps/relayer/deploy/compose.yaml up -d --build`. The container joins the Caddy network `deploy_default` as `comatocard-relayer`.
-4. HTTPS: a Caddy site block `relayer.comatocard.xyz, comatocard-relayer.201.18.211.8.sslip.io { reverse_proxy comatocard-relayer:4100 }`, then `caddy validate` and `caddy reload` in the Caddy container. The Caddyfile is bind mounted as a single file, so edit it in place (`>>` or an editor that keeps the inode); `sed -i` writes a new file the running container never sees, and `caddy reload` then reports `config is unchanged`.
-5. Check: `curl https://relayer.comatocard.xyz/health` shows `{"status":"ok"}`.
+2. Secrets, never through git or the image, mode 600: `apps/relayer/deploy/.env` for the relayer with `NETWORK`, `FACTORY_ID`, `INDEXER_URL=https://indexer.comatocard.xyz`, `RELAYER_ACCOUNT_ID` and `RELAYER_PRIVATE_KEY`; `apps/relayer/deploy/.env.assistant` for the assistant with `NETWORK`, `FACTORY_ID` and `NEAR_AI_API_KEY`. Neither file holds the other's key.
+3. Start: `cd /opt/comatocard && docker compose -f apps/relayer/deploy/compose.yaml up -d --build`. The containers join the Caddy network `deploy_default` as `comatocard-relayer` and `comatocard-assistant`.
+4. HTTPS: a Caddy site block `relayer.comatocard.xyz, comatocard-relayer.201.18.211.8.sslip.io { handle /assistant { reverse_proxy comatocard-assistant:4200 } handle { reverse_proxy comatocard-relayer:4100 } }`, then `caddy validate` and `caddy reload` in the Caddy container. The Caddyfile is bind mounted as a single file, so edit it in place (`>>` or an editor that keeps the inode); `sed -i` writes a new file the running container never sees, and `caddy reload` then reports `config is unchanged`.
+5. Check: `curl https://relayer.comatocard.xyz/health` shows `{"status":"ok"}`; `docker exec comatocard-relayer-relayer-1 env` lists no `NEAR_AI_API_KEY` and `docker exec comatocard-relayer-assistant-1 env` no `RELAYER_PRIVATE_KEY`.
 
-Update: `git pull && docker compose -f apps/relayer/deploy/compose.yaml up -d --build`. Logs: `docker compose -f apps/relayer/deploy/compose.yaml logs -f relayer`. Top up the relayer account when its balance runs low; each sponsored call costs about 0.0003 NEAR.
+Update: `git pull && docker compose -f apps/relayer/deploy/compose.yaml up -d --build`. Logs: `docker compose -f apps/relayer/deploy/compose.yaml logs -f relayer assistant`. Top up the relayer account when its balance runs low; each sponsored call costs about 0.0003 NEAR.
 
 ## Tests
-`pnpm test`: decoding and signature checks on delegates signed with real keys, every refusal, owner and approver authorization, withdraw screening, and the HTTP server, and the policy assistant endpoint with its rate limit. `test/regression/` holds one test per fixed issue.
+`pnpm test`: decoding and signature checks on delegates signed with real keys, every refusal, owner and approver authorization, withdraw screening, the HTTP servers (each answers only its own route), the split configuration (neither service reads the other's key), and the policy assistant endpoint with its rate limit. `test/regression/` holds one test per fixed issue.

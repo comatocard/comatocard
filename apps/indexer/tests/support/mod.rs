@@ -41,11 +41,31 @@ fn server() -> &'static (Container<Postgres>, String) {
                 .expect("start Postgres; is Docker running?");
             let port = container.get_host_port_ipv4(5432).expect("postgres port");
             let url = format!("postgres://postgres:postgres@127.0.0.1:{port}");
+            reap_after(std::process::id(), container.id());
             (container, url)
         })
         .join()
         .expect("container thread")
     })
+}
+
+/// Removes the container and its volume once process `pid` exits. The shared container lives in a
+/// static, and statics are never dropped, so testcontainers alone would leave it running (#184).
+#[expect(
+    clippy::zombie_processes,
+    reason = "the reaper must outlive this process to remove the container after it"
+)]
+pub fn reap_after(pid: u32, container_id: &str) {
+    let script = format!(
+        "while kill -0 {pid} 2>/dev/null; do sleep 1; done; docker rm -fv {container_id} >/dev/null 2>&1"
+    );
+    std::process::Command::new("sh")
+        .args(["-c", &script])
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+        .expect("spawn the container reaper");
 }
 
 /// Base URL of the shared Postgres server, without a database name.

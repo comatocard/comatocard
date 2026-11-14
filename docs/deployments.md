@@ -146,6 +146,23 @@ Every contract on testnet now runs the assets of [release v0.4.1](https://github
 | Owner issues a card checked by the registry | `7iP8drQZo1S5hFzHv2aLGvPm649uXgK9DSLpUpM5SXbb` | `card_created`, `nft_mint`, key added |
 | Card pays 1 tUSD with 100 Tgas | `7nK8SHcVnQWgDjeng4ozKgUA7ueGMRei5d6FSyZmbVmR` | Registry check, `payment_submitted`, `payment_settled` |
 
+### Vault lending on testnet (0.5.0) on 2026-11-14
+A vault built from this branch (`cargo near build non-reproducible-wasm`, contract version 0.5.0) runs standalone at `lend.comatocard.testnet`, owner `comatocard.testnet`, keeper `comatocard-agent.testnet`, accepting `usdc.fakes.testnet` (6 decimals). It lends to the Rhea (Burrow) testnet deployment `contract.burrow.testnet`, where USDC carries 12 extra decimals. The factory still publishes the v0.4.1 code, so vaults made in the app are unchanged.
+
+| Step | Transaction | Result |
+|-|-|-|
+| Deploy and init the vault | `J4ZUK8vwcS65E8uUZuPs2WRDQp9swd5kUra7GaJhBSwN` | `get_config` reports `0.5.0` |
+| Owner deposits 100 USDC.e | `76fhwJA2NXibS4GwwtLvnxMg1ARmaXbN56xCwQW2wWtv` | `deposit`, available 100 |
+| Storage deposit for the vault at the venue | `51EeAk4whn3F9PMnpKnNgsZs6gvA7e7qwF8b3CW7wPHP` | Registered at `contract.burrow.testnet` |
+| Owner sets venue and keeper | `HXTRHMNB59cUc4QKvryNqhRnRW4JVv2SutuxzNVPwpDT` | `get_yield` shows both |
+| Owner enables USDC.e with `min_liquid` 30 | `H59gigMXHvjqvv8vKB3TBuLnMvTks98gEiquYvhzr8LU` | `extra_decimals` 12 |
+| Keeper supplies 50 | `6zUN8BubLp8CQHdZQnYUctiewLng5C9cx1SBYc9AZVyB` | Burrow `deposit`, vault `yield_supplied` accepted 50; available 50, supplied 50; the venue account shows 50 USDC.e |
+| Keeper supplies 30 more | refused | `supply would leave less than min_liquid available` |
+| `comatocard-shop.testnet` supplies 1 | refused | `only the owner or the keeper may call this method` |
+| Keeper recalls up to 1,000 | `GwHYnrkGhKyPYSA8AkdwHd6Qe5T2oWXYQg9vAGRTpgvj` | Burrow `withdraw_succeeded` for the 50 held, vault `yield_recalled`; available 100, supplied 0, equal to the vault's token balance |
+
+Testnet USDC has no borrowers on this venue, so its supply APR is near zero; on mainnet, `contract.main.burrow.near` reported about 10.7 % for USDC on 2026-11-14 from its interest model.
+
 ### Indexer
 `https://indexer.comatocard.xyz` runs the image `ghcr.io/comatocard/comatocard-indexer:main` (published by `.github/workflows/indexer-image.yml`) on a VPS through Coolify, with its own Postgres 17. It indexes testnet from `factory.comatocard.testnet` and `registry.comatocard.testnet`.
 

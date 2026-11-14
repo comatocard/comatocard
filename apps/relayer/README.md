@@ -26,13 +26,13 @@ A delegate action is sent only when every check passes; otherwise the answer nam
 4. The same command signed by an account that is not the owner prints `{"status":"refused","reason":"not_authorized",...}` and the relayer balance is unchanged.
 
 ## Deployment
-Live at `https://comatocard-relayer.201.18.211.8.sslip.io` (relayer account `comatocard-relayer.testnet`), on the team VPS behind its shared Caddy. `relayer.comatocard.xyz` is added to Caddy once its DNS record points to the VPS. The web app reaches it through `RELAYER_URL`.
+Live at `https://relayer.comatocard.xyz` (relayer account `comatocard-relayer.testnet`), on the team VPS behind its shared Caddy; `https://comatocard-relayer.201.18.211.8.sslip.io` serves the same container. The web app reaches it through `RELAYER_URL`.
 
 1. Code: `git clone https://github.com/comatocard/comatocard.git /opt/comatocard`.
 2. Secrets, never through git or the image: `apps/relayer/deploy/.env` with `NETWORK`, `FACTORY_ID`, `INDEXER_URL=https://indexer.comatocard.xyz`, `RELAYER_ACCOUNT_ID` and `RELAYER_PRIVATE_KEY`, mode 600.
 3. Start: `cd /opt/comatocard && docker compose -f apps/relayer/deploy/compose.yaml up -d --build`. The container joins the Caddy network `deploy_default` as `comatocard-relayer`.
-4. HTTPS: a Caddy site block `reverse_proxy comatocard-relayer:4100`, then `caddy validate` and `caddy reload` in the Caddy container.
-5. Check: `curl https://comatocard-relayer.201.18.211.8.sslip.io/health` shows `{"status":"ok"}`.
+4. HTTPS: a Caddy site block `relayer.comatocard.xyz, comatocard-relayer.201.18.211.8.sslip.io { reverse_proxy comatocard-relayer:4100 }`, then `caddy validate` and `caddy reload` in the Caddy container. The Caddyfile is bind mounted as a single file, so edit it in place (`>>` or an editor that keeps the inode); `sed -i` writes a new file the running container never sees, and `caddy reload` then reports `config is unchanged`.
+5. Check: `curl https://relayer.comatocard.xyz/health` shows `{"status":"ok"}`.
 
 Update: `git pull && docker compose -f apps/relayer/deploy/compose.yaml up -d --build`. Logs: `docker compose -f apps/relayer/deploy/compose.yaml logs -f relayer`. Top up the relayer account when its balance runs low; each sponsored call costs about 0.0003 NEAR.
 

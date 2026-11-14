@@ -97,7 +97,7 @@ Requirements: Node 24 with pnpm, Rust from `rust-toolchain.toml` with [cargo-nea
 [Architecture](docs/architecture.md) · [Vault contract](docs/specs/vault-contract.md) · [Events](docs/specs/events.md) · [Indexer API](docs/specs/indexer-api.md) · [Integration guide](docs/integration.md) · [Security](docs/security.md) · [Compliance](docs/compliance.md) · [Deployments](docs/deployments.md) · [Contributing](AGENTS.md)
 
 ## Hackathon
-Built for NEAR HACKATHON, tracks `realworld`, `security`, `agents` and `social`.
+Built for NEAR HACKATHON, tracks `realworld`, `security`, `agents`, `social`, `nfts`, `privacy` and `defi`.
 
 ### Third-party code and tools
 Listed for the hackathon rules (Q-005). The repository starts on 2026-11-09, inside the hackathon window; there is no code from before it.

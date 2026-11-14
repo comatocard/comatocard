@@ -3,6 +3,7 @@
 import { type FunctionCall, type RelayResponse, relayResponse } from "@comatocard/sdk";
 import { useNearWallet } from "near-connect-hooks";
 import { groupByReceiver, toConnectorAction } from "../lib/actions";
+import { RELAYER_UNREACHABLE, untypedRelayError } from "../lib/relay-errors";
 
 /** How an owner action reached the chain. */
 export type OwnerResult =
@@ -45,9 +46,11 @@ export function useOwnerCall() {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ signed_delegate: delegate }),
-    });
-    const parsed = relayResponse.safeParse(await response.json().catch(() => null));
-    if (!parsed.success) throw new RelayError("The relayer is not reachable.", null);
+    }).catch(() => null);
+    if (!response) throw new RelayError(RELAYER_UNREACHABLE, null);
+    const body: unknown = await response.json().catch(() => null);
+    const parsed = relayResponse.safeParse(body);
+    if (!parsed.success) throw new RelayError(untypedRelayError(body), null);
     const result = parsed.data;
     if (result.status === "refused") throw new RelayError(result.detail, result);
     if (result.failure !== null) throw new RelayError(result.failure, result);

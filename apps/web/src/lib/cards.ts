@@ -1,4 +1,5 @@
 import type { Card, Policy } from "@comatocard/sdk";
+import { FACTORY_ID } from "./config";
 
 const DAY_NS = 86_400_000_000_000n;
 const PERIOD_NS = 30n * DAY_NS;
@@ -64,6 +65,9 @@ export function spentToday(
   }
   return { spent: spent.toString(), limit: limit.toString() };
 }
+
+/** A vault's own name, without the factory suffix every vault shares. */
+export const vaultLabel = (vault: string): string => vault.replace(`.${FACTORY_ID}`, "");
 
 export const KIND_LABEL = { human: "Person", agent: "Agent", treasury: "Treasury" } as const;
 

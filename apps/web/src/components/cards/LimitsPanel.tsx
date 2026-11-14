@@ -23,6 +23,8 @@ export function LimitsPanel({
   const left = remainingToday(p, spend);
   const rules: [string, string][] = [
     ["Per payment", `${displayUnits(p.per_tx_limit, decimals)} ${symbol}`],
+    ["Per day", `${displayUnits(p.daily_limit, decimals)} ${symbol}`],
+    ["Per 30 days", `${displayUnits(p.monthly_limit, decimals)} ${symbol}`],
     [
       "Ask me above",
       p.approval_threshold === null
@@ -35,16 +37,19 @@ export function LimitsPanel({
   ];
   return (
     <Card className="space-y-4 px-5 py-4">
-      <div className="flex items-center justify-between">
-        <span className="flex items-center gap-1.5 text-[14px] font-semibold">
-          Spending
+      <div>
+        <span className="flex items-center gap-1.5 text-[13px] text-muted">
+          Left today
           <InfoTip label="Spending">
             Checked by the contract on every payment. What is left today is the smaller of the day
             and the 30 day headroom.
           </InfoTip>
         </span>
-        <span className="text-[13px] font-semibold text-pos tabular-nums">
-          {displayUnits(left, decimals)} {symbol} left today
+        <span className="mt-0.5 flex items-baseline gap-1.5 tabular-nums">
+          <span className="text-[34px] leading-[1.1] font-semibold tracking-[-0.03em]">
+            {displayUnits(left, decimals)}
+          </span>
+          <span className="text-[15px] font-semibold text-muted">{symbol}</span>
         </span>
       </div>
       <SpendBar

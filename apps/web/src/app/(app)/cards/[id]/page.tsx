@@ -1,5 +1,6 @@
 "use client";
 import { vaultCalls } from "@comatocard/sdk";
+import { ChevronRight } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { CardArtwork } from "../../../../components/card/CardArtwork";
@@ -90,67 +91,86 @@ function CardScreen() {
   const live = card.status !== "revoked";
 
   return (
-    <div className="mx-auto w-full max-w-[560px]">
+    <div className="mx-auto w-full max-w-[560px] lg:mx-0 lg:max-w-none">
       <SubHeader title={card.label} />
 
-      <div className="mt-6 mb-4 flex justify-center">
-        <CardFolder
-          title={card.label}
-          ariaLabel={`Card ${card.label}`}
-          cardNumber={cardNumber(card.id)}
-          expiry={expiryLabel(p.expires_at)}
-          expiryLabel="Expires"
-          cvv={keyTail(card.public_key)}
-          secretLabel="Key"
-          detailsVisible={shown}
-          onDetailsVisibleChange={setShown}
-          className="w-full max-w-[340px]"
-          card={
-            <CardArtwork
-              label={card.label}
-              number={cardNumber(card.id)}
+      {/* Two equal columns on a desktop: the card and its controls, then its limits and payments. */}
+      <div className="lg:mt-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8">
+        <div>
+          <div className="mt-6 mb-4 flex justify-center lg:mt-0">
+            <CardFolder
+              title={card.label}
+              ariaLabel={`Card ${card.label}`}
+              cardNumber={cardNumber(card.id)}
               expiry={expiryLabel(p.expires_at)}
-              kind={card.kind}
-              frozen={card.status === "frozen"}
+              expiryLabel="Expires"
+              cvv={keyTail(card.public_key)}
+              secretLabel="Key"
               detailsVisible={shown}
+              onDetailsVisibleChange={setShown}
+              className="w-full max-w-[340px]"
+              card={
+                <CardArtwork
+                  label={card.label}
+                  number={cardNumber(card.id)}
+                  expiry={expiryLabel(p.expires_at)}
+                  kind={card.kind}
+                  frozen={card.status === "frozen"}
+                  detailsVisible={shown}
+                />
+              }
             />
-          }
-        />
+          </div>
+
+          {/* The artwork already shows the kind and the frozen state; only a revoked card needs words. */}
+          {live ? null : (
+            <p className="mb-5 text-center text-[13px] font-medium text-muted">
+              Revoked. This card can no longer pay.
+            </p>
+          )}
+
+          {live ? (
+            <CardActions
+              isOwner={isOwner}
+              frozen={card.status === "frozen"}
+              onToggleFreeze={() =>
+                void run(
+                  card.status === "frozen"
+                    ? calls.unfreezeCard(card.id)
+                    : calls.freezeCard(card.id),
+                )
+              }
+              onOpen={setSheet}
+              state={state}
+              onDirect={() => void runDirect()}
+            />
+          ) : null}
+        </div>
+
+        <div>
+          <CardDetails
+            card={card}
+            payments={payments}
+            now={now}
+            decimals={decimals}
+            symbol={symbol}
+          />
+
+          {isOwner && live ? (
+            <button
+              type="button"
+              onClick={() => setSheet("revoke")}
+              className="mt-4 flex w-full items-center justify-between gap-3 rounded-card border border-white bg-card px-5 py-4 text-left transition-colors hover:bg-white"
+            >
+              <span>
+                <span className="block text-[14.5px] font-semibold text-neg">Revoke card</span>
+                <span className="block text-[13px] text-muted">Stops this card for good.</span>
+              </span>
+              <ChevronRight size={16} strokeWidth={2} aria-hidden="true" className="text-faint" />
+            </button>
+          ) : null}
+        </div>
       </div>
-
-      {/* The artwork already shows the kind and the frozen state; only a revoked card needs words. */}
-      {live ? null : (
-        <p className="mb-5 text-center text-[13px] font-medium text-muted">
-          Revoked. This card can no longer pay.
-        </p>
-      )}
-
-      {live ? (
-        <CardActions
-          isOwner={isOwner}
-          frozen={card.status === "frozen"}
-          onToggleFreeze={() =>
-            void run(
-              card.status === "frozen" ? calls.unfreezeCard(card.id) : calls.freezeCard(card.id),
-            )
-          }
-          onOpen={setSheet}
-          state={state}
-          onDirect={() => void runDirect()}
-        />
-      ) : null}
-
-      <CardDetails card={card} payments={payments} now={now} decimals={decimals} symbol={symbol} />
-
-      {isOwner && live ? (
-        <button
-          type="button"
-          onClick={() => setSheet("revoke")}
-          className="mx-auto mt-6 block text-[13px] font-semibold text-neg"
-        >
-          Revoke card
-        </button>
-      ) : null}
 
       {live ? (
         <AssistantSheet

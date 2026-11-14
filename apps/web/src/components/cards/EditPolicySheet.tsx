@@ -22,8 +22,49 @@ export function EditPolicySheet({
   card: Card;
 }) {
   const token = useToken();
-  const decimals = token.data?.decimals ?? 0;
-  const [form, setForm] = useState<PolicyForm>(() => fromPolicy(card.policy, decimals));
+  const seed = fromPolicy(card.policy, token.data?.decimals);
+  // The editor mounts only once the token is known, so its form never starts from raw units.
+  if (!token.data || !seed) {
+    return (
+      <BottomSheet open={open} onClose={onClose} label="Edit limits">
+        <h2 className="mb-1 text-xl font-semibold">Edit limits</h2>
+        <p role="status" className="text-sm text-muted">
+          Reading the card's limits…
+        </p>
+      </BottomSheet>
+    );
+  }
+  return (
+    <PolicyEditor
+      open={open}
+      onClose={onClose}
+      vault={vault}
+      card={card}
+      seed={seed}
+      decimals={token.data.decimals}
+      symbol={token.data.symbol}
+    />
+  );
+}
+
+function PolicyEditor({
+  open,
+  onClose,
+  vault,
+  card,
+  seed,
+  decimals,
+  symbol,
+}: {
+  open: boolean;
+  onClose: () => void;
+  vault: string;
+  card: Card;
+  seed: PolicyForm;
+  decimals: number;
+  symbol: string;
+}) {
+  const [form, setForm] = useState<PolicyForm>(seed);
   const [error, setError] = useState<{ field: keyof PolicyForm; message: string } | null>(null);
   const { state, run, runDirect, reset } = useOwnerAction(vault);
 
@@ -45,7 +86,7 @@ export function EditPolicySheet({
 
   const close = () => {
     reset();
-    setForm(fromPolicy(card.policy, decimals));
+    setForm(seed);
     onClose();
   };
 
@@ -55,20 +96,10 @@ export function EditPolicySheet({
       <p className="mb-5 text-sm text-muted">
         The new policy applies to the next payment. What {card.label} spent today still counts.
       </p>
-      <PolicyFields
-        form={form}
-        onChange={setForm}
-        symbol={token.data?.symbol ?? ""}
-        error={error}
-      />
+      <PolicyFields form={form} onChange={setForm} symbol={symbol} error={error} />
       {next ? (
         <div className="mt-5">
-          <PolicyDiff
-            before={card.policy}
-            after={next}
-            decimals={decimals}
-            symbol={token.data?.symbol ?? ""}
-          />
+          <PolicyDiff before={card.policy} after={next} decimals={decimals} symbol={symbol} />
         </div>
       ) : null}
       <div className="mt-5">

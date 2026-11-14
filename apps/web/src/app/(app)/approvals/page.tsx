@@ -1,10 +1,10 @@
 "use client";
-import { type Payment, vaultCalls } from "@comatocard/sdk";
+import { type Payment, type Card as VaultCard, vaultCalls } from "@comatocard/sdk";
+import { Hourglass } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { DaoDecision } from "../../../components/approvals/DaoDecision";
 import { ActionStatus } from "../../../components/form/ActionStatus";
 import { Card, InfoTip, PageHeader } from "../../../components/ui";
-import { PagedPanel, Pager, usePaged } from "../../../components/ui/Pager";
 import { ApprovalSkeleton } from "../../../components/ui/ScreenSkeletons";
 import { useApprovals, useCards, useToken } from "../../../hooks/data";
 import { useDaoPolicy, useDaoProposals } from "../../../hooks/useDao";
@@ -41,14 +41,22 @@ export default function ApprovalsPage() {
   )?.max_amount;
   const canDecide = (row: Payment) =>
     isOwner || (approverLimit !== undefined && BigInt(row.amount) <= BigInt(approverLimit));
-  const labels = new Map(cards.data?.map((c) => [c.id, c.label]));
+  const byId = new Map(cards.data?.map((c) => [c.id, c]));
+  const decimals = token.data?.decimals;
+  const symbol = token.data?.symbol ?? "";
+  const items = approvals.data?.items;
+  const total = items?.reduce((sum, row) => sum + BigInt(row.amount), 0n);
 
   return (
-    <div className="mx-auto w-full max-w-[560px]">
+    <div className="mx-auto w-full max-w-[560px] lg:mx-0 lg:max-w-[880px]">
       <PageHeader
         className="mb-5"
         title="Approvals"
-        description="Nothing moves until you decide."
+        description={
+          items?.length && total !== undefined && decimals !== undefined
+            ? `${items.length} waiting · ${displayUnits(total.toString(), decimals)} ${symbol} in total. Nothing moves until you decide.`
+            : "Nothing moves until you decide."
+        }
       />
       {/* The queue swaps skeleton, requests and empty state; its height follows smoothly. */}
       <SmoothHeight>
@@ -61,9 +69,9 @@ export default function ApprovalsPage() {
               key={row.id}
               row={row}
               vault={vaultId ?? ""}
-              cardLabel={labels.get(row.card_id) ?? `Card ${row.card_id}`}
-              decimals={token.data?.decimals ?? 0}
-              symbol={token.data?.symbol ?? ""}
+              card={byId.get(row.card_id)}
+              decimals={decimals ?? 0}
+              symbol={symbol}
               now={now}
               canDecide={dao === null && canDecide(row)}
               accountId={accountId}
@@ -135,30 +143,32 @@ function Queue({
       </Card>
     );
   }
-  return <PagedQueue items={items} render={render} />;
-}
-
-/**
- * One request at a time with a pager, so a long queue never stacks on a phone. The count says how
- * many wait; deciding one moves the next into view.
- */
-function PagedQueue({ items, render }: { items: Payment[]; render: (row: Payment) => ReactNode }) {
-  const paged = usePaged(items, 1);
   return (
     <div>
-      <div className="mx-1 mb-3 flex min-h-8 items-center justify-between">
-        <span className="text-[13px] font-medium text-muted">{items.length} waiting</span>
-        <Pager page={paged.page} count={paged.count} onPage={paged.go} label="requests" />
-      </div>
-      <PagedPanel panel={paged.panel}>{paged.items.map(render)}</PagedPanel>
+      {/* Every request at once, so the owner can compare them; deciding one closes its card. */}
+      <div className="grid gap-3">{items.map(render)}</div>
       <p className="mx-1 mt-3 flex items-center gap-1.5 text-[12.5px] font-medium text-muted">
-        Gasless
+        Approving costs you no gas
         <InfoTip label="Gasless">
           Your decision is signed in your wallet and sent by the relayer, which pays the gas.
         </InfoTip>
       </p>
     </div>
   );
+}
+
+/** Why a payment waits, with the numbers when the card's own threshold is the cause. */
+function whyWaiting(
+  row: Payment,
+  card: VaultCard | undefined,
+  decimals: number,
+  symbol: string,
+): string {
+  const threshold = card?.policy.approval_threshold;
+  if (row.queue_cause === "threshold" && threshold) {
+    return `Asks ${displayUnits(row.amount, decimals)} ${symbol}. This card pays up to ${displayUnits(threshold, decimals)} without asking.`;
+  }
+  return row.queue_cause ? `Waiting: ${reasonText(row.queue_cause)}` : "Waiting for a decision";
 }
 
 function Decide({
@@ -202,7 +212,7 @@ function Decide({
 function ApprovalCard({
   row,
   vault,
-  cardLabel,
+  card,
   decimals,
   symbol,
   now,
@@ -214,12 +224,13 @@ function ApprovalCard({
   dao: { id: string; policy: DaoPolicy; proposals: DaoProposal[] | undefined } | null;
   row: Payment;
   vault: string;
-  cardLabel: string;
+  card: VaultCard | undefined;
   decimals: number;
   symbol: string;
   now: number | null;
   canDecide: boolean;
 }) {
+  const cardLabel = card?.label ?? `Card ${row.card_id}`;
   const { state, run, runDirect } = useOwnerAction(vault);
   const [decided, setDecided] = useState<"approve" | "decline" | null>(null);
   const calls = vaultCalls(vault);
@@ -253,8 +264,16 @@ function ApprovalCard({
           <div className="text-[12px] text-muted">{symbol}</div>
         </div>
       </div>
-      <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-muted">
-        <span>Waiting: {row.queue_cause ? reasonText(row.queue_cause) : "queued"}</span>
+      <p className="mt-3 flex items-start gap-2 rounded-[14px] bg-warn-soft px-3 py-2.5 text-[13px] leading-[1.35] font-medium text-[#7a3a06]">
+        <Hourglass
+          size={15}
+          strokeWidth={2}
+          aria-hidden="true"
+          className="mt-px shrink-0 text-warn"
+        />
+        {whyWaiting(row, card, decimals, symbol)}
+      </p>
+      <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-muted">
         {row.reference ? <span>Ref {row.reference}</span> : null}
         {row.memo ? <span>{row.memo}</span> : null}
         {now ? <span>{ago(nsToMs(row.created_at), now)}</span> : null}

@@ -74,6 +74,7 @@ describe("policy form", () => {
     );
     if (!first.ok) throw new Error("expected a policy");
     const form = fromPolicy(first.policy, 6);
+    if (!form) throw new Error("expected a form");
     const again = toPolicy(form, input);
     expect(again.ok && again.policy).toEqual(first.policy);
     const lowered: Policy = { ...first.policy, daily_limit: "40000000" };

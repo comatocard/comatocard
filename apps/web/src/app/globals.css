@@ -33,6 +33,13 @@
   --color-ring: var(--color-ink);
 }
 
+/* App screens only (the landing page keeps its own greys): muted text dark enough for 12px copy
+   on the app background, 5.4:1. Sheets portal to <body>, hence :has on the root. */
+:root:has([data-app-shell]) {
+  --color-muted: #5f6368;
+  --color-faint: #8e9196;
+}
+
 /* The same two tokens as bare custom properties. The card-folder's stitched-purse SVG fills and
    strokes with `var(--background)` / `var(--foreground)` directly. @theme only generates
    utilities; it does not publish these names to plain CSS. */

@@ -60,3 +60,22 @@ export const STATUS_TONE: Record<PaymentRowStatus, PaymentTone> = {
 
 /** Nanosecond timestamp string to milliseconds. */
 export const nsToMs = (ns: string): number => Number(BigInt(ns) / 1_000_000n);
+
+/**
+ * Rows grouped by the calendar day they were made, in the order given, each group under a label
+ * like "Nov 13". `timeZone` is the reader's own unless a test pins one.
+ */
+export function groupByDay<T extends { created_at: string }>(
+  rows: readonly T[],
+  timeZone?: string,
+): { day: string; rows: T[] }[] {
+  const format = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone });
+  const groups: { day: string; rows: T[] }[] = [];
+  for (const row of rows) {
+    const day = format.format(new Date(nsToMs(row.created_at)));
+    const last = groups.at(-1);
+    if (last && last.day === day) last.rows.push(row);
+    else groups.push({ day, rows: [row] });
+  }
+  return groups;
+}

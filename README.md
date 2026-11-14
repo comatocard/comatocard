@@ -8,7 +8,9 @@
 
 [App](https://app.comatocard.xyz) · [Website](https://comatocard.xyz) · [Documentation](https://docs.comatocard.xyz) · [Indexer GraphQL](https://indexer.comatocard.xyz/graphql) · [Testnet deployment](docs/deployments.md)
 
-[![Watch the 42 second film: an owner gives an AI assistant a Comatocard, approves a bigger payment and freezes the card](docs/media/comatocard-film-poster.jpg)](docs/media/comatocard-film.mp4)
+[![Preview of the 42 second film: an owner gives an AI assistant a Comatocard, approves a bigger payment and freezes the card. Click for the full film with sound.](docs/media/comatocard-film-preview.gif)](docs/media/comatocard-film.mp4)
+
+[Watch the full film with sound](docs/media/comatocard-film.mp4)
 
 > Everything runs on NEAR testnet with tUSD, a test stablecoin: no real money moves. The app, the demo merchant, the indexer and the relayer are hosted and stay up through judging.
 

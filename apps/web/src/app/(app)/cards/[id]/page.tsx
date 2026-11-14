@@ -9,17 +9,14 @@ import { CardDetails } from "../../../../components/cards/CardDetails";
 import { EditPolicySheet } from "../../../../components/cards/EditPolicySheet";
 import { RotateKeySheet } from "../../../../components/cards/RotateKeySheet";
 import { CardFolder } from "../../../../components/motion/card-folder";
-import { BottomSheet, Button, InfoTip, SubHeader } from "../../../../components/ui";
+import { BottomSheet, Button, SubHeader } from "../../../../components/ui";
 import { CardScreenSkeleton } from "../../../../components/ui/ScreenSkeletons";
 import { useCards, usePayments, useToken } from "../../../../hooks/data";
 import { useNow } from "../../../../hooks/useNow";
 import { useOwnerAction } from "../../../../hooks/useOwnerAction";
 import { useOwnership } from "../../../../hooks/useOwnership";
 import { useVault } from "../../../../hooks/useVault";
-import { cardChips, cardNumber, expiryLabel, keyTail } from "../../../../lib/cards";
-
-/** The dot before the status word: green while the card can pay. */
-const STATUS_DOT = { active: "bg-pos", frozen: "bg-[#3b5b8c]", revoked: "bg-faint" } as const;
+import { cardNumber, expiryLabel, keyTail } from "../../../../lib/cards";
 
 export default function CardPage() {
   return (
@@ -91,7 +88,6 @@ function CardScreen() {
   const p = card.policy;
   const calls = vaultCalls(vaultId);
   const live = card.status !== "revoked";
-  const chips = cardChips(card);
 
   return (
     <div className="mx-auto w-full max-w-[560px]">
@@ -122,33 +118,12 @@ function CardScreen() {
         />
       </div>
 
-      {/* Plain text, not pills: these describe the card and are not controls. */}
-      <ul
-        className="mb-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[13px] font-medium text-muted"
-        aria-label="Card status"
-      >
-        {chips.map((chip, i) => (
-          <li key={chip} className="flex items-center gap-1.5">
-            {i === 0 ? (
-              <span
-                aria-hidden="true"
-                className={`size-1.5 rounded-full ${STATUS_DOT[card.status]}`}
-              />
-            ) : (
-              <span aria-hidden="true" className="text-faint">
-                ·
-              </span>
-            )}
-            <span className={i === 0 ? "text-ink" : undefined}>{chip}</span>
-            {chip === "Registry check" ? (
-              <InfoTip label="Registry check">
-                Before each payment the vault looks the merchant up in the counterparty registry.
-                The card's limits decide which verdicts it refuses.
-              </InfoTip>
-            ) : null}
-          </li>
-        ))}
-      </ul>
+      {/* The artwork already shows the kind and the frozen state; only a revoked card needs words. */}
+      {live ? null : (
+        <p className="mb-5 text-center text-[13px] font-medium text-muted">
+          Revoked. This card can no longer pay.
+        </p>
+      )}
 
       {live ? (
         <CardActions

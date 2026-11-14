@@ -1,5 +1,6 @@
 "use client";
 import { displayUnits } from "../../lib/units";
+import { SpendBar } from "../cards/SpendBar";
 import { InfoTip } from "../ui";
 
 /**
@@ -40,25 +41,22 @@ export function AvailableHero({
       ) : (
         <div className="mt-2 text-[clamp(32px,12vw,54px)] font-semibold leading-none">—</div>
       )}
-      {known ? (
-        <SubLine
-          parts={[
-            today && today.limit !== "0"
-              ? `Spent today ${displayUnits(today.spent, decimals)} of ${displayUnits(today.limit, decimals)}`
-              : null,
-            reserved !== undefined && reserved !== "0"
-              ? `Reserved ${displayUnits(reserved, decimals)}`
-              : null,
-          ]}
-        />
+      {known && today && today.limit !== "0" ? (
+        <div className="mt-4">
+          <SpendBar
+            label="Spent today"
+            spent={today.spent}
+            limit={today.limit}
+            decimals={decimals}
+            symbol={symbol}
+          />
+        </div>
+      ) : null}
+      {known && reserved !== undefined && reserved !== "0" ? (
+        <div className="mt-2 text-[13px] text-muted tabular-nums">
+          {displayUnits(reserved, decimals)} {symbol} held for payments waiting
+        </div>
       ) : null}
     </div>
   );
-}
-
-/** The quiet line under the figure: today's spend and what is reserved, when there is any. */
-function SubLine({ parts }: { parts: (string | null)[] }) {
-  const shown = parts.filter((p): p is string => p !== null);
-  if (shown.length === 0) return null;
-  return <div className="mt-1.5 text-[13px] text-muted tabular-nums">{shown.join(" · ")}</div>;
 }

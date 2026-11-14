@@ -37,10 +37,12 @@ export function PolicyFields({
   const errorFor = (field: keyof PolicyForm) => (error?.field === field ? error.message : null);
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-2.5">
+      {/* One per row, each with its unit: three narrow boxes hid what the numbers were in. */}
+      <div className="grid gap-2.5">
         <Field
           label="Per payment"
           inputMode="decimal"
+          suffix={symbol}
           value={form.perTx}
           onChange={(e) => set("perTx", e.target.value)}
           error={errorFor("perTx")}
@@ -48,6 +50,7 @@ export function PolicyFields({
         <Field
           label="Per day"
           inputMode="decimal"
+          suffix={symbol}
           value={form.daily}
           onChange={(e) => set("daily", e.target.value)}
           error={errorFor("daily")}
@@ -55,6 +58,7 @@ export function PolicyFields({
         <Field
           label="Per 30 days"
           inputMode="decimal"
+          suffix={symbol}
           value={form.monthly}
           onChange={(e) => set("monthly", e.target.value)}
           error={errorFor("monthly")}

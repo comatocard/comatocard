@@ -1,10 +1,12 @@
 /**
  * Local storage keys, all under the `comatocard.` prefix. Storage holds conveniences only (the
- * selected vault per account); it can be blocked, so every read and write tolerates failure.
+ * selected vault per account, the sidebar state); it can be blocked, so every read and write tolerates failure.
  */
 export const STORAGE = {
   /** The vault an account last opened on this device. */
   vault: (account: string) => `comatocard.vault.v2.${account}`,
+  /** "open" or "closed": the desktop sidebar on this device. */
+  sidebar: "comatocard.sidebar",
 } as const;
 
 export function readStored(key: string): string | null {

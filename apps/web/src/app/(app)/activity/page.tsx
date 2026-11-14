@@ -1,9 +1,10 @@
 "use client";
 import { paymentPage } from "@comatocard/sdk";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { Download } from "lucide-react";
 import { useState } from "react";
 import { PaymentList } from "../../../components/activity/PaymentList";
-import { Card, LoadMore, PageHeader, SubHeader } from "../../../components/ui";
+import { Card, LoadMore, PageHeader } from "../../../components/ui";
 import { keys, useCards, useToken } from "../../../hooks/data";
 import { useLiveFeed } from "../../../hooks/useLiveFeed";
 import { useNow } from "../../../hooks/useNow";
@@ -44,17 +45,24 @@ export default function ActivityPage() {
   const rows = history.data?.pages.flatMap((p) => p.items);
 
   return (
-    <div className="mx-auto w-full max-w-[560px]">
-      <div className="lg:hidden">
-        <SubHeader title="History" />
-      </div>
-      <div className="hidden lg:block">
-        <PageHeader
-          className="mb-5"
-          title="History"
-          description="Every payment your cards tried, refused ones included."
-        />
-      </div>
+    <div className="mx-auto w-full max-w-[560px] lg:mx-0 lg:max-w-[880px]">
+      <PageHeader
+        className="mb-5"
+        title="History"
+        description="Every payment your cards tried, refused ones included."
+        action={
+          vaultId ? (
+            <a
+              href={exportCsvUrl(vaultId)}
+              aria-label="Download CSV for your accountant"
+              className="flex h-10 items-center gap-1.5 rounded-full border border-line bg-white px-3.5 text-[13.5px] font-semibold"
+            >
+              <Download size={15} strokeWidth={2} aria-hidden="true" />
+              CSV
+            </a>
+          ) : null
+        }
+      />
       <div className="-mx-5 mb-4 flex gap-1.5 overflow-x-auto px-5 [scrollbar-width:none]">
         {FILTERS.map((f) => (
           <button
@@ -62,7 +70,7 @@ export default function ActivityPage() {
             type="button"
             aria-pressed={filter === f.key}
             onClick={() => setFilter(f.key)}
-            className={`h-9 shrink-0 rounded-full border px-4 text-[13px] font-semibold ${
+            className={`h-9 shrink-0 rounded-full border px-3.5 text-[13px] font-semibold ${
               filter === f.key ? "border-ink bg-ink text-white" : "border-line bg-white text-ink-2"
             }`}
           >
@@ -79,20 +87,13 @@ export default function ActivityPage() {
           decimals={token.data?.decimals ?? 0}
           symbol={token.data?.symbol ?? ""}
           now={now}
+          byDay
         />
       </Card>
       {history.hasNextPage ? (
         <div className="mt-3">
           <LoadMore onClick={() => void history.fetchNextPage()} />
         </div>
-      ) : null}
-      {vaultId ? (
-        <a
-          href={exportCsvUrl(vaultId)}
-          className="mt-5 block text-center text-[13.5px] font-semibold text-ink-2 underline"
-        >
-          Download CSV for your accountant
-        </a>
       ) : null}
     </div>
   );

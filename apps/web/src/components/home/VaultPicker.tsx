@@ -3,11 +3,10 @@ import type { VaultRow } from "@comatocard/sdk";
 import { useState } from "react";
 import { useOwnerVaults } from "../../hooks/data";
 import { useVault } from "../../hooks/useVault";
+import { vaultLabel } from "../../lib/cards";
 import { FACTORY_ID } from "../../lib/config";
 import { Field } from "../form/Field";
 import { BottomSheet, Button } from "../ui";
-
-const shortVault = (vault: string) => vault.replace(`.${FACTORY_ID}`, "");
 
 /** The vault pill at the top of Home, and the sheet to switch, open by name, or create one. */
 export function VaultPicker({
@@ -38,7 +37,7 @@ export function VaultPicker({
         className="mx-auto flex h-10 items-center gap-2 rounded-full border border-line bg-white pl-4 pr-3 text-[14px] font-semibold [box-shadow:0_8px_18px_-12px_rgba(0,0,0,.2)]"
       >
         <span className="max-w-[220px] truncate">
-          {vaultId ? shortVault(vaultId) : (label ?? "Choose a card account")}
+          {vaultId ? vaultLabel(vaultId) : (label ?? "Choose a card account")}
         </span>
         <svg
           aria-hidden="true"
@@ -137,7 +136,7 @@ function VaultList({
           className="flex w-full items-center justify-between py-3.5 text-left"
         >
           <span>
-            <span className="block text-[14px] font-semibold">{shortVault(v.vault_id)}</span>
+            <span className="block text-[14px] font-semibold">{vaultLabel(v.vault_id)}</span>
             <span className="block text-[12px] text-muted">{v.vault_id}</span>
           </span>
           {v.vault_id === current ? <span className="text-[12px] font-semibold">Open</span> : null}

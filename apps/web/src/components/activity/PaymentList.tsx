@@ -1,5 +1,6 @@
 "use client";
 import type { Card, PaymentRow as Row } from "@comatocard/sdk";
+import { groupByDay } from "../../lib/payments";
 import { Skeleton } from "../ui";
 import { PaymentRow } from "./PaymentRow";
 
@@ -14,6 +15,7 @@ export function PaymentList({
   now,
   emptyTitle = "No payments yet",
   emptyDescription = "Payments from your cards, including refused ones, show here.",
+  byDay = false,
 }: {
   rows: Row[] | undefined;
   cards: Card[] | undefined;
@@ -24,6 +26,8 @@ export function PaymentList({
   now: number | null;
   emptyTitle?: string;
   emptyDescription?: string;
+  /** Puts a date heading above each day's rows, for the long history. */
+  byDay?: boolean;
 }) {
   if (loading && !rows) {
     return (
@@ -57,6 +61,32 @@ export function PaymentList({
     );
   }
   const labels = new Map(cards?.map((c) => [c.id, c.label]));
+  if (byDay) {
+    return (
+      <div>
+        {groupByDay(rows).map((group, g) => (
+          <section key={group.day} aria-label={group.day}>
+            <h2
+              className={`pb-0.5 text-[12.5px] font-semibold text-muted ${g === 0 ? "pt-3" : "border-t border-line pt-4"}`}
+            >
+              {group.day}
+            </h2>
+            {group.rows.map((row, i) => (
+              <PaymentRow
+                key={row.id}
+                row={row}
+                decimals={decimals}
+                symbol={symbol}
+                now={now}
+                first={i === 0}
+                cardLabel={labels.get(row.card_id)}
+              />
+            ))}
+          </section>
+        ))}
+      </div>
+    );
+  }
   return (
     <div>
       {rows.map((row, i) => (

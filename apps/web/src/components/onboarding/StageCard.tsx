@@ -43,8 +43,8 @@ function chipTone(positive: boolean, dark: boolean): string {
 }
 
 /**
- * The card that assembles itself during setup: an empty outline, then the card face with the
- * account name, a funds chip, the card's own name and limit, and a check once it is live. One
+ * The card that assembles itself during setup: an empty outline until a name is typed, then the
+ * card face with the account name, a funds chip, the card's own name and limit, and a check once it is live. One
  * element throughout, so the eye follows a single object instead of a sequence of pictures.
  */
 export function StageCard(props: StageCardProps) {
@@ -54,7 +54,8 @@ export function StageCard(props: StageCardProps) {
   const face = useRef<HTMLDivElement>(null);
   const chip = useRef<HTMLDivElement>(null);
   const check = useRef<HTMLSpanElement>(null);
-  const hasFace = stage !== "empty";
+  // The face shows as soon as there is a name to put on it, so the preview follows the typing.
+  const hasFace = stage !== "empty" || Boolean(account);
   const chipData = chipFor(props);
   const chipKey = chipData?.text ?? "none";
 

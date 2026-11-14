@@ -1,10 +1,11 @@
 "use client";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { PaymentList } from "../../../components/activity/PaymentList";
 import { CardList } from "../../../components/cards/CardList";
 import { NewCardSheet } from "../../../components/cards/NewCardSheet";
-import { ApprovalBanner } from "../../../components/home/ApprovalBanner";
+import { ApprovalBanner, ApprovalPanel } from "../../../components/home/ApprovalBanner";
 import { AvailableHero } from "../../../components/home/AvailableHero";
 import { CardCarousel } from "../../../components/home/CardCarousel";
 import { CreateVaultSheet } from "../../../components/home/CreateVaultSheet";
@@ -21,7 +22,7 @@ import { useVault } from "../../../hooks/useVault";
 import { spentToday } from "../../../lib/cards";
 
 /** Rows per page of activity: a phone shows three, so nothing stacks past the fold. */
-const ACTIVITY_PAGE = { phone: 3, desktop: 5 } as const;
+const ACTIVITY_PAGE = { phone: 3, desktop: 4 } as const;
 
 /** Home: what the account can pay, its cards, and the latest payments, a page at a time. */
 export default function HomePage() {
@@ -64,44 +65,56 @@ function VaultHome({ vault }: { vault: string }) {
     vault,
   );
 
+  const actions = isOwner ? (
+    <>
+      <ActionPill primary onClick={() => setSheet("card")}>
+        New card
+      </ActionPill>
+      <ActionPill onClick={() => setSheet("topup")}>Top up</ActionPill>
+    </>
+  ) : null;
+
   return (
-    <div className="mx-auto w-full max-w-[560px] lg:grid lg:max-w-none lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)] lg:gap-12">
-      <div>
+    <div className="mx-auto w-full max-w-[560px] lg:max-w-none">
+      <div className="lg:mb-6 lg:flex lg:items-center lg:justify-between">
         <VaultPicker owner={accountId} onCreate={() => setSheet("vault")} />
-        <AvailableHero
-          available={balance?.available}
-          reserved={balance?.reserved}
-          decimals={token.data?.decimals}
-          symbol={symbol}
-          today={today}
-        />
-        <ApprovalBanner vault={vault} className="mb-5 lg:hidden" />
-        {isOwner ? (
-          <ActionRow className="mb-6">
-            <ActionPill primary onClick={() => setSheet("card")}>
-              New card
-            </ActionPill>
-            <ActionPill onClick={() => setSheet("topup")}>Top up</ActionPill>
-          </ActionRow>
-        ) : null}
-        <CardCarousel
-          cards={cards.data}
-          loading={cards.isLoading}
-          vault={vault}
-          decimals={decimals}
-          symbol={symbol}
-          now={now}
-        />
+        {actions ? <div className="hidden items-center gap-2 lg:flex">{actions}</div> : null}
       </div>
 
-      <div className="mt-8 space-y-7 lg:mt-0">
-        <ApprovalBanner vault={vault} className="hidden lg:flex" />
+      {/* A phone stacks these; a desktop sets them as two equal columns whose rows share a height:
+          balance beside approvals, then cards beside activity. */}
+      <div className="lg:grid lg:grid-cols-2 lg:gap-6">
+        <div className="lg:rounded-card lg:border lg:border-white lg:bg-card lg:px-6">
+          <AvailableHero
+            available={balance?.available}
+            reserved={balance?.reserved}
+            decimals={token.data?.decimals}
+            symbol={symbol}
+            today={today}
+          />
+        </div>
+        <ApprovalPanel vault={vault} className="hidden lg:flex" />
 
-        <section className="hidden lg:block">
+        <div className="lg:hidden">
+          <ApprovalBanner vault={vault} className="mb-5" />
+          {actions ? <ActionRow className="mb-6">{actions}</ActionRow> : null}
+          <CardCarousel
+            cards={cards.data}
+            loading={cards.isLoading}
+            vault={vault}
+            decimals={decimals}
+            symbol={symbol}
+            now={now}
+          />
+        </div>
+
+        <section className="hidden lg:flex lg:flex-col">
           <SectionHead title="Cards">
-            <span className="text-[12px] text-muted">{cards.data?.length ?? 0}</span>
+            <span className="text-[12px] text-muted">
+              {cards.data?.length === 1 ? "1 card" : `${cards.data?.length ?? 0} cards`}
+            </span>
           </SectionHead>
-          <Card className="px-5 pt-0.5 pb-1">
+          <Card className="flex-1 px-5 pt-0.5 pb-3">
             <CardList
               cards={cards.data}
               loading={cards.isLoading}
@@ -111,10 +124,20 @@ function VaultHome({ vault }: { vault: string }) {
               symbol={symbol}
               now={now}
             />
+            {isOwner ? (
+              <button
+                type="button"
+                onClick={() => setSheet("card")}
+                className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-line-2 text-[13.5px] font-semibold text-muted transition-colors hover:border-ink hover:text-ink"
+              >
+                <Plus size={16} strokeWidth={2} aria-hidden="true" />
+                New card
+              </button>
+            ) : null}
           </Card>
         </section>
 
-        <section>
+        <section className="mt-8 lg:mt-0 lg:flex lg:flex-col">
           <SectionHead title="Activity">
             <div className="flex items-center gap-3">
               <Pager
@@ -124,11 +147,11 @@ function VaultHome({ vault }: { vault: string }) {
                 label="activity"
               />
               <Link href="/activity" className="text-[13px] font-semibold text-ink-2">
-                All
+                See all
               </Link>
             </div>
           </SectionHead>
-          <Card className="px-5 pt-1 pb-2">
+          <Card className="px-5 pt-1 pb-2 lg:flex-1">
             <PagedPanel panel={activity.panel}>
               <PaymentList
                 rows={payments.data ? activity.items : undefined}

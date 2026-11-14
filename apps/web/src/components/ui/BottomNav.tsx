@@ -16,6 +16,16 @@ const TABS = [
     ),
   },
   {
+    href: "/activity",
+    label: "History",
+    icon: (
+      <>
+        <path d="M6 3h12v18l-3-2-3 2-3-2-3 2z" />
+        <path d="M9 8h6M9 12h6" />
+      </>
+    ),
+  },
+  {
     href: "/account",
     label: "Account",
     icon: (
@@ -62,7 +72,7 @@ export function BottomNav({ badge = 0 }: { badge?: number }) {
       </div>
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-40 flex h-[88px] items-start justify-around px-6 pt-2.5 pb-[calc(20px+env(safe-area-inset-bottom))]"
+        className="fixed inset-x-0 bottom-0 z-40 flex h-[88px] items-start justify-around px-3 pt-2.5 pb-[calc(20px+env(safe-area-inset-bottom))]"
       >
         {TABS.map((t) => {
           const active = path === t.href || path.startsWith(`${t.href}/`);
@@ -71,7 +81,7 @@ export function BottomNav({ badge = 0 }: { badge?: number }) {
               key={t.href}
               href={t.href}
               aria-current={active ? "page" : undefined}
-              className={`flex h-[52px] flex-col items-center justify-center gap-[3px] rounded-[18px] border px-[18px] text-[11px] font-medium transition-colors ${active ? "border-white bg-card text-ink [box-shadow:0_1px_2px_rgba(17,19,22,.04),0_10px_22px_-14px_rgba(17,19,22,.28)]" : "border-transparent text-faint hover:text-muted"}`}
+              className={`flex h-[52px] flex-col items-center justify-center gap-[3px] rounded-[18px] border px-[14px] text-[11px] font-medium transition-colors ${active ? "border-white bg-card text-ink [box-shadow:0_1px_2px_rgba(17,19,22,.04),0_10px_22px_-14px_rgba(17,19,22,.28)]" : "border-transparent text-faint hover:text-muted"}`}
             >
               <span className="relative">
                 <Icon>{t.icon}</Icon>

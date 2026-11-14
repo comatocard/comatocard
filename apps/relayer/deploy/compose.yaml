@@ -1,0 +1,21 @@
+# Relayer on the team VPS. Run from the repository root:
+#   docker compose -f apps/relayer/deploy/compose.yaml up -d --build
+# Secrets stay in apps/relayer/deploy/.env on the server (see apps/relayer/README.md).
+# The shared Caddy (network deploy_default) terminates TLS and proxies to comatocard-relayer:4100.
+name: comatocard-relayer
+services:
+  relayer:
+    build:
+      context: ../../..
+      dockerfile: apps/relayer/Dockerfile
+    env_file: .env
+    environment:
+      PORT: 4100
+    restart: unless-stopped
+    networks:
+      caddy:
+        aliases: [comatocard-relayer]
+networks:
+  caddy:
+    name: deploy_default
+    external: true

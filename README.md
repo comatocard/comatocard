@@ -8,6 +8,8 @@
 
 [App](https://app.comatocard.xyz) · [Website](https://comatocard.xyz) · [Documentation](https://docs.comatocard.xyz) · [Indexer GraphQL](https://indexer.comatocard.xyz/graphql) · [Testnet deployment](docs/deployments.md)
 
+[![Watch the 42 second film: an owner gives an AI assistant a Comatocard, approves a bigger payment and freezes the card](docs/media/comatocard-film-poster.jpg)](docs/media/comatocard-film.mp4)
+
 > Everything runs on NEAR testnet with tUSD, a test stablecoin: no real money moves. The app, the demo merchant, the indexer and the relayer are hosted and stay up through judging.
 
 ## Overview
@@ -95,6 +97,8 @@ Requirements: Node 24 with pnpm, Rust from `rust-toolchain.toml` with [cargo-nea
 
 ## Hackathon
 Built for NEAR HACKATHON, tracks `realworld`, `security`, `agents` and `social`.
+
+The film at the top of the GitHub README ([docs/media/comatocard-film.mp4](docs/media/comatocard-film.mp4)) shows an owner giving an assistant a card, seeing its payments, approving a bigger one and freezing the card after a refused payment. Its app screens are redrawn from the owner app and its amounts are examples; it was made with Remotion and narrated with ElevenLabs.
 
 ### Third-party code and tools
 Listed for the hackathon rules (Q-005). The repository starts on 2026-11-09, inside the hackathon window; there is no code from before it.

@@ -25,6 +25,14 @@ test("issue 152: drops the logo above the H1 with the H1", () => {
   assert.doesNotMatch(readme, /&lt;img|^# /m);
 });
 
+test("drops lines made only of badges", () => {
+  const out = toMdx(
+    "# Title\n\n[![CI](https://x/ci.svg)](https://x/ci) [![MIT](https://x/mit.svg)](LICENSE)\n\nBody with [![CI](https://x/ci.svg)](https://x/ci).\n",
+    "README.md",
+  );
+  assert.equal(out, "Body with [![CI](https://x/ci.svg)](https://x/ci).");
+});
+
 test("leaves inline code untouched", () => {
   assert.equal(toMdx("Call `get<T>({})` now.", "docs/a.md"), "Call `get<T>({})` now.");
 });

@@ -39,13 +39,17 @@ function prose(text, source) {
 
 /**
  * Converts one Markdown file found at `source` (a repository path): drops the H1 and any HTML
- * lines above it, such as the README logo, since the page hero shows the title; escapes prose.
+ * lines above it, such as the README logo, since the page hero shows the title, and lines made
+ * only of badges, which belong on GitHub; escapes prose.
  * @param {string} markdown
  * @param {string} source
  * @returns {string}
  */
 export function toMdx(markdown, source) {
-  const lines = markdown.replace(/^(?:<[^\n]*>\s*\n)*# .*\n+/, "").split("\n");
+  const lines = markdown
+    .replace(/^(?:<[^\n]*>\s*\n)*# .*\n+/, "")
+    .replace(/^(?:\[!\[[^\]]*\]\([^)\s]*\)\]\([^)\s]*\) ?)+\n+/gm, "")
+    .split("\n");
   let fenced = false;
   return lines
     .map((line) => {

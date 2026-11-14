@@ -31,10 +31,12 @@
     "status": "node --env-file=.env dist/status.js",
     "pay": "node --env-file=.env dist/pay.js",
     "treasury": "node --env-file=.env dist/treasury-cli.js",
-    "policy": "node --env-file=.env dist/policy-cli.js"
+    "policy": "node --env-file=.env dist/policy-cli.js",
+    "mcp": "node --env-file=.env dist/mcp.js"
   },
   "dependencies": {
     "@comatocard/sdk": "workspace:*",
+    "@modelcontextprotocol/sdk": "1.32.2",
     "near-api-js": "7.5.3",
     "pino": "10.4.0",
     "zod": "4.6.7"

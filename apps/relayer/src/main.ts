@@ -30,6 +30,10 @@ const server = createRelayServer({
     if (!response.ok) throw new Error(`indexer responded ${response.status}`);
     return riskAssessment.parse(await response.json());
   },
+  finalHeight: async () => {
+    const block = await relayer.provider.viewBlock({ finality: "final" });
+    return BigInt(block.header.height);
+  },
   send: async (delegate) => {
     const response = await relayer.relayMetaTransaction(delegate.signed);
     const failed = response.receipts_outcome.find((r) => "Failure" in Object(r.outcome.status));

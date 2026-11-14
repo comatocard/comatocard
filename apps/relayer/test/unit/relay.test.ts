@@ -17,6 +17,7 @@ function deps(): RelayDeps & { send: ReturnType<typeof vi.fn> } {
       },
       approvers: [],
     }),
+    finalHeight: async () => 0n,
     risk: async () => {
       throw new Error("not used");
     },

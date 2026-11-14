@@ -3,7 +3,10 @@ import { z } from "zod";
 /** Body of `POST /relay`: a NEP-366 `SignedDelegate`, borsh-encoded, then base64. */
 export const relayRequest = z.strictObject({ signed_delegate: z.base64().min(1) });
 
-/** Why the relayer refused to sponsor a delegate action; nothing was sent on chain. */
+/**
+ * Why the relayer did not sponsor a delegate action. `expired` and `nonce_used` can also come from
+ * the chain after sending; the delegated call did not run either way.
+ */
 export const relayRefusal = z.enum([
   "malformed",
   "bad_signature",
@@ -14,6 +17,10 @@ export const relayRefusal = z.enum([
   "not_authorized",
   "receiver_blocked",
   "risk_unavailable",
+  /** The delegate passed its `max_block_height` before it reached the chain: sign again. */
+  "expired",
+  /** The delegate's nonce was already used, for example by a double submit: sign again. */
+  "nonce_used",
 ]);
 
 export const relayResponse = z.discriminatedUnion("status", [

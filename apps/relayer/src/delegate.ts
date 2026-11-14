@@ -14,6 +14,8 @@ export interface DelegatedCall {
 export interface Delegate {
   senderId: string;
   receiverId: string;
+  /** Last block height at which the chain accepts this delegate. */
+  maxBlockHeight: bigint;
   /** `null` for an action that is not a function call. */
   calls: (DelegatedCall | null)[];
   signed: SignedDelegate;
@@ -26,6 +28,7 @@ interface RawSignedDelegate {
     actions: {
       functionCall?: { methodName: string; args: number[]; gas: bigint; deposit: bigint };
     }[];
+    maxBlockHeight: bigint;
     publicKey: { ed25519Key?: { data: number[] } };
   };
   signature: { ed25519Signature?: { data: number[] } };
@@ -41,6 +44,7 @@ export function decodeDelegate(base64: string): Delegate {
   return {
     senderId: delegateAction.senderId,
     receiverId: delegateAction.receiverId,
+    maxBlockHeight: BigInt(delegateAction.maxBlockHeight),
     calls: delegateAction.actions.map((action) => {
       const call = action.functionCall;
       if (call === undefined) return null;

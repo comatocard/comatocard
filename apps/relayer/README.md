@@ -25,5 +25,16 @@ A delegate action is sent only when every check passes; otherwise the answer nam
 3. Set `OWNER_ACCOUNT_ID` and `OWNER_PRIVATE_KEY` to the owner of a factory vault, then `pnpm owner-call <vault> freeze_card '{"card_id":0}'`. It prints `{"status":"relayed","tx_hash":"...","failure":null}`; `get_card` shows `frozen` and the owner balance is unchanged. `pnpm owner-call <vault> unfreeze_card '{"card_id":0}'` reverts it.
 4. The same command signed by an account that is not the owner prints `{"status":"refused","reason":"not_authorized",...}` and the relayer balance is unchanged.
 
+## Deployment
+Live at `https://comatocard-relayer.201.18.211.8.sslip.io` (relayer account `comatocard-relayer.testnet`), on the team VPS behind its shared Caddy. `relayer.comatocard.xyz` is added to Caddy once its DNS record points to the VPS. The web app reaches it through `RELAYER_URL`.
+
+1. Code: `git clone https://github.com/comatocard/comatocard.git /opt/comatocard`.
+2. Secrets, never through git or the image: `apps/relayer/deploy/.env` with `NETWORK`, `FACTORY_ID`, `INDEXER_URL=https://indexer.comatocard.xyz`, `RELAYER_ACCOUNT_ID` and `RELAYER_PRIVATE_KEY`, mode 600.
+3. Start: `cd /opt/comatocard && docker compose -f apps/relayer/deploy/compose.yaml up -d --build`. The container joins the Caddy network `deploy_default` as `comatocard-relayer`.
+4. HTTPS: a Caddy site block `reverse_proxy comatocard-relayer:4100`, then `caddy validate` and `caddy reload` in the Caddy container.
+5. Check: `curl https://comatocard-relayer.201.18.211.8.sslip.io/health` shows `{"status":"ok"}`.
+
+Update: `git pull && docker compose -f apps/relayer/deploy/compose.yaml up -d --build`. Logs: `docker compose -f apps/relayer/deploy/compose.yaml logs -f relayer`. Top up the relayer account when its balance runs low; each sponsored call costs about 0.0003 NEAR.
+
 ## Tests
 `pnpm test`: decoding and signature checks on delegates signed with real keys, every refusal, owner and approver authorization, withdraw screening, and the HTTP server.

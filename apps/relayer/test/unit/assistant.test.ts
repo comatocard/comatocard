@@ -5,13 +5,6 @@ import { assistantDeps, card, proposal, VAULT } from "./assistant-support.js";
 const ask = { vault: VAULT, cardId: 0, request: "raise the daily limit to 80 tUSD" };
 
 describe("assistant", () => {
-  it("answers 503 without a NEAR AI key", async () => {
-    expect(await assistant(null, ask, "c")).toEqual({
-      status: 503,
-      body: { error: "The assistant is not configured." },
-    });
-  });
-
   it("answers 429 before reading the body once the client is over its limit", async () => {
     const deps = assistantDeps({ allow: () => false });
     expect((await assistant(deps, ask, "c")).status).toBe(429);

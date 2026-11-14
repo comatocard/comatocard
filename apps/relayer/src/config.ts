@@ -18,7 +18,16 @@ const schema = z.object({
   RELAYER_PRIVATE_KEY: z.string().startsWith("ed25519:", "must be an ed25519:<base58> secret key"),
   PORT: z.coerce.number().int().positive().default(4100),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
-  NEAR_AI_API_KEY: z.preprocess(unsetIfEmpty, z.string().min(1).optional()),
+});
+
+/** The policy assistant service: the NEAR AI key and no relayer key. */
+const assistantSchema = z.object({
+  NETWORK: z.enum(["testnet", "mainnet"]).default("testnet"),
+  RPC_URL: z.preprocess(unsetIfEmpty, z.url().optional()),
+  FACTORY_ID: accountId,
+  PORT: z.coerce.number().int().positive().default(4200),
+  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
+  NEAR_AI_API_KEY: z.string().min(1),
   NEAR_AI_BASE_URL: z.preprocess(unsetIfEmpty, z.url().default("https://cloud-api.near.ai/v1")),
   POLICY_MODEL: z.preprocess(unsetIfEmpty, z.string().min(1).default("Qwen/Qwen3.8-27B")),
 });
@@ -40,8 +49,14 @@ export interface Config {
   relayerKey: KeyPair;
   port: number;
   logLevel: z.infer<typeof schema>["LOG_LEVEL"];
-  /** The policy assistant's model on NEAR AI Cloud; null keeps `/assistant` off. */
-  nearAi: NearAiConfig | null;
+}
+
+export interface AssistantConfig {
+  rpcUrl: string;
+  factoryId: string;
+  port: number;
+  logLevel: z.infer<typeof schema>["LOG_LEVEL"];
+  nearAi: NearAiConfig;
 }
 
 /** Reads and validates the configuration from environment variables. */
@@ -67,13 +82,26 @@ export function loadConfig(env: Record<string, string | undefined>): Config {
     relayerKey,
     port: value.PORT,
     logLevel: value.LOG_LEVEL,
-    nearAi:
-      value.NEAR_AI_API_KEY === undefined
-        ? null
-        : {
-            baseUrl: value.NEAR_AI_BASE_URL,
-            apiKey: value.NEAR_AI_API_KEY,
-            model: value.POLICY_MODEL,
-          },
+  };
+}
+
+/** Reads the policy assistant's configuration; it never reads the relayer key. */
+export function loadAssistantConfig(env: Record<string, string | undefined>): AssistantConfig {
+  const parsed = assistantSchema.safeParse(env);
+  if (!parsed.success) {
+    // Zod messages never echo input values, so the key cannot leak through this error.
+    throw new Error(`invalid configuration\n${z.prettifyError(parsed.error)}`);
+  }
+  const value = parsed.data;
+  return {
+    rpcUrl: value.RPC_URL ?? RPC_URLS[value.NETWORK],
+    factoryId: value.FACTORY_ID,
+    port: value.PORT,
+    logLevel: value.LOG_LEVEL,
+    nearAi: {
+      baseUrl: value.NEAR_AI_BASE_URL,
+      apiKey: value.NEAR_AI_API_KEY,
+      model: value.POLICY_MODEL,
+    },
   };
 }

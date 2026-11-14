@@ -4,40 +4,68 @@ import { type RelayDeps, relay } from "./relay.js";
 
 const MAX_BODY_BYTES = 16 * 1024;
 
-/** `POST /relay`, `POST /assistant` and `GET /health`; any other route is 404. */
-export function createRelayServer(
-  deps: RelayDeps,
-  assistantDeps: AssistantDeps | null = null,
+type Reply = { status: number; body: unknown };
+
+/**
+ * One service: `POST <path>` handled by `handle`, `GET /health`, anything else 404. The relayer
+ * and the policy assistant run as separate services so the gas key and the NEAR AI key never
+ * share a process (#188).
+ */
+function service(
+  path: string,
+  handle: (body: unknown, client: string) => Promise<Reply>,
+  logger: { warn: (obj: object, msg: string) => void },
 ): Server {
   return createServer(async (req, res) => {
-    const reply = (status: number, body: unknown) => {
+    const reply = ({ status, body }: Reply) => {
       res.writeHead(status, { "content-type": "application/json" });
       res.end(JSON.stringify(body));
     };
     try {
-      if (req.method === "GET" && req.url === "/health") return reply(200, { status: "ok" });
-      if (req.method === "POST" && req.url === "/assistant") {
-        // Read before the body: an oversized body ends the stream and detaches the socket.
-        const client = clientKey(req);
-        const body = await readJson(req);
-        const result = await assistant(assistantDeps, body ?? null, client);
-        return reply(result.status, result.body);
+      if (req.method === "GET" && req.url === "/health") {
+        return reply({ status: 200, body: { status: "ok" } });
       }
-      if (req.method !== "POST" || req.url !== "/relay") return reply(404, { error: "not found" });
-      const body = await readJson(req);
-      if (body === undefined) {
-        return reply(400, { status: "refused", reason: "malformed", detail: "invalid JSON body" });
+      if (req.method !== "POST" || req.url !== path) {
+        return reply({ status: 404, body: { error: "not found" } });
       }
-      const result = await relay(deps, body);
-      return reply(result.status === "relayed" ? 200 : 400, result);
+      // Read before the body: an oversized body ends the stream and detaches the socket.
+      const client = clientKey(req);
+      return reply(await handle(await readJson(req), client));
     } catch (error) {
-      deps.logger.warn(
+      logger.warn(
         { error: error instanceof Error ? error.message : String(error) },
-        "relay error",
+        `${path} error`,
       );
-      return reply(502, { error: "relay failed" });
+      return reply({ status: 502, body: { error: `${path.slice(1)} failed` } });
     }
   });
+}
+
+/** The relayer: `POST /relay` and `GET /health`. It holds the gas key and no NEAR AI key. */
+export function createRelayServer(deps: RelayDeps): Server {
+  return service(
+    "/relay",
+    async (body) => {
+      if (body === undefined) {
+        return {
+          status: 400,
+          body: { status: "refused", reason: "malformed", detail: "invalid JSON body" },
+        };
+      }
+      const result = await relay(deps, body);
+      return { status: result.status === "relayed" ? 200 : 400, body: result };
+    },
+    deps.logger,
+  );
+}
+
+/** The policy assistant: `POST /assistant` and `GET /health`. It holds the NEAR AI key only. */
+export function createAssistantServer(deps: AssistantDeps): Server {
+  return service(
+    "/assistant",
+    (body, client) => assistant(deps, body ?? null, client),
+    deps.logger,
+  );
 }
 
 /** The peer as the proxy in front reports it, else the socket address. */

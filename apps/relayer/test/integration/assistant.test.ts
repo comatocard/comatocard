@@ -3,12 +3,11 @@ import { createServer, type IncomingMessage, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterAll, describe, expect, it, vi } from "vitest";
 import { createAssistantDeps } from "../../src/assistant.js";
-import type { RelayDeps } from "../../src/relay.js";
-import { createRelayServer } from "../../src/server.js";
+import { createAssistantServer } from "../../src/server.js";
 import { card, VAULT } from "../unit/assistant-support.js";
 import { FACTORY } from "../unit/support.js";
 
-// The relayer runs as a real HTTP server with the production assistant wiring: the card is read
+// The assistant service runs as a real HTTP server with the production wiring: the card is read
 // over JSON-RPC from a stand-in node, and NEAR AI Cloud is a stand-in that replays a recorded
 // completion, its signature and the TDX attestation report.
 
@@ -59,21 +58,7 @@ const nearAi = await serve((url) => {
   return { status: 404, body: "{}" };
 });
 
-const relayDeps: RelayDeps = {
-  factoryId: FACTORY,
-  logger: { info: vi.fn(), warn: vi.fn() },
-  vault: async () => {
-    throw new Error("not used");
-  },
-  risk: async () => {
-    throw new Error("not used");
-  },
-  finalHeight: async () => 0n,
-  send: async () => ({ txHash: "tx", failure: null }),
-};
-
-const server = createRelayServer(
-  relayDeps,
+const server = createAssistantServer(
   createAssistantDeps({
     factoryId: FACTORY,
     rpcUrl: rpc.url,

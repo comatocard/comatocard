@@ -1,7 +1,9 @@
 # Relayer on the team VPS. Run from the repository root:
 #   docker compose -f apps/relayer/deploy/compose.yaml up -d --build
-# Secrets stay in apps/relayer/deploy/.env on the server (see apps/relayer/README.md).
-# The shared Caddy (network deploy_default) terminates TLS and proxies to comatocard-relayer:4100.
+# Secrets stay on the server: the relayer key in apps/relayer/deploy/.env, the NEAR AI key in
+# apps/relayer/deploy/.env.assistant, so neither process holds the other's key (see README).
+# The shared Caddy (network deploy_default) terminates TLS and proxies /assistant to
+# comatocard-assistant:4200 and everything else to comatocard-relayer:4100.
 name: comatocard-relayer
 services:
   relayer:
@@ -15,6 +17,18 @@ services:
     networks:
       caddy:
         aliases: [comatocard-relayer]
+  assistant:
+    build:
+      context: ../../..
+      dockerfile: apps/relayer/Dockerfile
+    command: ["node", "dist/assistant-main.js"]
+    env_file: .env.assistant
+    environment:
+      PORT: 4200
+    restart: unless-stopped
+    networks:
+      caddy:
+        aliases: [comatocard-assistant]
 networks:
   caddy:
     name: deploy_default

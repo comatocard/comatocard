@@ -124,7 +124,7 @@ export function Closing() {
               href={LINKS.app}
               className="rounded-xl bg-[#18161B] px-8 py-3.5 text-[0.95rem] font-semibold text-white shadow-[0_10px_20px_rgba(0,0,0,0.3)] transition-transform duration-200 active:scale-[.97]"
             >
-              Open the app
+              Open app
             </Link>
           </div>
           <div id={SECTION.faq} className="flex scroll-mt-24 flex-col justify-center gap-3">

@@ -16,7 +16,7 @@ test.describe("landing page", () => {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1, name: HERO })).toBeVisible();
-    const cta = page.locator("header").getByRole("link", { name: "Open the app" });
+    const cta = page.locator("header").getByRole("link", { name: "Open app" });
     if (await cta.isVisible()) await expect(cta).toHaveAttribute("href", "/connect");
     // The page holds at one viewport until the intro is done.
     await expect(page.getByLabel("Example conversation")).toHaveCount(0);

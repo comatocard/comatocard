@@ -76,7 +76,6 @@ describe("createVaultClient", () => {
         {
           token: "usdc.testnet",
           min_liquid: "30",
-          extra_decimals: 12,
           supplied: "50",
           pending: false,
         },

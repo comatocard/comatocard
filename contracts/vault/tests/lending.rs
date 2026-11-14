@@ -115,7 +115,7 @@ async fn setup() -> anyhow::Result<World> {
         &owner,
         &vault,
         "set_yield_token",
-        json!({ "token": token, "min_liquid": (100 * UNIT).to_string(), "extra_decimals": EXTRA }),
+        json!({ "token": token, "min_liquid": (100 * UNIT).to_string() }),
     )
     .send()
     .await?

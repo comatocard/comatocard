@@ -7,7 +7,7 @@ use near_sdk::json_types::U128;
 use near_sdk::serde_json::json;
 use near_sdk::{AccountId, Gas, NearToken, PromiseError, env, near, require};
 
-use crate::ext::{VenueAccount, ext_venue};
+use crate::ext::{VenueAccount, VenueAssetConfig, ext_venue};
 use crate::types::{LendingToken, YieldTokenView, YieldView};
 use crate::{GAS_CALLBACK, Vault, VaultExt, events};
 
@@ -40,16 +40,13 @@ impl Vault {
     }
 
     /// Enables lending of an accepted token, keeping `min_liquid` available for cards.
-    pub fn set_yield_token(&mut self, token: AccountId, min_liquid: U128, extra_decimals: u8) {
+    pub fn set_yield_token(&mut self, token: AccountId, min_liquid: U128) {
         self.assert_owner();
         require!(
             self.balances.contains_key(&token),
             "token is not in the ledger"
         );
-        require!(extra_decimals <= 24, "extra_decimals must be at most 24");
-        let entry = self.lending.entry(token).or_default();
-        entry.min_liquid = min_liquid;
-        entry.extra_decimals = extra_decimals;
+        self.lending.entry(token).or_default().min_liquid = min_liquid;
     }
 
     /// Lends `amount` of `token` to the venue if `min_liquid` stays available.
@@ -105,9 +102,16 @@ impl Vault {
         );
         position.pending = true;
 
-        ext_venue::ext(venue)
+        // The venue's own asset configuration scales its internal balance, so no owner setting
+        // can make the vault credit more than the venue sends back.
+        ext_venue::ext(venue.clone())
             .with_static_gas(GAS_VENUE_VIEW)
             .get_account(env::current_account_id())
+            .and(
+                ext_venue::ext(venue)
+                    .with_static_gas(GAS_VENUE_VIEW)
+                    .get_asset(token.clone()),
+            )
             .then(
                 Self::ext(env::current_account_id())
                     .with_static_gas(GAS_ACCOUNT_CALLBACK)
@@ -132,7 +136,6 @@ impl Vault {
                 .map(|(token, t)| YieldTokenView {
                     token: token.clone(),
                     min_liquid: t.min_liquid,
-                    extra_decimals: t.extra_decimals,
                     supplied: t.supplied,
                     pending: t.pending,
                 })
@@ -161,17 +164,26 @@ impl Vault {
         events::yield_supplied(&token, &self.venue(), amount, U128(accepted));
     }
 
-    /// Withdraws `min(amount, supplied at the venue)` once the venue account is known.
+    /// Withdraws `min(amount, supplied at the venue)` once the venue account and the token's
+    /// venue configuration are known. Either read failing ends the recall with nothing moved.
     #[private]
     pub fn on_yield_account(
         &mut self,
         token: AccountId,
         amount: U128,
         #[callback_result] account: Result<Option<VenueAccount>, PromiseError>,
+        #[callback_result] asset: Result<Option<VenueAssetConfig>, PromiseError>,
     ) {
         let venue = self.venue();
-        let extra = self.lending_token(&token).extra_decimals;
-        let scale = 10u128.pow(u32::from(extra));
+        let scale = asset
+            .ok()
+            .flatten()
+            .and_then(|a| 10u128.checked_pow(u32::from(a.config.extra_decimals)));
+        let Some(scale) = scale else {
+            self.lending_token_mut(&token).pending = false;
+            events::yield_recalled(&token, &venue, U128(0), false);
+            return;
+        };
         let at_venue = account
             .ok()
             .flatten()

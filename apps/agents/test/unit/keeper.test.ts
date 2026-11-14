@@ -47,7 +47,6 @@ function lending(
       {
         token: TOKEN,
         min_liquid: "30000000",
-        extra_decimals: 12,
         supplied: "0",
         pending: false,
         ...overrides,

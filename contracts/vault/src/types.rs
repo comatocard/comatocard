@@ -324,7 +324,6 @@ pub struct VaultConfig {
 #[derive(Default)]
 pub struct LendingToken {
     pub min_liquid: U128,
-    pub extra_decimals: u8,
     /// Principal lent and not yet recalled.
     pub supplied: U128,
     /// A supply or recall is in flight.
@@ -335,7 +334,6 @@ pub struct LendingToken {
 pub struct YieldTokenView {
     pub token: AccountId,
     pub min_liquid: U128,
-    pub extra_decimals: u8,
     pub supplied: U128,
     pub pending: bool,
 }

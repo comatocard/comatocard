@@ -29,6 +29,18 @@ pub struct VenueAsset {
     pub balance: U128,
 }
 
+/// The part of a venue asset the vault reads: its extra decimals.
+#[near(serializers = [json])]
+pub struct VenueAssetConfig {
+    pub config: VenueAssetSettings,
+}
+
+#[near(serializers = [json])]
+pub struct VenueAssetSettings {
+    /// Extra precision of the venue's internal balance for this token (12 for USDC on Rhea).
+    pub extra_decimals: u8,
+}
+
 #[ext_contract(ext_venue)]
 #[expect(
     dead_code,
@@ -36,5 +48,6 @@ pub struct VenueAsset {
 )]
 pub trait Venue {
     fn get_account(&self, account_id: AccountId) -> Option<VenueAccount>;
+    fn get_asset(&self, token_id: AccountId) -> Option<VenueAssetConfig>;
     fn execute(&mut self, actions: Value);
 }

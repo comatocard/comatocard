@@ -110,7 +110,6 @@ export const yieldView = z.strictObject({
     z.strictObject({
       token: accountId,
       min_liquid: u128,
-      extra_decimals: z.number().int().min(0).max(24),
       supplied: u128,
       pending: z.boolean(),
     }),

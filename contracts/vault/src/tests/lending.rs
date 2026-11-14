@@ -1,6 +1,6 @@
 //! Idle balance lent to a venue and recalled. The harness vault holds 1 000 of `usd.near`.
 
-use crate::ext::{VenueAccount, VenueAsset};
+use crate::ext::{VenueAccount, VenueAsset, VenueAssetConfig, VenueAssetSettings};
 
 use super::*;
 
@@ -19,8 +19,16 @@ const SCALE: u128 = 1_000_000_000_000;
 fn lending() -> Harness {
     let mut harness = Harness::new();
     harness.vault.set_yield_venue(Some(venue()), Some(keeper()));
-    harness.vault.set_yield_token(token(), U128(300), EXTRA);
+    harness.vault.set_yield_token(token(), U128(300));
     harness
+}
+
+fn asset() -> VenueAssetConfig {
+    VenueAssetConfig {
+        config: VenueAssetSettings {
+            extra_decimals: EXTRA,
+        },
+    }
 }
 
 fn at_venue(balance: u128) -> VenueAccount {
@@ -122,9 +130,12 @@ fn recall_takes_back_principal_and_interest() {
     assert!(harness.pending());
     // The venue holds 612 with interest; the vault withdraws all of it.
     harness.as_vault();
-    harness
-        .vault
-        .on_yield_account(token(), U128(10_000), Ok(Some(at_venue(612))));
+    harness.vault.on_yield_account(
+        token(),
+        U128(10_000),
+        Ok(Some(at_venue(612))),
+        Ok(Some(asset())),
+    );
     assert!(harness.pending());
     harness.vault.on_yield_recalled(token(), U128(612), Ok(()));
     assert_eq!(harness.available(), 1_012);
@@ -138,7 +149,9 @@ fn recall_credits_nothing_when_the_venue_holds_nothing_or_fails() {
     let mut harness = lending();
     harness.vault.recall(token(), U128(100));
     harness.as_vault();
-    harness.vault.on_yield_account(token(), U128(100), Ok(None));
+    harness
+        .vault
+        .on_yield_account(token(), U128(100), Ok(None), Ok(Some(asset())));
     assert!(!harness.pending());
     assert_eq!(harness.available(), 1_000);
 
@@ -172,4 +185,26 @@ fn owner_can_clear_a_stuck_operation() {
     harness.as_account(owner());
     harness.vault.clear_yield_pending(token());
     assert!(!harness.pending());
+}
+
+#[test]
+fn recall_moves_nothing_without_the_venue_asset_configuration() {
+    let mut harness = lending();
+    harness.vault.supply(token(), U128(600));
+    harness.as_vault();
+    harness
+        .vault
+        .on_yield_supplied(token(), U128(600), Ok(U128(600)));
+    harness.as_account(owner());
+    harness.vault.recall(token(), U128(600));
+    harness.as_vault();
+    harness.vault.on_yield_account(
+        token(),
+        U128(600),
+        Ok(Some(at_venue(600))),
+        Err(PromiseError::Failed),
+    );
+    assert!(!harness.pending());
+    assert_eq!(harness.available(), 400);
+    assert_eq!(harness.supplied(), 600);
 }

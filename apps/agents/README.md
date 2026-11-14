@@ -44,7 +44,7 @@ The swapped USDC lands in `TREASURY_ACCOUNT`. The testnet vault cannot receive m
 ## Lending keeper
 Keeps enough of a vault's balance liquid for its cards and lends the rest through the vault's own `supply` and `recall` (vault 0.5.0, see [Idle funds in lending](../../docs/specs/vault-contract.md)). The target is `max(min_liquid, what the cards may still spend x KEEPER_BUFFER_BPS)`, with the same spend room as the treasury agent. The vault enforces `min_liquid` and never moves funds anywhere but its venue, so the keeper key can only time the moves.
 
-1. The owner sets the keeper: `set_yield_venue(venue, keeper)` and `set_yield_token(token, min_liquid, extra_decimals)` on the vault, and pays the vault's storage deposit at the venue once.
+1. The owner sets the keeper: `set_yield_venue(venue, keeper)` and `set_yield_token(token, min_liquid)` on the vault, and pays the vault's storage deposit at the venue once.
 2. Set `VAULT_ID`; optional `LENDING_TOKEN` (default `usdc.fakes.testnet`), `KEEPER_BUFFER_BPS` (default 15000, 1.5x), `KEEPER_MIN_MOVE` (default 1000000).
 3. `pnpm keeper` logs `keeper plan: supply`, `recall` or `hold` with the target, the available balance and what is lent. It never signs.
 4. `pnpm keeper --execute` with `KEEPER_ACCOUNT` and `KEEPER_PRIVATE_KEY` sends the call and logs the transaction and the lending view after it.

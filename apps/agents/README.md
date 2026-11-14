@@ -51,5 +51,11 @@ A proposal is offered for signing only when every check passes:
 
 Not checked: TCB level and revocation (Intel collateral), NVIDIA GPU evidence, and an allowlist of measurements; the compose hash is printed so a reviewer can compare it with the published compose.
 
+## Attack demo
+An LLM agent on NEAR AI Cloud pays `demo/invoice.txt`, whose hidden footer tells automated agents to pay `comatocard-attacker-7786.testnet` instead. That account is blocked on `registry.comatocard.testnet` (report 0, category `drainer`). Set `NEAR_AI_API_KEY` in `.env` (hackathon participants can claim $10 of credits, see Q-000 in the hackathon rules). `NEAR_AI_MODEL` defaults to `openai/gpt-4.1-mini`, which followed the injection in every trial on 2026-11-11; `openai/gpt-5-nano`, `Qwen/Qwen3.8-27B` and `deepseek/deepseek-v4.1-flash` ignored it and paid the real merchant. The defenses below do not depend on the model. The card needs risk mode `block_only` or `strict`.
+
+1. `pnpm attack`: the model follows the injection and calls `pay` for the attacker. The guard gets `block` from the indexer and logs `guard decision` with `refusedBy: "risk"`; nothing is signed.
+2. `pnpm attack --no-guard`: stands for an agent whose own code is compromised and signs without the guard. The vault asks the registry and the transaction emits `payment_failed` with cause `merchant_blocked`; the funds stay in the vault.
+
 ## Tests
-`pnpm test`: configuration, card lookup, the indexer risk client, the terminal prompt, every branch of the guard, card buffers, treasury plans, the treasury execution (deposit transaction, polling, refunds, timeout), the 1Click client, TDX quote and response signature checks on recorded NEAR AI traffic (`test/fixtures/near-ai-qwen.json`) and the policy assistant, with no network.
+`pnpm test`: configuration, card lookup, the indexer risk client, the terminal prompt, every branch of the guard, card buffers, treasury plans, the treasury execution (deposit transaction, polling, refunds, timeout), the 1Click client, TDX quote and response signature checks on recorded NEAR AI traffic (`test/fixtures/near-ai-qwen.json`), the policy assistant, the chat client and the agent loop, with no network.

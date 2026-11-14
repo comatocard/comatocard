@@ -1,7 +1,7 @@
 import { CARD_PAY_GAS, type PaymentPreview, type RiskAssessment } from "@comatocard/sdk";
 import { describe, expect, it, vi } from "vitest";
 import type { Approve } from "../../src/approve.js";
-import { type Submit, spend } from "../../src/spend.js";
+import { type Submit, sendPayment, spend } from "../../src/spend.js";
 
 const vaultId = "alice.factory.comatocard.testnet";
 const publicKey = "ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp";
@@ -33,6 +33,7 @@ function setup(options: {
   const submit = vi.fn<Submit>(async () => ({
     txHash: "tx1",
     result: options.result ?? { status: "submitted", payment_id: 3 },
+    logs: [],
   }));
   const approve = vi.fn<Approve>(async () => options.approve ?? false);
   const risk = vi.fn(async () => {
@@ -105,6 +106,7 @@ describe("spend guard", () => {
       risk: verdict("allow"),
       approvedByHuman: false,
       decision: { status: "submitted", payment_id: 3 },
+      events: [],
       txHash: "tx1",
     });
     expect(s.approve).not.toHaveBeenCalled();
@@ -129,5 +131,24 @@ describe("spend guard", () => {
   it("rejects a result that is not a payment decision", async () => {
     const s = setup({ result: { status: "done" } });
     await expect(spend(s.deps, request)).rejects.toThrow(/pay tx1: unexpected result/);
+  });
+});
+
+describe("sendPayment", () => {
+  it("returns the Comatocard events of every receipt and skips other logs", async () => {
+    const failed =
+      'EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"payment_failed","data":[{"payment_id":3,"card_id":1,"merchant":"shop.testnet","token":"tusd.testnet","amount":"25000000","cause":"merchant_blocked"}]}';
+    const submit = vi.fn<Submit>(async () => ({
+      txHash: "tx2",
+      result: { status: "submitted", payment_id: 3 },
+      logs: ["Transfer 1 from a to b", failed],
+    }));
+    const sent = await sendPayment(vaultId, submit, { merchant: "shop.testnet", amount: "1" });
+    expect(sent.events).toEqual([
+      expect.objectContaining({
+        event: "payment_failed",
+        data: expect.objectContaining({ cause: "merchant_blocked" }),
+      }),
+    ]);
   });
 });

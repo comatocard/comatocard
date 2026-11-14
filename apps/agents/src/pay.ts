@@ -33,7 +33,8 @@ const context = { vaultId: config.vaultId, merchant, amount, reference };
 if (outcome.kind === "refused") {
   process.exitCode = 1;
 } else {
-  const { decision, txHash } = outcome;
-  logger.info({ ...context, decision, txHash }, `payment ${decision.status}`);
+  const { decision, txHash, events } = outcome;
+  const emitted = events.map((e) => e.event);
+  logger.info({ ...context, decision, txHash, events: emitted }, `payment ${decision.status}`);
   if (outcome.decision.status === "rejected") process.exitCode = 1;
 }

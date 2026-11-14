@@ -1,4 +1,10 @@
+"use client";
+import { useRef } from "react";
+import { DURATION, EASE } from "../../lib/motion/gsap";
+import { useTweenTo } from "../../lib/motion/useShowHide";
 import { displayUnits, ratio } from "../../lib/units";
+
+const FILL_TIMING = { duration: DURATION.height, ease: EASE.inOut };
 
 /** Spent against a limit, as a thin bar with both figures. Full turns the bar red. */
 export function SpendBar({
@@ -15,6 +21,8 @@ export function SpendBar({
   symbol: string;
 }) {
   const r = ratio(spent, limit);
+  const fill = useRef<HTMLDivElement>(null);
+  useTweenTo(fill, { width: `${Math.max(r * 100, r > 0 ? 3 : 0)}%` }, FILL_TIMING);
   return (
     <div>
       <div className="flex items-baseline justify-between text-[12px]">
@@ -28,10 +36,7 @@ export function SpendBar({
         </span>
       </div>
       <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-line">
-        <div
-          className={`h-full rounded-full transition-[width] duration-500 ${r >= 1 ? "bg-neg" : "bg-ink"}`}
-          style={{ width: `${Math.max(r * 100, r > 0 ? 3 : 0)}%` }}
-        />
+        <div ref={fill} className={`h-full w-0 rounded-full ${r >= 1 ? "bg-neg" : "bg-ink"}`} />
       </div>
     </div>
   );

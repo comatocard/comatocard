@@ -1,9 +1,9 @@
 "use client";
-// Vendored from beUI (https://beui.dev/components/blocks/card-folder), MIT.
-// Kept close to upstream so it can be re-synced; product styling lives in components/card/.
+// Adapted from beUI (https://beui.dev/components/blocks/card-folder), MIT, with the motion moved
+// to GSAP. Product styling lives in components/card/.
 
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { EASE_OUT } from "@/lib/ease";
+import { useLayoutEffect, useRef, useState } from "react";
+import { EASE, gsap, prefersReducedMotion } from "@/lib/motion/gsap";
 import { cn } from "@/lib/utils";
 
 export type DigitSwapDirection = "up" | "down";
@@ -26,27 +26,6 @@ export interface DigitSwapProps {
   suffixClassName?: string;
 }
 
-type GlyphMotionContext = {
-  direction: DigitSwapDirection;
-  reduceMotion: boolean;
-};
-
-/** Where a glyph starts (enter) or ends (exit): it rolls along its direction. */
-function offset({ direction, reduceMotion }: GlyphMotionContext, phase: "enter" | "exit") {
-  if (reduceMotion) return "none";
-  const forward = (direction === "up") === (phase === "enter");
-  return forward ? "translateY(45%)" : "translateY(-45%)";
-}
-
-const GLYPH_VARIANTS = {
-  enter: (context: GlyphMotionContext) => ({ opacity: 0, transform: offset(context, "enter") }),
-  visible: {
-    opacity: 1,
-    transform: "translateY(0%)",
-  },
-  exit: (context: GlyphMotionContext) => ({ opacity: 0, transform: offset(context, "exit") }),
-};
-
 /** Fixed-slot digits and mask glyphs that roll when their value changes. */
 export function DigitSwap({
   value,
@@ -59,15 +38,8 @@ export function DigitSwap({
   glyphClassName,
   suffixClassName,
 }: DigitSwapProps) {
-  const reduceMotion = useReducedMotion() ?? false;
   const text = String(value);
   const suffixStart = Math.max(0, text.length - Math.max(0, suffixLength));
-  const motionContext: GlyphMotionContext = { direction, reduceMotion };
-  const glyphs = Array.from(text, (character, position) => ({
-    character,
-    id: `glyph-${position}`,
-    position,
-  }));
 
   return (
     <span
@@ -77,47 +49,99 @@ export function DigitSwap({
     >
       <span className="sr-only">{text}</span>
       <span aria-hidden="true" className="inline-flex items-center">
-        {glyphs.map(({ character, id, position }) => {
+        {Array.from(text, (character, position) => {
+          const id = `glyph-${position}`;
           if (character === " ") {
             return <span key={id} className="inline-block w-[0.7ch]" />;
           }
-
-          const glyphKey =
-            animationKey === undefined
-              ? `${id}-${character}`
-              : `${id}-${character}-${animationKey}`;
-
           return (
-            <span
+            <Glyph
               key={id}
-              data-slot="digit-swap-glyph"
-              className="relative inline-block h-[1.1em] w-[1ch] shrink-0 overflow-hidden align-bottom"
-            >
-              <AnimatePresence initial={false} custom={motionContext}>
-                <motion.span
-                  key={glyphKey}
-                  custom={motionContext}
-                  variants={GLYPH_VARIANTS}
-                  initial="enter"
-                  animate="visible"
-                  exit="exit"
-                  transition={{
-                    duration: reduceMotion ? Math.min(duration, 0.12) : duration,
-                    delay: reduceMotion ? 0 : position * stagger,
-                    ease: EASE_OUT,
-                  }}
-                  className={cn(
-                    "absolute inset-0 flex items-center justify-center leading-none",
-                    glyphClassName,
-                    position >= suffixStart ? suffixClassName : undefined,
-                  )}
-                >
-                  {character}
-                </motion.span>
-              </AnimatePresence>
-            </span>
+              character={character}
+              swapKey={`${character}-${animationKey ?? ""}`}
+              direction={direction}
+              duration={duration}
+              delay={position * stagger}
+              className={cn(glyphClassName, position >= suffixStart ? suffixClassName : undefined)}
+            />
           );
         })}
+      </span>
+    </span>
+  );
+}
+
+type Face = { key: string; character: string; className: string | undefined };
+
+const FACE = "absolute inset-0 flex items-center justify-center leading-none";
+
+/**
+ * One character slot. When its key changes, the old face rolls out along `direction` while the
+ * new one rolls in behind it; reduced motion only crossfades, quicker and without the stagger.
+ */
+function Glyph({
+  character,
+  swapKey,
+  direction,
+  duration,
+  delay,
+  className,
+}: {
+  character: string;
+  swapKey: string;
+  direction: DigitSwapDirection;
+  duration: number;
+  delay: number;
+  className: string | undefined;
+}) {
+  const [face, setFace] = useState<Face>({ key: swapKey, character, className });
+  const [leaving, setLeaving] = useState<Face | null>(null);
+  const enter = useRef<HTMLSpanElement>(null);
+  const exit = useRef<HTMLSpanElement>(null);
+
+  // A new key keeps the old face for its exit; derived during render, so both faces paint at once.
+  if (face.key !== swapKey) {
+    setLeaving(face);
+    setFace({ key: swapKey, character, className });
+  } else if (face.className !== className) {
+    setFace({ ...face, className });
+  }
+
+  useLayoutEffect(() => {
+    if (!leaving) return;
+    const reduce = prefersReducedMotion();
+    const shift = reduce ? 0 : 45;
+    const from = direction === "up" ? shift : -shift;
+    const timing = {
+      duration: reduce ? Math.min(duration, 0.12) : duration,
+      delay: reduce ? 0 : delay,
+      ease: EASE.out,
+    };
+    const timeline = gsap.timeline({ onComplete: () => setLeaving(null) });
+    timeline.fromTo(
+      enter.current,
+      { autoAlpha: 0, yPercent: from },
+      { autoAlpha: 1, yPercent: 0, ...timing },
+      0,
+    );
+    timeline.to(exit.current, { autoAlpha: 0, yPercent: -from, ...timing }, 0);
+    return () => {
+      timeline.kill();
+    };
+  }, [leaving, direction, duration, delay]);
+
+  return (
+    <span
+      data-slot="digit-swap-glyph"
+      className="relative inline-block h-[1.1em] w-[1ch] shrink-0 overflow-hidden align-bottom"
+    >
+      {leaving ? (
+        <span ref={exit} className={cn(FACE, leaving.className)}>
+          {leaving.character}
+        </span>
+      ) : null}
+      <span ref={enter} className={cn(FACE, face.className)}>
+        {face.character}
       </span>
     </span>
   );

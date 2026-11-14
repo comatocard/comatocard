@@ -1,6 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { type ReactNode, type TouchEvent, useRef, useState } from "react";
+import { type ReactNode, type TouchEvent, useLayoutEffect, useRef, useState } from "react";
 import { AuthGate } from "../../components/AuthGate";
 import { AccountMenu } from "../../components/desktop/AccountMenu";
 import { BottomNav, DesktopNav, SHELL, TopBlur } from "../../components/ui";
@@ -9,10 +9,13 @@ import { useApprovals } from "../../hooks/data";
 import { useIsDesktop } from "../../hooks/useIsDesktop";
 import { useNav } from "../../hooks/useNav";
 import { useVault } from "../../hooks/useVault";
+import { DURATION, EASE, gsap, prefersReducedMotion } from "../../lib/motion/gsap";
 
 /** Swipe order follows the bottom bar. */
 const SHELL_ROUTES: readonly string[] = ["/home", "/approvals", "/account"];
 type SwipeStart = { x: number; y: number };
+/** How far a new page slides in on a phone, in px. */
+const PAGE_SHIFT = 28;
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const nav = useNav();
@@ -23,7 +26,29 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const routeIndex = SHELL_ROUTES.indexOf(pathname);
   const { vaultId } = useVault();
   const pending = useApprovals(vaultId).data?.items.length ?? 0;
-  const enterClass = enterDirection === "prev" ? "page-enter page-enter-prev" : "page-enter";
+  const page = useRef<HTMLDivElement>(null);
+
+  // On a phone each new page slides in from the side it came from. Props are cleared at the end:
+  // a transform left on the wrapper would trap the `fixed` sheets inside it.
+  useLayoutEffect(() => {
+    const el = page.current;
+    if (!el || isDesktop || !pathname) return;
+    const shift = prefersReducedMotion() ? 0 : PAGE_SHIFT;
+    const tween = gsap.fromTo(
+      el,
+      { autoAlpha: 0, x: enterDirection === "prev" ? -shift : shift },
+      {
+        autoAlpha: 1,
+        x: 0,
+        duration: DURATION.enter,
+        ease: EASE.out,
+        clearProps: "transform,opacity,visibility",
+      },
+    );
+    return () => {
+      tween.progress(1).kill();
+    };
+  }, [pathname, isDesktop, enterDirection]);
 
   const onTouchStart = (event: TouchEvent<HTMLDivElement>) => {
     if (isDesktop || routeIndex === -1 || event.touches.length !== 1) return;
@@ -65,7 +90,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             on a phone. */}
         <DesktopNav account={isDesktop ? <AccountMenu /> : undefined} badge={pending} />
         <div className={`${SHELL} pb-[120px] pt-14 lg:pb-16 lg:pt-8`}>
-          <div key={pathname} className={isDesktop ? undefined : enterClass}>
+          <div key={pathname} ref={page}>
             <VaultGuard>{children}</VaultGuard>
           </div>
         </div>

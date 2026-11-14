@@ -1,12 +1,16 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useIssueCard } from "../../hooks/setup";
 import { SmoothHeight } from "../../lib/motion/SmoothHeight";
+import { useTweenTo } from "../../lib/motion/useShowHide";
 import { type FirstCardLimits, firstCardForm } from "../../lib/setup-flow";
 import { cn } from "../../lib/utils";
 import { Field } from "../form/Field";
 import { InfoTip } from "../ui";
 import { GhostButton, SignButton, StepFooter, StepHead } from "./StepParts";
+
+/** The switch knob slides as fast as a press answers. */
+const KNOB_TIMING = { duration: 0.2 };
 
 const LIMITS = [
   ["perTx", "Payment"],
@@ -36,6 +40,8 @@ export function CardStep({
 }) {
   const { issue, error, symbol, ready, state, retryDirect, secret } = useIssueCard(vault);
   const asking = limits.askAbove !== "";
+  const knob = useRef<HTMLSpanElement>(null);
+  useTweenTo(knob, { x: asking ? 18 : 0 }, KNOB_TIMING);
   const limitError = error && error.field !== "label" ? error.message : null;
 
   // The secret goes up once the card exists on chain, and only then.
@@ -106,10 +112,8 @@ export function CardStep({
               )}
             >
               <span
-                className={cn(
-                  "absolute top-[3px] left-[3px] size-5 rounded-full bg-white shadow-sm transition-transform duration-200 [transition-timing-function:cubic-bezier(.23,1,.32,1)]",
-                  asking && "translate-x-[18px]",
-                )}
+                ref={knob}
+                className="absolute top-[3px] left-[3px] size-5 rounded-full bg-white shadow-sm"
               />
             </button>
           </div>

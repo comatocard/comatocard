@@ -5,8 +5,8 @@ import { CustomEase } from "gsap/CustomEase";
 gsap.registerPlugin(CustomEase);
 
 /**
- * GSAP eases named after the curves in `lib/ease.ts`. The built-in power curves are too soft for UI:
- * these start fast, so a moving element answers the tap at once.
+ * The app's GSAP eases. The built-in power curves are too soft for UI: these start fast, so a
+ * moving element answers the tap at once.
  */
 export const EASE = {
   /** Enter and exit. */

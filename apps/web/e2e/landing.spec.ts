@@ -16,8 +16,11 @@ test.describe("landing page", () => {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1, name: HERO })).toBeVisible();
-    const cta = page.locator("header").getByRole("link", { name: "Open the app" });
-    if (await cta.isVisible()) await expect(cta).toHaveAttribute("href", "/connect");
+    const cta = page.locator("header").getByRole("link", { name: "Open app" });
+    // The local route, or the app's own host in production.
+    if (await cta.isVisible()) {
+      await expect(cta).toHaveAttribute("href", /^(\/connect|https:\/\/app\.[^/]+)$/);
+    }
     // The page holds at one viewport until the intro is done.
     await expect(page.getByLabel("Example conversation")).toHaveCount(0);
     expect(errors).toEqual([]);

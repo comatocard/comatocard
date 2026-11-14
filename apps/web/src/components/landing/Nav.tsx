@@ -95,7 +95,7 @@ export function Nav({
             href={LINKS.app}
             className="mt-6 self-start rounded-full bg-white px-5 py-2.5 text-sm font-medium text-ink opacity-0"
           >
-            Open the app
+            Open app
           </Link>
         </nav>
       </div>
@@ -145,7 +145,7 @@ export function Nav({
             d ? "bg-[#18161B] text-white" : "bg-white text-ink",
           )}
         >
-          Open the app
+          Open app
         </Link>
 
         <button

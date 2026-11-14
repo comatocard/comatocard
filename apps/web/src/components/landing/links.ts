@@ -1,6 +1,7 @@
 /** Where the landing page sends people. */
 export const LINKS = {
-  app: "/connect",
+  /** The app on its own host in production (`NEXT_PUBLIC_APP_ORIGIN`), else the local route. */
+  app: process.env.NEXT_PUBLIC_APP_ORIGIN || "/connect",
   repo: "https://github.com/comatocard/comatocard",
   docs: "https://docs.comatocard.xyz",
   compliance: "https://github.com/comatocard/comatocard/blob/main/docs/compliance.md",

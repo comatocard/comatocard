@@ -1,8 +1,10 @@
 "use client";
 import { Info } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useId, useRef, useState } from "react";
-import { EASE_OUT } from "../../lib/ease";
+import { useShowHide } from "../../lib/motion/useShowHide";
+
+const DROPPED = { y: -4, scale: 0.97 };
+const TIP_TIMING = { enter: 0.18, exit: 0.18 };
 
 /**
  * A small ⓘ beside a label that explains it on demand, so the screen keeps its short labels and
@@ -17,7 +19,8 @@ export function InfoTip({ label, children }: { label: string; children: React.Re
   const open = hovered || pinned;
   const ref = useRef<HTMLSpanElement>(null);
   const id = useId();
-  const reduceMotion = useReducedMotion() ?? false;
+  const tip = useRef<HTMLSpanElement>(null);
+  useShowHide(tip, open, DROPPED, TIP_TIMING);
 
   useEffect(() => {
     if (!open) return;
@@ -63,21 +66,14 @@ export function InfoTip({ label, children }: { label: string; children: React.Re
       >
         <Info size={14} strokeWidth={2} aria-hidden="true" />
       </button>
-      <AnimatePresence>
-        {open ? (
-          <motion.span
-            id={id}
-            role="tooltip"
-            initial={{ opacity: 0, y: reduceMotion ? 0 : -4, scale: reduceMotion ? 1 : 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: reduceMotion ? 0 : -4, scale: reduceMotion ? 1 : 0.97 }}
-            transition={{ duration: 0.18, ease: EASE_OUT }}
-            className="absolute left-[-6px] top-[calc(100%+8px)] z-30 block w-[min(260px,calc(100vw-48px))] origin-top-left rounded-[14px] bg-ink px-3.5 py-2.5 text-left text-[12.5px] font-normal leading-[1.45] tracking-normal text-white shadow-[0_12px_28px_-12px_rgba(0,0,0,.45)]"
-          >
-            {children}
-          </motion.span>
-        ) : null}
-      </AnimatePresence>
+      <span
+        ref={tip}
+        id={id}
+        role="tooltip"
+        className="invisible absolute top-[calc(100%+8px)] left-[-6px] z-30 block w-[min(260px,calc(100vw-48px))] origin-top-left rounded-[14px] bg-ink px-3.5 py-2.5 text-left text-[12.5px] leading-[1.45] font-normal tracking-normal text-white opacity-0 shadow-[0_12px_28px_-12px_rgba(0,0,0,.45)]"
+      >
+        {children}
+      </span>
     </span>
   );
 }

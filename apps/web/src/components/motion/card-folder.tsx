@@ -1,31 +1,30 @@
 "use client";
-// Vendored from beUI (https://beui.dev/components/blocks/card-folder), MIT.
-// Kept close to upstream so it can be re-synced; product styling lives in components/card/.
+// Adapted from beUI (https://beui.dev/components/blocks/card-folder), MIT, with the motion moved
+// to GSAP. Product styling lives in components/card/.
 
 import { Eye, EyeOff } from "lucide-react";
-import {
-  AnimatePresence,
-  animate,
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useTransform,
-} from "motion/react";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
 import { DigitSwap } from "@/components/motion/digit-swap";
-import { EASE_IN_OUT, EASE_OUT, SPRING_PRESS } from "@/lib/ease";
+import { EASE, gsap, prefersReducedMotion } from "@/lib/motion/gsap";
+import { pressHandlers } from "@/lib/motion/useShowHide";
 import { cn } from "@/lib/utils";
 
 // The two purse layers collapse as one material surface after the card starts
 // moving, then reverse immediately so closing feels like the card is caught.
-const PURSE_MORPH_TRANSITION = {
-  duration: 0.28,
-  ease: EASE_IN_OUT,
-} as const;
-const PURSE_REDUCED_TRANSITION = {
-  duration: 0.16,
-  ease: EASE_OUT,
-} as const;
+const PURSE_MORPH = { duration: 0.28, ease: EASE.inOut } as const;
+const PURSE_REDUCED = { duration: 0.16, ease: EASE.out } as const;
+const PRESS = pressHandlers(0.96);
+
+/** Where every layer sits at `p` (0 closed, 1 open): the card lifts and settles, the purse sinks. */
+function purseFrame(p: number) {
+  const lift = Math.sin(Math.PI * Math.min(1, Math.max(0, p)));
+  const opacity = p <= 0.76 ? 1 : 1 - (p - 0.76) / 0.24;
+  return {
+    card: { yPercent: -8 * lift, scale: 1 + 0.01 * lift },
+    back: { yPercent: 18 * p, scaleY: 1 - 0.82 * p, opacity },
+    front: { yPercent: 18 * p, rotationX: -72 * p, opacity },
+  };
+}
 
 export interface CardFolderProps {
   title: string;
@@ -65,7 +64,6 @@ export function CardFolder({
   className,
   cardClassName,
 }: CardFolderProps) {
-  const reduce = useReducedMotion();
   const [isOpen, setOpen] = useState(false);
   const [internalDetailsVisible, setInternalDetailsVisible] = useState(defaultDetailsVisible);
   const detailsControlled = detailsVisible !== undefined;
@@ -75,48 +73,47 @@ export function CardFolder({
   const revealedCardNumber = normalizedCardNumber.match(/.{1,4}/g)?.join(" ") ?? visibleLastFour;
   const maskedCvv = "•".repeat(Math.max(3, cvv.length));
   const defaultAriaLabel = `${isOpen ? "Close" : "Open"} ${title}, card ending in ${visibleLastFour}, expires ${expiry}`;
-  const progress = useMotionValue(isOpen ? 1 : 0);
-  const cardTransform = useTransform(progress, (value) => {
-    const boundedProgress = Math.min(1, Math.max(0, value));
-    const lift = Math.sin(Math.PI * boundedProgress);
-    return `translateY(${-8 * lift}%) scale(${1 + 0.01 * lift})`;
-  });
-  const backTransform = useTransform(
-    progress,
-    [0, 1],
-    ["translateY(0%) scaleY(1)", "translateY(18%) scaleY(0.18)"],
-  );
-  const frontTransform = useTransform(
-    progress,
-    [0, 1],
-    ["translateY(0%) rotateX(0deg)", "translateY(18%) rotateX(-72deg)"],
-  );
-  const purseOpacity = useTransform(progress, [0, 0.76, 1], [1, 1, 0]);
+  const cardRef = useRef<HTMLSpanElement>(null);
+  const backRef = useRef<HTMLSpanElement>(null);
+  const frontRef = useRef<HTMLSpanElement>(null);
+  const progress = useRef({ p: 0 });
+  const first = useRef(true);
 
-  useEffect(() => {
-    const controls = animate(
-      progress,
-      isOpen ? 1 : 0,
-      reduce ? { duration: 0 } : PURSE_MORPH_TRANSITION,
-    );
-    return () => controls.stop();
-  }, [isOpen, progress, reduce]);
+  // One progress value drives the three layers; with reduced motion the purse only fades.
+  useLayoutEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    const layers = [cardRef.current, backRef.current, frontRef.current];
+    if (prefersReducedMotion()) {
+      const tween = gsap.to([backRef.current, frontRef.current], {
+        opacity: isOpen ? 0 : 1,
+        ...PURSE_REDUCED,
+        overwrite: true,
+      });
+      return () => {
+        tween.kill();
+      };
+    }
+    const tween = gsap.to(progress.current, {
+      p: isOpen ? 1 : 0,
+      ...PURSE_MORPH,
+      overwrite: true,
+      onUpdate: () => {
+        const frame = purseFrame(progress.current.p);
+        const [card, back, front] = layers;
+        if (card) gsap.set(card, frame.card);
+        if (back) gsap.set(back, frame.back);
+        if (front) gsap.set(front, frame.front);
+      },
+    });
+    return () => {
+      tween.kill();
+    };
+  }, [isOpen]);
 
   const handleClick = () => setOpen(!isOpen);
-  // With reduced motion the purse only fades; otherwise it follows the progress value.
-  const purseFade = { animate: { opacity: isOpen ? 0 : 1 } };
-  const backMotion = reduce
-    ? purseFade
-    : { style: { opacity: purseOpacity, transform: backTransform } };
-  const frontMotion = reduce
-    ? purseFade
-    : { style: { opacity: purseOpacity, transform: frontTransform } };
-  const cardMotion = reduce
-    ? { animate: { transform: "translateY(0%) scale(1)" } }
-    : { style: { transform: cardTransform } };
-  const press = reduce
-    ? { transition: { duration: 0 } }
-    : { whileTap: { scale: 0.96 }, transition: SPRING_PRESS };
 
   const toggleDetails = () => {
     const nextVisible = !areDetailsVisible;
@@ -133,42 +130,37 @@ export function CardFolder({
         className,
       )}
     >
-      <motion.button
+      <button
         type="button"
         aria-label={ariaLabel ?? defaultAriaLabel}
         aria-expanded={isOpen}
         onClick={handleClick}
-        {...press}
+        {...PRESS}
         className="absolute inset-0 block rounded-2xl text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <motion.span
+        <span
+          ref={backRef}
           data-slot="card-folder-back"
           aria-hidden="true"
-          initial={false}
-          transition={PURSE_REDUCED_TRANSITION}
-          {...backMotion}
           className="absolute inset-x-0 bottom-0 top-[10%] rounded-2xl border border-foreground/10 bg-background [transform-origin:center_bottom]"
         />
 
-        <motion.span
+        <span
+          ref={cardRef}
           aria-hidden="true"
-          initial={false}
-          {...cardMotion}
           className={cn(
             "absolute left-[4.7%] right-[4.7%] top-0 z-10 aspect-[1.586/1] overflow-hidden rounded-xl border border-foreground/10 bg-background [transform-origin:center_bottom] will-change-transform",
             cardClassName,
           )}
         >
           {card}
-        </motion.span>
-      </motion.button>
+        </span>
+      </button>
 
-      <motion.span
+      <span
+        ref={frontRef}
         aria-hidden={isOpen}
         inert={isOpen}
-        initial={false}
-        transition={PURSE_REDUCED_TRANSITION}
-        {...frontMotion}
         className="pointer-events-none absolute inset-x-0 bottom-0 top-1/2 z-20 [backface-visibility:hidden] [transform-origin:center_bottom]"
       >
         <svg
@@ -200,7 +192,6 @@ export function CardFolder({
             <VisibilityToggle
               visible={areDetailsVisible}
               hidden={isOpen}
-              reduce={reduce === true}
               onToggle={toggleDetails}
             />
 
@@ -232,57 +223,68 @@ export function CardFolder({
             />
           </span>
         </span>
-      </motion.span>
+      </span>
     </div>
   );
 }
-
-const ICON_HIDDEN = { opacity: 0, scale: 0.25, filter: "blur(4px)" };
 
 /** The eye in the pocket that shows or hides the card details. */
 function VisibilityToggle({
   visible,
   hidden,
-  reduce,
   onToggle,
 }: {
   visible: boolean;
   hidden: boolean;
-  reduce: boolean;
   onToggle: () => void;
 }) {
-  const fade = reduce ? { opacity: 0 } : ICON_HIDDEN;
+  const icon = useRef<HTMLSpanElement>(null);
+  const shown = useRef(visible);
+
+  // The new icon blooms in from small and blurred; reduced motion only fades it.
+  useLayoutEffect(() => {
+    if (shown.current === visible || !icon.current) return;
+    shown.current = visible;
+    const reduce = prefersReducedMotion();
+    const tween = gsap.fromTo(
+      icon.current,
+      { opacity: 0, scale: reduce ? 1 : 0.25, filter: reduce ? "blur(0px)" : "blur(4px)" },
+      {
+        opacity: 1,
+        scale: 1,
+        filter: "blur(0px)",
+        duration: reduce ? 0.12 : 0.3,
+        ease: EASE.out,
+        overwrite: true,
+        clearProps: "filter",
+      },
+    );
+    return () => {
+      tween.progress(1).kill();
+    };
+  }, [visible]);
+
   return (
-    <motion.button
+    <button
       type="button"
       {...(hidden ? { tabIndex: -1 } : {})}
       aria-label={visible ? "Hide card details" : "Show card details"}
       aria-pressed={visible}
       onClick={onToggle}
-      {...(reduce ? {} : { whileTap: { scale: 0.96 } })}
-      transition={reduce ? { duration: 0.12 } : SPRING_PRESS}
+      {...PRESS}
       className={cn(
         "z-30 flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
         hidden ? "pointer-events-none" : "pointer-events-auto",
       )}
     >
-      <AnimatePresence initial={false} mode="popLayout">
-        <motion.span
-          key={visible ? "hide" : "show"}
-          initial={fade}
-          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-          exit={fade}
-          transition={reduce ? { duration: 0.12 } : { type: "spring", duration: 0.3, bounce: 0 }}
-          className="flex items-center justify-center"
-        >
-          {visible ? (
-            <EyeOff className="size-4" aria-hidden="true" />
-          ) : (
-            <Eye className="size-4" aria-hidden="true" />
-          )}
-        </motion.span>
-      </AnimatePresence>
-    </motion.button>
+      <span ref={icon} className="flex items-center justify-center">
+        {visible ? (
+          <EyeOff className="size-4" aria-hidden="true" />
+        ) : (
+          <Eye className="size-4" aria-hidden="true" />
+        )}
+      </span>
+    </button>
   );
 }
 

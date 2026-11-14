@@ -1,5 +1,9 @@
 "use client";
 import { type ReactNode, useEffect, useRef } from "react";
+import { useShowHide } from "../../lib/motion/useShowHide";
+
+const LIFTED = { y: -6 };
+const MENU_TIMING = { enter: 0.15, exit: 0.15 };
 
 /**
  * Small anchored menu for the desktop account avatar. Inline (not portaled), it is tiny and lives
@@ -19,6 +23,7 @@ export function Dropdown({
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  useShowHide(ref, open, LIFTED, MENU_TIMING);
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
@@ -42,9 +47,7 @@ export function Dropdown({
       role="menu"
       aria-label={label}
       aria-hidden={!open}
-      className={`absolute right-0 top-[calc(100%+10px)] z-40 w-[300px] rounded-[18px] border border-white bg-card p-1.5 [box-shadow:0_-1px_0_rgba(0,0,0,.04),0_24px_60px_-26px_rgba(17,19,22,.28)] transition-[opacity,transform] duration-150 ${
-        open ? "opacity-100" : "pointer-events-none -translate-y-1.5 opacity-0"
-      }`}
+      className="absolute right-0 top-[calc(100%+10px)] z-40 w-[300px] rounded-[18px] border border-white bg-card p-1.5 [box-shadow:0_-1px_0_rgba(0,0,0,.04),0_24px_60px_-26px_rgba(17,19,22,.28)] invisible opacity-0"
     >
       {children}
     </div>

@@ -4,12 +4,13 @@ import { ArrowRight } from "lucide-react";
 import { useNearWallet } from "near-connect-hooks";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { type PointerEvent, useEffect, useRef, useState } from "react";
 import { FloatingCard } from "../../components/onboarding/FloatingCard";
 import { PanelGlow, Wordmark } from "../../components/onboarding/SetupLayout";
 import { InfoTip, Toast } from "../../components/ui";
 import { Loader } from "../../components/ui/Loader";
 import { useSession } from "../../hooks/useSession";
+import { EASE, gsap, prefersReducedMotion } from "../../lib/motion/gsap";
 import { useReveal } from "../../lib/motion/useReveal";
 
 /** Wallets offered by name on a desktop; any other one is still in the connector's own list. */
@@ -73,10 +74,6 @@ export default function ConnectPage() {
         <PanelGlow />
         <header className="relative flex items-center justify-between">
           <Wordmark />
-          <span className="flex h-7 items-center gap-1.5 rounded-full border border-white/10 bg-white/[.08] px-3 text-[12px] font-semibold text-white/80">
-            <span className="size-1.5 rounded-full bg-[#4ade80]" />
-            Testnet
-          </span>
         </header>
         <div className="relative flex flex-1 items-center py-10">
           <FloatingCard />
@@ -127,14 +124,16 @@ export default function ConnectPage() {
                   type="button"
                   onClick={() => void connect(w.id)}
                   disabled={busy !== null}
-                  className="group flex h-[60px] w-full items-center gap-3 rounded-[16px] border border-line bg-white px-4 text-left transition-[border-color,transform] duration-150 hover:border-line-2 active:scale-[.985] disabled:opacity-60"
+                  onPointerEnter={nudge(2)}
+                  onPointerLeave={nudge(0)}
+                  className="flex h-[60px] w-full items-center gap-3 rounded-[16px] border border-line bg-white px-4 text-left transition-[border-color,transform] duration-150 hover:border-line-2 active:scale-[.985] disabled:opacity-60"
                 >
                   <WalletIcon name={w.name} logo={w.logo} />
                   <span className="flex-1 text-[15px] font-semibold">{w.name}</span>
                   {busy === w.id ? (
                     <Loader className="size-4 text-ink" />
                   ) : (
-                    <ArrowRight className="size-4 text-faint transition-transform duration-200 group-hover:translate-x-0.5" />
+                    <ArrowRight data-nudge className="size-4 text-faint" />
                   )}
                 </button>
               </li>
@@ -154,6 +153,15 @@ export default function ConnectPage() {
       <Toast open={!!error} message={error ?? ""} />
     </main>
   );
+}
+
+/** Hover handler that slides a wallet row's arrow `x` px to the right, with GSAP. */
+function nudge(x: number) {
+  return (event: PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== "mouse" || prefersReducedMotion()) return;
+    const arrow = event.currentTarget.querySelector("[data-nudge]");
+    if (arrow) gsap.to(arrow, { x, duration: 0.2, ease: EASE.out, overwrite: true });
+  };
 }
 
 function WalletIcon({ name, logo }: { name: string; logo: string | null }) {

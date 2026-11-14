@@ -19,15 +19,17 @@ pub use nft::MIN_HOLDER_ALLOWANCE;
 mod cards;
 mod ext;
 mod ledger;
+mod lending;
+pub use lending::{MIN_RECALL_GAS, MIN_SUPPLY_GAS};
 mod nft;
 mod owner;
 mod payments;
 mod views;
 
-use types::{Card, CardId, Payment, PaymentId, TokenBalance};
+use types::{Card, CardId, LendingToken, Payment, PaymentId, TokenBalance};
 
 /// Version reported by `get_config`, bumped with every state or interface change.
-pub const CONTRACT_VERSION: &str = "0.4.0";
+pub const CONTRACT_VERSION: &str = "0.5.0";
 
 /// Default time a queued payment waits before anyone may expire it: 24 hours.
 pub const DEFAULT_APPROVAL_TTL_NS: u64 = 24 * 60 * 60 * 1_000_000_000;
@@ -61,6 +63,7 @@ enum StorageKey {
     Balances,
     Payments,
     Queued,
+    Lending,
 }
 
 #[near(contract_state)]
@@ -80,6 +83,11 @@ pub struct Vault {
     payments: IterableMap<PaymentId, Payment>,
     /// Ids of the queued payments of each card, at most [`types::MAX_QUEUED_PER_CARD`].
     queued: LookupMap<CardId, Vec<PaymentId>>,
+    /// Lending venue with a Rhea (Burrow) interface, see `lending.rs`.
+    yield_venue: Option<AccountId>,
+    /// Account besides the owner allowed to call `supply` and `recall`.
+    yield_keeper: Option<AccountId>,
+    lending: IterableMap<AccountId, LendingToken>,
 }
 
 #[near]
@@ -109,6 +117,9 @@ impl Vault {
             balances: IterableMap::new(StorageKey::Balances),
             payments: IterableMap::new(StorageKey::Payments),
             queued: LookupMap::new(StorageKey::Queued),
+            yield_venue: None,
+            yield_keeper: None,
+            lending: IterableMap::new(StorageKey::Lending),
         };
         require!(vault.approval_ttl > 0, "approval_ttl must be positive");
         for token in accepted_tokens {

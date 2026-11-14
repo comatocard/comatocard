@@ -23,6 +23,7 @@ const NOW: u64 = 1_800_000_000 * 1_000_000_000;
 mod approvals;
 mod audit;
 mod cards;
+mod lending;
 mod nft;
 mod owner;
 mod payments;

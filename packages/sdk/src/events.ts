@@ -62,6 +62,18 @@ export const eventData = {
     amount: u128,
     success: z.boolean(),
   }),
+  yield_supplied: z.strictObject({
+    token: accountId,
+    venue: accountId,
+    amount: u128,
+    accepted: u128,
+  }),
+  yield_recalled: z.strictObject({
+    token: accountId,
+    venue: accountId,
+    amount: u128,
+    success: z.boolean(),
+  }),
   payment_submitted: z.strictObject({
     ...paymentCore,
     memo: z.string().nullable(),

@@ -153,3 +153,21 @@ pub struct Rejection<'a> {
     pub reason: RejectReason,
     pub reference: Option<&'a str>,
 }
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+pub(super) struct YieldSupplied<'a> {
+    pub(super) token: &'a AccountId,
+    pub(super) venue: &'a AccountId,
+    pub(super) amount: U128,
+    pub(super) accepted: U128,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+pub(super) struct YieldRecalled<'a> {
+    pub(super) token: &'a AccountId,
+    pub(super) venue: &'a AccountId,
+    pub(super) amount: U128,
+    pub(super) success: bool,
+}

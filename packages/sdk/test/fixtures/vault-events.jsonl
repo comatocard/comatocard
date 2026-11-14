@@ -12,6 +12,8 @@ EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"approver_set","da
 EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"approver_set","data":[{"account_id":"council.testnet","max_amount":null}]}
 EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"deposit","data":[{"token":"tusd.testnet","sender_id":"owner.testnet","amount":"500000000"}]}
 EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"withdrawal","data":[{"token":"tusd.testnet","receiver_id":"owner.testnet","amount":"10000000","success":true}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"yield_supplied","data":[{"token":"tusd.testnet","venue":"contract.burrow.testnet","amount":"300000000","accepted":"300000000"}]}
+EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"yield_recalled","data":[{"token":"tusd.testnet","venue":"contract.burrow.testnet","amount":"300100000","success":true}]}
 EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"payment_submitted","data":[{"payment_id":3,"card_id":1,"merchant":"shop.testnet","token":"tusd.testnet","amount":"25000000","memo":"api credits","reference":"inv-42"}]}
 EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"payment_queued","data":[{"payment_id":3,"card_id":1,"merchant":"shop.testnet","token":"tusd.testnet","amount":"25000000","memo":"api credits","reference":"inv-42","cause":"threshold"}]}
 EVENT_JSON:{"standard":"comatocard","version":"1.0.0","event":"payment_approved","data":[{"payment_id":3,"approver_id":"owner.testnet"}]}

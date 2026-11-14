@@ -64,6 +64,18 @@ fn emit_all() {
     approver_set(&account("council.testnet"), None);
     deposit(&payment.token, &owner, U128(500_000_000));
     withdrawal(&payment.token, &owner, U128(10_000_000), true);
+    yield_supplied(
+        &payment.token,
+        &account("contract.burrow.testnet"),
+        U128(300_000_000),
+        U128(300_000_000),
+    );
+    yield_recalled(
+        &payment.token,
+        &account("contract.burrow.testnet"),
+        U128(300_100_000),
+        true,
+    );
     payment_submitted(&payment);
     payment_queued(&payment, QueueCause::Threshold);
     payment_decided("payment_approved", 3, &owner);

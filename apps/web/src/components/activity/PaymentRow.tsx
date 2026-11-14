@@ -64,6 +64,8 @@ export function PaymentRow({
 }) {
   const tone = STATUS_TONE[row.status];
   const detail = paymentDetail(row);
+  // Which card paid and why it stopped; the reference stands in when neither is known.
+  const more = [cardLabel, detail].filter(Boolean).join(" · ") || row.reference;
   const when = now ? ago(nsToMs(row.created_at), now) : "";
   const className = `flex items-center gap-[13px] py-3.5 ${first ? "" : "border-t border-line"}`;
   const body = (
@@ -71,11 +73,10 @@ export function PaymentRow({
       <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${TONE_CLASS[tone]}`}>
         <StatusIcon tone={tone} />
       </span>
+      {/* The merchant leads and the reason gets its own line, so a phone never cuts either off. */}
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 truncate text-[13.5px] font-semibold">
-            {STATUS_TITLE[row.status]} · {row.merchant}
-          </div>
+          <div className="min-w-0 truncate text-[13.5px] font-semibold">{row.merchant}</div>
           <div
             className={`shrink-0 text-[13.5px] font-semibold tabular-nums ${tone === "bad" ? "text-muted line-through decoration-1" : ""}`}
           >
@@ -83,11 +84,10 @@ export function PaymentRow({
           </div>
         </div>
         <div className="mt-0.5 flex items-start justify-between gap-3 text-xs text-muted">
-          <span className="min-w-0 truncate">
-            {[cardLabel, detail].filter(Boolean).join(" · ") || row.reference || " "}
-          </span>
+          <span className="min-w-0 truncate">{STATUS_TITLE[row.status]}</span>
           {when ? <span className="shrink-0 font-medium">{when}</span> : null}
         </div>
+        {more ? <p className="mt-0.5 line-clamp-2 text-xs text-muted">{more}</p> : null}
       </div>
     </>
   );

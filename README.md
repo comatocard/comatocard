@@ -10,6 +10,8 @@
 
 > Everything runs on NEAR testnet with tUSD, a test stablecoin: no real money moves. The app, the demo merchant, the indexer and the relayer are hosted and stay up through judging.
 
+**Judges and screeners:** [JUDGE.md](JUDGE.md) checks every feature and track with `curl` and `jq` alone: no wallet, no funds, no build, each step with its expected result.
+
 ## Overview
 AI agents increasingly need to pay for APIs, data and services, but handing an agent a wallet hands it the whole balance. Comatocard gives it a card instead.
 
@@ -66,7 +68,7 @@ Requirements: Node 24 with pnpm, Rust from `rust-toolchain.toml` with [cargo-nea
 
 1. **Build and test everything.** `pnpm install && pnpm build && pnpm test` builds the contracts and apps and runs the unit tests. `pnpm test:integration` runs the near-sandbox and Postgres tests.
 2. **See a vault on testnet.** `near contract call-function as-read-only v5.factory.comatocard.testnet get_config json-args '{}' network-config testnet now` returns the owner, the registry and `contract_version` `0.4.0`.
-3. **See a payment that settled.** Open `https://testnet.nearblocks.io/txns/7nK8SHcVnQWgDjeng4ozKgUA7ueGMRei5d6FSyZmbVmR`: a card paid 1 tUSD after an on-chain registry check (`payment_submitted`, `payment_settled`).
+3. **See a payment that settled.** Open `https://testnet.nearblocks.io/txns/7nK8SHcVnQWgDjeng4ozKgUA7ueGMRei5d6FSyZmbVmR`: a card paid 1 tUSD after an on-chain registry check (`payment_submitted`, `payment_settled`). The public RPC no longer keeps a transaction this old; read it from the archival node as in [JUDGE.md](JUDGE.md#1-a-vault-and-a-card-that-paid).
 4. **Query the live indexer.** Open https://indexer.comatocard.xyz/graphql and run `{ cards(vault: "v5.factory.comatocard.testnet") { cardId label status } payments(vault: "v5.factory.comatocard.testnet") { items { status amount merchant reference } } }`: card 0 is active and the payment above is `settled`. The same data is at `https://indexer.comatocard.xyz/vaults/v5.factory.comatocard.testnet/payments`.
 5. **Index it yourself.** `docker compose -f apps/indexer/docker-compose.yml up --build` starts Postgres and the indexer on testnet; `curl localhost:4000/health` shows the indexed height and the lag. Events from then on appear under `/vaults/<vault>/payments` and in `/vaults/<vault>/export.csv`.
 6. **Pay from an agent.** `apps/agents` holds a card key and pays through its guard: preview, risk verdict, and human confirmation on a warning. See [apps/agents](apps/agents/README.md).
@@ -114,7 +116,7 @@ Listed for the hackathon rules (Q-005). The repository starts on 2026-11-09, ins
 
 - **Templates:** the docs site layout, components, illustrations and article icons come from [zeta-chain/docs](https://github.com/zeta-chain/docs) (MIT, notice in [`apps/docs/LICENSE`](apps/docs/LICENSE)); its content, branding and services are removed. The official NEAR agent skills from [near/agent-skills](https://github.com/near/agent-skills) are vendored in `.agents/skills`. Sandbox tests deploy third-party contract code as fixtures, never on a network: the Sputnik DAO v2 and Rhea (Burrow) lending wasm, with provenance and hashes in [`contracts/testkit/fixtures`](contracts/testkit/fixtures/README.md).
 - **Services:** NEAR testnet RPC, neardata by FastNEAR for blocks, NEAR Intents 1Click for treasury quotes and swaps, NEAR AI Cloud for the policy assistant, Rhea (Burrow) lending as the venue for idle vault balance, Vercel for the web app, GitHub Pages for the docs, GHCR and Coolify for the indexer, a team VPS behind Caddy for the relayer.
-- **AI-written code:** much of the code, tests and documentation was written with AI coding assistants and reviewed, tested and merged by the team through labelled pull requests.
+- **AI-written code:** much of the code, tests and documentation was written with AI coding assistants and reviewed, tested and merged by the team through labelled pull requests. The backdrop of the connect and setup screens is an AI-generated image.
 
 ### Other projects
 Disclosed for the hackathon rules (Q-015). Axel ([@Lexirieru](https://github.com/Lexirieru)) also builds [Hellonear](https://github.com/Hellonear-AI/hellonear) at NEAR HACKATHON. The two projects are independent and share no code.

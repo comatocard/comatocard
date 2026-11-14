@@ -20,6 +20,17 @@ test.describe("landing page", () => {
     // The local route, or the app's own host in production.
     if (await cta.isVisible()) {
       await expect(cta).toHaveAttribute("href", /^(\/connect|https:\/\/app\.[^/]+)$/);
+      // The app opens in a new tab and the landing page stays where it was.
+      const [tab] = await Promise.all([page.waitForEvent("popup"), cta.click()]);
+      await expect(tab).toHaveURL(/\/connect|^https:\/\/app\./);
+      await expect(page.getByRole("heading", { level: 1, name: HERO })).toBeVisible();
+      await tab.close();
+    }
+    for (const link of await page
+      .getByRole("link", { name: "Open app", includeHidden: true })
+      .all()) {
+      await expect(link).toHaveAttribute("target", "_blank");
+      await expect(link).toHaveAttribute("rel", "noopener noreferrer");
     }
     // The page holds at one viewport until the intro is done.
     await expect(page.getByLabel("Example conversation")).toHaveCount(0);

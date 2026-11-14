@@ -18,6 +18,7 @@ const deps: RelayDeps = {
     },
     approvers: [],
   }),
+  finalHeight: async () => 0n,
   risk: async () => {
     throw new Error("not used");
   },

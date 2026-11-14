@@ -16,6 +16,9 @@ A delegate action is sent only when every check passes; otherwise the answer nam
 | The ed25519 signature covers the delegate action | `bad_signature` |
 | The sender is the vault owner, or an approver for `approve_payment` and `decline_payment` | `not_authorized` |
 | A `withdraw` receiver is not `block` on the indexer `GET /risk`; an unreachable indexer refuses | `receiver_blocked`, `risk_unavailable` |
+| The delegate's `max_block_height` is above the latest final block | `expired` |
+
+When the chain still rejects the wrapping transaction because the delegate expired on the way or its nonce was already used (a double submit), the answer is the same refusal, `expired` or `nonce_used`, with a detail that tells the owner to sign again; the delegated call did not run.
 
 `pay`, `nft_transfer`, `set_card_key`, `propose_owner` and `accept_owner` are never relayed. Request and response schemas are `relayRequest` and `relayResponse` in `@comatocard/sdk`.
 
@@ -37,4 +40,4 @@ Live at `https://relayer.comatocard.xyz` (relayer account `comatocard-relayer.te
 Update: `git pull && docker compose -f apps/relayer/deploy/compose.yaml up -d --build`. Logs: `docker compose -f apps/relayer/deploy/compose.yaml logs -f relayer`. Top up the relayer account when its balance runs low; each sponsored call costs about 0.0003 NEAR.
 
 ## Tests
-`pnpm test`: decoding and signature checks on delegates signed with real keys, every refusal, owner and approver authorization, withdraw screening, and the HTTP server.
+`pnpm test`: decoding and signature checks on delegates signed with real keys, every refusal, owner and approver authorization, withdraw screening, and the HTTP server. `test/regression/` holds one test per fixed issue.

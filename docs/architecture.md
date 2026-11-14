@@ -47,7 +47,7 @@ One vault holds stablecoins (NEP-141). It issues many cards, each with its own p
  Agents (spender, treasury, policy assistant)    Web app (dashboard, approvals, merchant checkout)
         |
         v
- Relayer (meta transactions for owner actions only)
+ Relayer (meta transactions for owner actions only); policy assistant as a separate service
 ```
 
 ## Repository layout
@@ -57,7 +57,7 @@ apps/
   merchant/   Demo merchant: HTTP 402 resource server and payment verification
   agents/     Spending agent, treasury agent, policy assistant, attack demo
   indexer/    Rust: block poller, event projections, REST and WebSocket API
-  relayer/    Meta transaction relayer for owner actions
+  relayer/    Meta transaction relayer for owner actions, policy assistant service
 contracts/
   vault/      Vault contract (Rust, near-sdk)
   factory/    Creates vault accounts using the global vault code
@@ -81,7 +81,9 @@ docs/         Architecture, specs, workstreams, research
 9. **Funds are accounted in an internal ledger.** Deposits arrive through `ft_transfer_call`. A payment reserves funds and spend before the transfer and releases them in the callback if the transfer fails.
 10. **Counterparty checks are layered.** On-chain: the registry status (clear, flagged, blocked) checked by the vault according to the card's risk mode. Off-chain: indexer signals (merchant first seen, prior payments, contract code changes) used by the agent-side guard before signing.
 11. **Owner actions can be gasless.** The relayer sponsors meta transactions whose receiver is a vault created by our factory, with an allowlist of owner methods and zero attached deposit.
-12. **The indexer reads finalized blocks from neardata.** No reorg handling needed; ingestion is idempotent on `(receipt_id, log_index)`. It is written in Rust and parses events into the contract crates' own types, so the contracts and the indexer cannot drift apart.
+12. **Idle balance is lent by the vault itself.** From 0.5.0 the vault supplies balance above the owner's `min_liquid` to one Rhea (Burrow) venue and recalls it, so the position stays the vault's; a keeper only decides when, and cannot move funds anywhere but the venue. See "Idle funds in lending" in `docs/specs/vault-contract.md`.
+13. **Keys live in separate processes.** The relayer holds only the key that pays gas; the policy assistant, which takes free text from the public and calls NEAR AI Cloud, runs as its own service with only the NEAR AI key.
+14. **The indexer reads finalized blocks from neardata.** No reorg handling needed; ingestion is idempotent on `(receipt_id, log_index)`. It is written in Rust and parses events into the contract crates' own types, so the contracts and the indexer cannot drift apart.
 
 ## Payment flow
 ```
@@ -113,6 +115,8 @@ Approval flow: an approver or the owner calls `approve_payment(id)`. The vault r
 | Async race between two payments | Funds and spend are reserved synchronously before any cross-contract call |
 | Registry abuse | Reports need evidence; only curators change statuses; vault risk mode is opt-in per card |
 | Relayer abuse | Relayer accepts only factory vaults, allowlisted owner methods and zero deposit |
+| Lending venue fails or pauses withdrawals | Only balance above `min_liquid` is lent; the keeper recalls when cards need more; payments fail closed on a short balance |
+| Leaked keeper key | The keeper can only call `supply` and `recall`; funds move only between the vault and its venue, above `min_liquid` |
 | Owner key loss | DAO ownership or a two-step owner transfer |
 
 ## Out of scope for the core

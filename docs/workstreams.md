@@ -20,6 +20,8 @@ Who builds what, in which order, and what "done" means. Each task becomes a GitH
 | Cards as NEP-171 tokens (stretch, `nfts`) | Done, PRs #32 #53, live on testnet, see `docs/deployments.md` |
 | Indexer in Rust | Done, PRs #55 #57 |
 | Contract audit fixes, vault 0.4.0 | Done, PR #65, live on testnet |
+| Vault lending to Rhea, keeper, vault 0.5.0 | Done, PRs #183 #187, release v0.5.0 live on testnet |
+| Policy assistant as its own service | Code done, PR #198; VPS deployment pending (#188) |
 
 ## Status of workstream C (2026-11-12)
 | Item | State |

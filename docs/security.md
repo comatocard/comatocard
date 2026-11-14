@@ -22,6 +22,10 @@ Comatocard is built security first: the rules that protect the money live in the
 | The previous holder or previous owner keeps spending after a handover | Token transfer and ownership change delete keys, decline queued payments and remove approvers | `nft/mod.rs`, `owner.rs` | `issue_62_*`, `transfer_removes_the_key_until_the_holder_sets_one` |
 | A relayer impersonates a card | Card payments are never relayed: the vault identifies the card by the signer key and requires the vault itself as predecessor | `payments.rs` | `pay_requires_the_vault_as_predecessor`, `pay_requires_a_card_key` |
 | Tampered or malformed events poison the books | The indexer parses events into the contract crates' own types, dead-letters anything else, and ignores logs of failed receipts | `apps/indexer/src/events.rs` | Golden fixtures shared by contracts, SDK and indexer; `projects_the_scenario` |
+| Lent funds stuck at the venue, or the venue fails | Lending is opt-in per vault and token; only balance above the owner's `min_liquid` leaves; the vault itself holds the position and reads the venue's own decimals | `lending.rs` | `vault/tests/lending.rs` against the real Burrow code; unit tests in `src/tests/lending.rs` |
+| A leaked keeper key moves funds | The keeper can call only `supply` and `recall`; both move funds only between the vault and the owner's venue, and `supply` keeps `min_liquid` | `lending.rs` | `strangers_cannot_supply`, `supply_keeps_min_liquid_for_cards` |
+| Two lending operations race | One operation in flight per token; callbacks never panic, and the owner can clear a stuck flag | `lending.rs` | `one_operation_at_a_time`, `owner_can_clear_a_stuck_operation` |
+| A flaw on the public assistant path reaches the gas key | The policy assistant runs as its own service with only the NEAR AI key; the relayer has no NEAR AI key and no `/assistant` route | `apps/relayer/src/server.ts`, `config.ts` | `runs apart from the relayer`, `never reads the NEAR AI key into the relayer` |
 | Formula injection through the accountant export | CSV cells that start with a formula trigger are quoted | `apps/indexer/src/api/format.rs` | `escapes_csv_cells` |
 
 ## Audit

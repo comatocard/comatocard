@@ -52,5 +52,6 @@ Card labels, payment memos and references are public and permanent on-chain and 
 - **Identity and AML:** know-your-customer checks on vault owners and on merchants, and transaction monitoring, from a provider of their choice. The registry is a counterparty signal, not a sanctions list.
 - **Travel Rule:** if the operator is a virtual asset service provider, the exchange of originator and beneficiary data with other providers.
 - **Licensing:** whether a licence applies depends on the operator's role and jurisdiction, not on the contract.
+- **Lending idle balance:** off unless the owner sets a venue. Earning yield on funds held for others can be a regulated activity; an operator that enables it for clients checks that first.
 - **Record retention:** on-chain events persist, but the indexer database is a projection; operators keep their own exports for the retention period their rules require.
 - **Policy review:** owners decide limits and approvers. Comatocard enforces the rules it is given; it does not decide whether they are adequate.

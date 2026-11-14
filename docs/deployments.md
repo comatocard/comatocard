@@ -8,6 +8,7 @@ Deployed with `ROOT_ACCOUNT=comatocard.testnet scripts/deploy-testnet.sh` on 202
 | Test stablecoin (tUSD, 6 decimals, public faucet) | `tusd.comatocard.testnet` | `contracts/mock-ft` |
 | Counterparty registry, curator `comatocard.testnet`, redeployed 2026-11-11 with sanctions reports (PR #74) | `registry.comatocard.testnet` | `contracts/registry` |
 | Factory, default token tUSD, default registry above | `factory.comatocard.testnet` | `contracts/factory` |
+| Vault global contract (by hash), code version 6, contract 0.5.0 with lending, from the reproducible build of release v0.5.0 (PR #183) | `Dy7N2F5XwXCEAUudrJMJFWBmingVuhVNGWTN9PCGqzb` | `contracts/vault` |
 | Vault global contract (by hash), code version 5, contract 0.4.0 from the reproducible build of release v0.4.1 (PR #90) | `6XRhVBvaFGBuDqrLzn6EPptBX9e724h85Gw5tHPsGXXU` | `contracts/vault` |
 | Vault global contract (by hash), code version 4, contract 0.4.0 built without wee_alloc (PRs #79 #80) | `CQn2sAQtZ87h2v1akv4wnCiLdH4wLHKfCeEXyh1edRED` | `contracts/vault` |
 | Vault global contract (by hash), code version 3, contract 0.4.0 with the audit fixes (PR #65) | `6b8ijoAK9QhACv5y8s4UdRwvBNpeUVsX1bBCDLRNC9Ms` | `contracts/vault` |
@@ -17,13 +18,18 @@ Deployed with `ROOT_ACCOUNT=comatocard.testnet scripts/deploy-testnet.sh` on 202
 | Card token demo vault owned by `comatocard.testnet`, code version 2 | `nft.factory.comatocard.testnet` | global vault code |
 | Audited demo vault owned by `comatocard.testnet`, code version 3, card risk mode `block_only` | `audit.factory.comatocard.testnet` | global vault code |
 | Demo vault owned by `comatocard.testnet`, code version 4, card risk mode `block_only` | `v4.factory.comatocard.testnet` | global vault code |
-| Current demo vault owned by `comatocard.testnet`, code version 5, card risk mode `block_only` | `v5.factory.comatocard.testnet` | global vault code |
+| Demo vault owned by `comatocard.testnet`, code version 5, card risk mode `block_only` | `v5.factory.comatocard.testnet` | global vault code |
+| Current demo vault owned by `comatocard.testnet`, code version 6, lends USDC.e to Rhea | `v6.factory.comatocard.testnet` | global vault code |
+| Vault owned by the DAO below, code version 6 | `dao.factory.comatocard.testnet` | global vault code |
+| Sputnik DAO v2 with council `comatocard-council.testnet` | `comatocard-council.sputnik-v2.testnet` | `sputnik-v2.testnet` |
+| Standalone lending test vault, keeper `comatocard-agent.testnet` | `lend.comatocard.testnet` | `contracts/vault` 0.5.0 |
+| Rhea (Burrow) lending testnet deployment used as the venue, and its USDC.e | `contract.burrow.testnet`, `usdc.fakes.testnet` | third party |
 
 Demo accounts: `comatocard-shop.testnet` (merchant), `comatocard-council.testnet` (DAO council member), `comatocard-agent.testnet` (agent operator).
 
 ### Verify
 - `near contract call-function as-read-only factory.comatocard.testnet get_config json-args '{}' network-config testnet now` shows the latest vault code hash above. New vaults use the latest code; existing vaults keep the code they were created with.
-- From release v0.4.1 on, testnet code is deployed from the release assets, built with `cargo near build reproducible-wasm` in the image pinned in each contract's `Cargo.toml`. To check it, check out the release tag, run `cargo near build reproducible-wasm --manifest-path contracts/vault/Cargo.toml` (Docker required) and compare `python3 scripts/code-hash.py target/near/vault/vault.wasm` with the release `CODE_HASHES` asset and the hash on chain.
+- From release v0.4.1 on, testnet code is deployed from the release assets (vault from v0.5.0), built with `cargo near build reproducible-wasm` in the image pinned in each contract's `Cargo.toml`. To check it, check out the release tag, run `cargo near build reproducible-wasm --manifest-path contracts/vault/Cargo.toml` (Docker required) and compare `python3 scripts/code-hash.py target/near/vault/vault.wasm` with the release `CODE_HASHES` asset and the hash on chain.
 
 ### End-to-end check on 2026-11-10
 | Step | Transaction | Result |

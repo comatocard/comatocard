@@ -51,6 +51,8 @@ const call = vaultCalls(vault.vaultId).pay({ merchant: "comatocard-shop.testnet"
 ```
 Every view response is validated with the same Zod schemas the indexer uses. Import types from the SDK; never redefine them.
 
+Lending (vault 0.5.0): `vault.getYield()` returns the venue, the keeper and each token's `min_liquid`, lent principal and in-flight flag; `vaultCalls(id).supply(token, amount)` and `recall(token, amount)` carry the gas the vault requires (100 and 150 Tgas). The owner or the keeper signs them; `apps/agents` `pnpm keeper` plans them from the cards' spend room.
+
 ## Indexer
 Run it with `apps/indexer/README.md`. Endpoints are specified in `docs/specs/indexer-api.md`; the ones the apps need first:
 - `GET /vaults?owner=<account>`, `GET /vaults/<vault>`, `GET /vaults/<vault>/cards`, `GET /cards?holder=<account>` for the cards an agent or person received as tokens

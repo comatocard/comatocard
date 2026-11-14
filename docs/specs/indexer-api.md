@@ -7,7 +7,7 @@ Status: v1, implemented in Rust in `apps/indexer`. Owner: indexer workstream.
 - Filter: successful receipt outcomes whose `executor_id` is the factory, the registry, or a direct sub-account `<name>.<factory>`. Logs of failed receipts are ignored because their effects were rolled back.
 - Parse logs starting with `EVENT_JSON:`, validate against `packages/sdk` schemas, reject and record unknown shapes in a dead-letter table.
 - Idempotency key: `(receipt_id, log_index)`. A cursor table stores the last processed height; restart resumes from it.
-- Projections, updated in the same database transaction as the raw event insert and the cursor: `vaults`, `cards`, `payments`, `approvers`, `token_flows` (deposits and withdrawals), `registry_reports`, `registry_statuses`. A replayed event is skipped before projection, so reprocessing a block never double counts.
+- Projections, updated in the same database transaction as the raw event insert and the cursor: `vaults`, `cards`, `payments`, `approvers`, `token_flows` (deposits, withdrawals, and lending: `yield_supplied` out with the accepted amount, `yield_recalled` back in), `registry_reports`, `registry_statuses`. A replayed event is skipped before projection, so reprocessing a block never double counts.
 - WebSocket subscribers receive events only after their block is committed.
 
 ## Payment rows
@@ -20,7 +20,7 @@ All responses are JSON unless noted. Lists use cursor pagination (`?cursor=&limi
 |-|-|
 | `GET /health` | Status, indexed height, chain head, lag |
 | `GET /vaults?owner=` | Vaults of an owner |
-| `GET /vaults/:vault` | Vault summary: owner, card count, `spent_today` (reserved and settled spend since 00:00 UTC) and `indexed_balances` per token derived from events (`available`, `reserved`); the contract view `get_balances` is authoritative |
+| `GET /vaults/:vault` | Vault summary: owner, card count, `spent_today` (reserved and settled spend since 00:00 UTC) and `indexed_balances` per token derived from events (`available`, `reserved`), with lent funds counted out until recalled; the contract view `get_balances` is authoritative |
 | `GET /vaults/:vault/cards` | Cards with status, policy, `public_key` (null after a token transfer until the holder sets a key) and `holder_id` (null means the vault owner); live spend counters come from the vault view `list_cards` |
 | `GET /cards?holder=` | Cards that are not revoked and whose token the account holds, across vaults; cards without an explicit holder count for the vault owner |
 | `GET /vaults/:vault/cards/:card` | One card with recent payments |

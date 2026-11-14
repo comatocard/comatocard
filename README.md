@@ -46,10 +46,10 @@ A Comatocard vault is a self-custodial NEAR account that holds stablecoins and i
 | Website and HTTP 402 demo merchant | https://comatocard.xyz, https://comatocard.xyz/shop |
 | Documentation | https://docs.comatocard.xyz |
 | Indexer, GraphQL explorer | https://indexer.comatocard.xyz/graphql |
-| Relayer | https://relayer.comatocard.xyz/health |
+| Relayer, and the policy assistant as its own service at `/assistant` | https://relayer.comatocard.xyz/health |
 | Contracts | `factory.comatocard.testnet`, `registry.comatocard.testnet`, `tusd.comatocard.testnet` |
 
-Contract code is the reproducible build attached to [release v0.4.1](https://github.com/comatocard/comatocard/releases/tag/v0.4.1). Every testnet transaction checked so far, including a rejection, an approval and a card handover, is listed in [docs/deployments.md](docs/deployments.md).
+Vault code is the reproducible build attached to [release v0.5.0](https://github.com/comatocard/comatocard/releases/tag/v0.5.0); factory, registry and tUSD run the build of [release v0.4.1](https://github.com/comatocard/comatocard/releases/tag/v0.4.1). Every testnet transaction checked so far, including a rejection, an approval and a card handover, is listed in [docs/deployments.md](docs/deployments.md).
 
 ## Try it
 ### In the browser
@@ -71,6 +71,7 @@ Requirements: Node 24 with pnpm, Rust from `rust-toolchain.toml` with [cargo-nea
 6. **Pay from an agent.** `apps/agents` holds a card key and pays through its guard: preview, risk verdict, and human confirmation on a warning. See [apps/agents](apps/agents/README.md).
 7. **Watch a prompt injection fail.** `pnpm attack` in `apps/agents` gives an LLM agent an invoice whose hidden footer redirects the payment to a blocked account: the model follows it, and the guard refuses before signing. `pnpm attack --no-guard` stands for an agent whose own code is compromised: the vault asks the registry on chain and the payment fails with `merchant_blocked`. Recorded runs are in [docs/deployments.md](docs/deployments.md).
 8. **Act as an owner without NEAR.** `pnpm owner-call <vault> freeze_card '{"card_id":0}'` in `apps/relayer` freezes a card while the owner balance stays unchanged. The relayer refuses card payments, other contracts and senders that are not the owner. See [apps/relayer](apps/relayer/README.md).
+9. **See a vault that lends.** `near contract call-function as-read-only v6.factory.comatocard.testnet get_yield json-args '{}' network-config testnet now` shows the venue `contract.burrow.testnet` and `min_liquid` 5 USDC.e kept for cards. Its supply and recall transactions, and the keeper's runs, are in [docs/deployments.md](docs/deployments.md).
 
 ## For AI agents
 - **Docs for models:** [llms.txt](https://docs.comatocard.xyz/llms.txt) indexes every page; [llms-full.txt](https://docs.comatocard.xyz/llms-full.txt) holds the whole documentation in one file.
@@ -85,8 +86,8 @@ Requirements: Node 24 with pnpm, Rust from `rust-toolchain.toml` with [cargo-nea
 | [`contracts/registry`](contracts/registry) | Counterparty registry with reports, curators and sanctions listings |
 | [`contracts/mock-ft`](contracts/mock-ft) | tUSD, the testnet stablecoin |
 | [`apps/indexer`](apps/indexer) | Rust indexer: REST, WebSocket, GraphQL, risk verdicts, CSV export |
-| [`apps/agents`](apps/agents) | Spending agent with its guard |
-| [`apps/relayer`](apps/relayer) | Meta transaction relayer for owner actions |
+| [`apps/agents`](apps/agents) | Spending agent with its guard, lending keeper, treasury agent, MCP server |
+| [`apps/relayer`](apps/relayer) | Meta transaction relayer for owner actions, and the policy assistant service |
 | [`apps/web`](apps/web) | Owner app and the HTTP 402 demo merchant (`/shop`) |
 | [`apps/docs`](apps/docs) | Documentation site, generated from `docs/` |
 | [`packages/sdk`](packages/sdk) | Types, event schemas, vault client and compliance helpers |

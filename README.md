@@ -4,9 +4,9 @@
 
 Programmable payment cards for people and AI agents, enforced by smart contracts on NEAR.
 
-[Docs](https://docs.comatocard.xyz) · [Indexer GraphQL](https://indexer.comatocard.xyz/graphql) · [Testnet deployment](docs/deployments.md)
+[App](https://app.comatocard.xyz) · [Website](https://comatocard.xyz) · [Docs](https://docs.comatocard.xyz) · [Indexer GraphQL](https://indexer.comatocard.xyz/graphql) · [Testnet deployment](docs/deployments.md)
 
-The docs and the testnet indexer are live; the hosted app is being deployed, so until then the steps below run against NEAR testnet and locally.
+Everything runs on NEAR testnet with tUSD, a test stablecoin: no real money moves. The app, the demo merchant, the indexer and the relayer are hosted and stay up through judging.
 
 ## What it is
 A Comatocard vault is a self-custodial NEAR account that holds stablecoins and issues cards. A card is a NEAR access key that can call only `pay`, with its own spending policy: limits per payment, day and 30-day period, merchant allow or deny lists, an approval threshold, a validity window and counterparty checks. The vault enforces the policy on every payment and records every attempt, including rejections and their reasons, as an on-chain event. An AI agent can spend on its own, inside limits it cannot change.
@@ -23,6 +23,15 @@ A Comatocard vault is a self-custodial NEAR account that holds stablecoins and i
 - **Built for the rules where it runs.** Sanctions reports name their official list, approvals name their approver, and the docs map each control to local and global rules. Comatocard is not offered for paying Indonesian merchants in stablecoins for domestic sales, as the Currency Law requires rupiah. See [Compliance readiness](docs/compliance.md) and [Compliance research](docs/compliance-research.md).
 
 ## Try it
+### In the browser
+Needs a NEAR testnet wallet such as [Meteor](https://wallet.meteorwallet.app) or [MyNearWallet](https://testnet.mynearwallet.com), and a little testnet NEAR from the [faucet](https://near-faucet.io).
+
+1. **Open the app.** Go to https://app.comatocard.xyz and connect the wallet. Setup creates your vault, mints test tUSD and deposits it, then issues a first card with its limits.
+2. **See the card and its limits.** Home shows the balance and the card; open the card to see today's spend against its daily limit, its policy and its key.
+3. **Act as the owner without gas.** Freeze the card from its page: the relayer sponsors the call, so your NEAR balance stays unchanged, and the card shows `Frozen`.
+4. **Pay a merchant over HTTP 402.** https://comatocard.xyz/shop is a demo merchant: it answers `402 Payment Required` with a challenge and the agent command that pays it. Run that command with a card key from `apps/agents`, and the page unlocks once the payment settles, with a link to the transaction.
+
+### From the command line
 Requirements: Node 24 with pnpm, Rust from `rust-toolchain.toml` with [cargo-near](https://github.com/near/cargo-near), Docker.
 
 1. **Build and test everything.** `pnpm install && pnpm build && pnpm test` builds the contracts and apps and runs the unit tests. `pnpm test:integration` runs the near-sandbox and Postgres tests.
@@ -63,13 +72,16 @@ Listed for the hackathon rules (Q-005). The repository starts on 2026-11-09, ins
 | Contracts | `near-sdk`, `near-contract-standards`; tests on `near-sandbox` and `near-api` |
 | Indexer | `tokio`, `axum`, `sqlx`, `reqwest`, `async-graphql`, `tracing`; tests on `testcontainers` |
 | SDK, agents, relayer | `near-api-js`, `zod`, `pino`, `borsh` |
-| Web app | Next.js, React, `@hot-labs/near-connect`, TanStack Query, Tailwind CSS, Motion, GSAP, Lenis, Lucide |
-| Docs site | Next.js, Nextra, MUI, Emotion, Tailwind CSS, Shiki, Pagefind |
+| Web app | Next.js, React, `@hot-labs/near-connect`, TanStack Query, Tailwind CSS, GSAP, Lenis, Lucide |
+| Docs site | Next.js, Nextra, MUI, Emotion, Tailwind CSS, Motion, Shiki, Pagefind |
 | Tooling | `cargo-near`, NEAR CLI, pnpm, Turborepo, Biome, ESLint with SonarJS, Vitest, Playwright, cargo-deny |
 
 - **Templates:** the docs site layout, components, illustrations and article icons come from [zeta-chain/docs](https://github.com/zeta-chain/docs) (MIT, notice in [`apps/docs/LICENSE`](apps/docs/LICENSE)); its content, branding and services are removed. The official NEAR agent skills from [near/agent-skills](https://github.com/near/agent-skills) are vendored in `.agents/skills`.
-- **Services:** NEAR testnet RPC, neardata by FastNEAR for blocks, NEAR Intents 1Click for treasury quotes and swaps, NEAR AI Cloud for the policy assistant, GitHub Pages for the docs, GHCR and Coolify for the indexer.
+- **Services:** NEAR testnet RPC, neardata by FastNEAR for blocks, NEAR Intents 1Click for treasury quotes and swaps, NEAR AI Cloud for the policy assistant, Vercel for the web app, GitHub Pages for the docs, GHCR and Coolify for the indexer, a team VPS behind Caddy for the relayer.
 - **AI-written code:** much of the code, tests and documentation was written with AI coding assistants and reviewed, tested and merged by the team through labelled pull requests.
+
+## Other projects
+Disclosed for the hackathon rules (Q-015). Axel ([@Lexirieru](https://github.com/Lexirieru)) also builds [Hellonear](https://github.com/Hellonear-AI/hellonear) at NEAR HACKATHON. The two projects are independent and share no code.
 
 ## License
 [MIT](LICENSE)

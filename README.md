@@ -106,13 +106,13 @@ Listed for the hackathon rules (Q-005). The repository starts on 2026-11-09, ins
 |-|-|
 | Contracts | `near-sdk`, `near-contract-standards`; tests on `near-sandbox` and `near-api` |
 | Indexer | `tokio`, `axum`, `sqlx`, `reqwest`, `async-graphql`, `tracing`; tests on `testcontainers` |
-| SDK, agents, relayer | `near-api-js`, `zod`, `pino`, `borsh` |
+| SDK, agents, relayer | `near-api-js`, `zod`, `pino`, `borsh`, `@modelcontextprotocol/sdk` (MCP server) |
 | Web app | Next.js, React, `@hot-labs/near-connect`, TanStack Query, Tailwind CSS, GSAP, Lenis, Lucide |
 | Docs site | Next.js, Nextra, MUI, Emotion, Tailwind CSS, Motion, Shiki, Pagefind |
 | Tooling | `cargo-near`, NEAR CLI, pnpm, Turborepo, Biome, ESLint with SonarJS, Vitest, Playwright, cargo-deny |
 
-- **Templates:** the docs site layout, components, illustrations and article icons come from [zeta-chain/docs](https://github.com/zeta-chain/docs) (MIT, notice in [`apps/docs/LICENSE`](apps/docs/LICENSE)); its content, branding and services are removed. The official NEAR agent skills from [near/agent-skills](https://github.com/near/agent-skills) are vendored in `.agents/skills`.
-- **Services:** NEAR testnet RPC, neardata by FastNEAR for blocks, NEAR Intents 1Click for treasury quotes and swaps, NEAR AI Cloud for the policy assistant, Vercel for the web app, GitHub Pages for the docs, GHCR and Coolify for the indexer, a team VPS behind Caddy for the relayer.
+- **Templates:** the docs site layout, components, illustrations and article icons come from [zeta-chain/docs](https://github.com/zeta-chain/docs) (MIT, notice in [`apps/docs/LICENSE`](apps/docs/LICENSE)); its content, branding and services are removed. The official NEAR agent skills from [near/agent-skills](https://github.com/near/agent-skills) are vendored in `.agents/skills`. Sandbox tests deploy third-party contract code as fixtures, never on a network: the Sputnik DAO v2 and Rhea (Burrow) lending wasm, with provenance and hashes in [`contracts/testkit/fixtures`](contracts/testkit/fixtures/README.md).
+- **Services:** NEAR testnet RPC, neardata by FastNEAR for blocks, NEAR Intents 1Click for treasury quotes and swaps, NEAR AI Cloud for the policy assistant, Rhea (Burrow) lending as the venue for idle vault balance, Vercel for the web app, GitHub Pages for the docs, GHCR and Coolify for the indexer, a team VPS behind Caddy for the relayer.
 - **AI-written code:** much of the code, tests and documentation was written with AI coding assistants and reviewed, tested and merged by the team through labelled pull requests.
 
 ### Other projects

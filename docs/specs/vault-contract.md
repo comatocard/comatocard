@@ -139,11 +139,11 @@ The vault can lend idle balance to one NEAR lending venue with a Rhea (Burrow) i
 | Method | Caller | Effect |
 |-|-|-|
 | `set_yield_venue(venue: Option<AccountId>, keeper: Option<AccountId>)` | Owner | Sets the lending contract and the keeper allowed to call `supply` and `recall`. The venue changes only while nothing is supplied or in flight |
-| `set_yield_token(token, min_liquid: U128, extra_decimals: u8)` | Owner | Enables an accepted token for lending. `min_liquid` is the available balance that always stays in the vault for cards; `extra_decimals` is the venue's extra precision for the token (12 for USDC on Rhea) |
+| `set_yield_token(token, min_liquid: U128)` | Owner | Enables an accepted token for lending. `min_liquid` is the available balance that always stays in the vault for cards |
 | `supply(token, amount)` | Owner or keeper | Requires `available - amount >= min_liquid` and nothing in flight for the token. Moves `amount` from available to supplied and sends it with `ft_transfer_call(venue, amount, "")`. Whatever the venue does not accept returns to available. Prepaid gas at least 100 Tgas |
-| `recall(token, amount)` | Owner or keeper | Reads the vault's venue account, withdraws `min(amount, supplied at the venue)` with `execute([Withdraw])`, and credits it to available. Interest can be recalled; the tracked principal never goes below zero. Prepaid gas at least 150 Tgas |
+| `recall(token, amount)` | Owner or keeper | Reads, in parallel, the vault's venue account (`get_account`) and the token's venue configuration (`get_asset`), whose `extra_decimals` converts the venue's internal balance, so no owner setting can scale it wrongly. Withdraws `min(amount, supplied at the venue)` with `execute([Withdraw])` and credits it to available. If either read fails, nothing moves. Interest can be recalled; the tracked principal never goes below zero. Prepaid gas at least 150 Tgas |
 | `clear_yield_pending(token)` | Owner | Clears a stuck in-flight flag after a callback ran out of gas |
-| `get_yield() -> YieldView` | Anyone | Venue, keeper, and per token `min_liquid`, `extra_decimals`, principal `supplied` and `pending` |
+| `get_yield() -> YieldView` | Anyone | Venue, keeper, and per token `min_liquid`, principal `supplied` and `pending` |
 
 The vault must hold a storage deposit at the venue before the first `supply` (`storage_deposit(account_id: <vault>)` on the venue, paid by anyone); without it the venue refuses the transfer and the tokens return to available. Card payments only spend available balance, so `min_liquid` and the keeper's recalls keep cards paying. Known limit: after a successful `execute`, the venue sends the tokens with a plain `ft_transfer`; if that transfer failed, the venue keeps the amount credited to the vault's venue account while the vault has already counted it as available.
 

@@ -102,9 +102,6 @@ Requirements: Node 24 with pnpm, Rust from `rust-toolchain.toml` with [cargo-nea
 ## Hackathon
 Built for NEAR HACKATHON, tracks `realworld`, `security`, `agents`, `social`, `nfts`, `privacy` and `defi`.
 
-### Other projects by team members
-Disclosed for the hackathon rules (Q-015). [riorblade](https://github.com/riorblade) also entered [Nyxeron](https://github.com/riorblade/nyxeron-near), an independent project that shares no code with Comatocard.
-
 ### Third-party code and tools
 Listed for the hackathon rules (Q-005). The repository starts on 2026-11-09, inside the hackathon window; there is no code from before it.
 
@@ -122,7 +119,11 @@ Listed for the hackathon rules (Q-005). The repository starts on 2026-11-09, ins
 - **AI-written code:** much of the code, tests and documentation was written with AI coding assistants and reviewed, tested and merged by the team through labelled pull requests. The backdrop of the connect and setup screens is an AI-generated image.
 
 ### Other projects
-Disclosed for the hackathon rules (Q-015). Axel ([@Lexirieru](https://github.com/Lexirieru)) also builds [Hellonear](https://github.com/Hellonear-AI/hellonear) at NEAR HACKATHON. The two projects are independent and share no code.
+Disclosed for the hackathon rules (Q-015). Two team members also entered an independent project at NEAR HACKATHON:
+- Axel ([@Lexirieru](https://github.com/Lexirieru)): [Hellonear](https://github.com/Hellonear-AI/hellonear)
+- Kiel ([@riorblade](https://github.com/riorblade)): [Nyxeron](https://github.com/riorblade/nyxeron-near)
+
+Each is a separate project and shares no code with Comatocard.
 
 ## License
 [MIT](LICENSE)

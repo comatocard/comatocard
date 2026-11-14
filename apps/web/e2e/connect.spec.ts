@@ -42,6 +42,19 @@ test.describe("connect screen", () => {
     await expect(page.getByRole("tooltip")).toHaveCount(0);
     await tip.first().click();
     await expect(page.getByRole("tooltip")).toContainText("Testnet only");
+    // The tip stays inside the screen, even near the bottom or right edge of a phone.
+    const view = page.viewportSize() ?? { width: 0, height: 0 };
+    await expect
+      .poll(async () => {
+        const box = await page.getByRole("tooltip").boundingBox();
+        return (
+          box !== null &&
+          box.x >= 8 &&
+          box.x + box.width <= view.width - 8 &&
+          box.y + box.height <= view.height
+        );
+      })
+      .toBe(true);
     await page.keyboard.press("Escape");
     await expect(page.getByRole("tooltip")).toHaveCount(0);
   });

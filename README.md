@@ -102,6 +102,9 @@ Requirements: Node 24 with pnpm, Rust from `rust-toolchain.toml` with [cargo-nea
 ## Hackathon
 Built for NEAR HACKATHON, tracks `realworld`, `security`, `agents`, `social`, `nfts`, `privacy` and `defi`.
 
+### Other projects by team members
+Disclosed for the hackathon rules (Q-015). [riorblade](https://github.com/riorblade) also entered [Nyxeron](https://github.com/riorblade/nyxeron-near), an independent project that shares no code with Comatocard.
+
 ### Third-party code and tools
 Listed for the hackathon rules (Q-005). The repository starts on 2026-11-09, inside the hackathon window; there is no code from before it.
 

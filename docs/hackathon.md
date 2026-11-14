@@ -46,7 +46,9 @@ Demo post on X: built at NEAR HACKATHON, tags `@NEARProtocol` and `#NEARHackatho
 | `security` | Cards are function-call keys, on-chain policies, counterparty registry, prompt-injection demo |
 | `agents` | Agents hold cards, pay HTTP 402 APIs, every purchase has a receipt |
 | `social` | A Sputnik DAO can own a vault: tiered approvals through DAO proposals |
-| `nfts`, `privacy`, `defi` | Stretch, see `docs/workstreams.md` |
+| `nfts` | Every card is a NEP-171 token that carries spending rights; transferring it hands the card over and deletes the old key |
+| `privacy` | The policy assistant runs in a TEE on NEAR AI Cloud; its answer's signature and TDX attestation are verified before the owner sees it |
+| `defi` | A vault lends idle balance to Rhea lending and recalls it itself, with a keeper; the treasury agent tops up through NEAR Intents 1Click |
 
 ## Resources
 | Resource | Link |

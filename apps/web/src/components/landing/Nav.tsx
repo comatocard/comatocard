@@ -8,8 +8,9 @@ import { cn } from "../../lib/utils";
 import { APP_LINK, NAV_ITEMS } from "./links";
 
 /**
- * The fixed header: white over the photo, dark once the page below is open. On a phone the links
- * live in a panel that drops from the top with GSAP, its rows following one after another.
+ * The fixed header: white over the photo, dark once the page below is open. Open app stays in it
+ * at every width. On a phone the section links live in a panel that drops from the top with GSAP,
+ * its rows following one after another.
  */
 export function Nav({
   dark,
@@ -30,28 +31,41 @@ export function Nav({
   // The mobile panel is near-black, so the header stays white while it is open.
   const d = dark && !menuOpen;
 
+  // The panel rests above the screen through a `transform` class, which GSAP then owns. Tailwind's
+  // own translate utilities write the separate `translate` property, which GSAP never touches:
+  // with one of those the panel stayed off screen however far the tween moved it.
   useLayoutEffect(() => {
     const el = panel.current;
     if (!el) return;
     const instant = first.current || prefersReducedMotion();
     first.current = false;
     const duration = instant ? 0 : 0.5;
-    const ctx = gsap.context(() => {
-      gsap.to(el, { yPercent: menuOpen ? 0 : -100, duration, ease: EASE.drawer });
+    const tweens = [
+      gsap.to(el, {
+        y: 0,
+        yPercent: menuOpen ? 0 : -100,
+        duration,
+        ease: EASE.drawer,
+        overwrite: true,
+      }),
       gsap.to(scrim.current, {
         autoAlpha: menuOpen ? 1 : 0,
         duration: instant ? 0 : DURATION.enter,
-      });
-      gsap.to("[data-menu-row]", {
+        overwrite: true,
+      }),
+      gsap.to(el.querySelectorAll("[data-menu-row]"), {
         opacity: menuOpen ? 1 : 0,
         y: menuOpen ? 0 : 12,
         duration: instant ? 0 : 0.4,
         ease: EASE.out,
         stagger: menuOpen ? 0.04 : 0,
         delay: menuOpen && !instant ? 0.08 : 0,
-      });
-    }, el);
-    return () => ctx.revert();
+        overwrite: true,
+      }),
+    ];
+    return () => {
+      for (const tween of tweens) tween.kill();
+    };
   }, [menuOpen]);
 
   const link = (id: string) => ({
@@ -74,7 +88,7 @@ export function Nav({
       />
       <div
         ref={panel}
-        className="fixed inset-x-0 top-0 z-[55] -translate-y-full bg-[#0A0B11]/[0.98] px-5 pt-20 pb-8 md:hidden"
+        className="fixed inset-x-0 top-0 z-[55] bg-[#0A0B11]/[0.98] px-5 pt-20 pb-8 [transform:translateY(-100%)] md:hidden"
       >
         <nav aria-label="Sections" className="flex flex-col">
           {NAV_ITEMS.map((item) => (
@@ -90,23 +104,29 @@ export function Nav({
               {item.label}
             </a>
           ))}
-          <Link
-            data-menu-row
-            {...APP_LINK}
-            className="mt-6 self-start rounded-full bg-white px-5 py-2.5 text-sm font-medium text-ink opacity-0"
-          >
-            Open app
-          </Link>
         </nav>
       </div>
 
       <header
         className={cn(
-          "fixed inset-x-0 top-0 z-[60] flex items-center justify-between px-5 py-4 transition-[background-color,backdrop-filter] duration-500 sm:px-8 sm:py-5 md:px-10",
-          // Once the page is open, content scrolls under the header; a soft backdrop keeps the links readable.
-          d ? "bg-[#F4F0ED]/80 backdrop-blur-md" : "bg-transparent",
+          "fixed inset-x-0 top-0 z-[60] flex items-center justify-between px-5 py-4 sm:px-8 sm:py-5 md:px-10",
         )}
       >
+        {/* Once the page is open, content scrolls under the header. The backdrop is a blur that
+            thins out downwards instead of ending in a flat edge: three layers, each masked a
+            little shorter, under a tint that fades the same way. */}
+        <span
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute inset-x-0 top-0 -z-10 h-[168%] transition-opacity duration-500",
+            d ? "opacity-100" : "opacity-0",
+          )}
+        >
+          <span className="absolute inset-0 [backdrop-filter:blur(3px)] [mask-image:linear-gradient(to_bottom,#000_0%,#000_60%,transparent_100%)]" />
+          <span className="absolute inset-0 [backdrop-filter:blur(8px)] [mask-image:linear-gradient(to_bottom,#000_0%,#000_42%,transparent_78%)]" />
+          <span className="absolute inset-0 [backdrop-filter:blur(16px)] [mask-image:linear-gradient(to_bottom,#000_0%,#000_26%,transparent_58%)]" />
+          <span className="absolute inset-0 [background:linear-gradient(to_bottom,rgba(244,240,237,.9)_0%,rgba(244,240,237,.72)_45%,rgba(244,240,237,0)_100%)]" />
+        </span>
         <span className="flex items-center gap-2.5">
           <Image src="/comatocard-icon.svg" alt="" width={24} height={24} className="size-6" />
           <span
@@ -138,28 +158,31 @@ export function Nav({
           ))}
         </nav>
 
-        <Link
-          {...APP_LINK}
-          className={cn(
-            "hidden rounded-full px-5 py-2.5 text-sm font-medium transition-[background-color,color,transform] duration-300 active:scale-[.97] md:block",
-            d ? "bg-[#18161B] text-white" : "bg-white text-ink",
-          )}
-        >
-          Open app
-        </Link>
+        {/* Open app stays in reach on a phone too, beside the menu button. */}
+        <div className="flex items-center gap-1.5">
+          <Link
+            {...APP_LINK}
+            className={cn(
+              "rounded-full px-4 py-2 text-[13px] font-medium transition-[background-color,color,transform] duration-300 active:scale-[.97] md:px-5 md:py-2.5 md:text-sm",
+              d ? "bg-[#18161B] text-white" : "bg-white text-ink",
+            )}
+          >
+            Open app
+          </Link>
 
-        <button
-          type="button"
-          onClick={onToggleMenu}
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
-          aria-expanded={menuOpen}
-          className={cn(
-            "grid size-10 place-items-center transition-colors duration-500 md:hidden",
-            d ? "text-[#18161B]" : "text-white",
-          )}
-        >
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
+          <button
+            type="button"
+            onClick={onToggleMenu}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            className={cn(
+              "grid size-10 place-items-center rounded-full transition-colors duration-500 md:hidden",
+              d ? "text-[#18161B]" : "text-white",
+            )}
+          >
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </header>
     </>
   );

@@ -37,6 +37,31 @@ test.describe("landing page", () => {
     expect(errors).toEqual([]);
   });
 
+  test("opens the phone menu with its links on screen, and keeps Open app in the header", async ({
+    page,
+  }) => {
+    const view = page.viewportSize() ?? { width: 0, height: 0 };
+    // Only phones have the menu button; wider screens show the links in the header. Decided by
+    // width, not by whether the button is on screen yet: the header fades in after load.
+    test.skip(view.width >= 768, "the menu button is for phones");
+    await page.goto("/");
+    const open = page.getByRole("button", { name: "Open menu" });
+    await expect(open).toBeVisible();
+    await expect(page.locator("header").getByRole("link", { name: "Open app" })).toBeVisible();
+    await open.click();
+    for (const name of ["Why Comatocard", "How it works", "Merchants", "FAQ"]) {
+      const link = page.getByRole("link", { name }).first();
+      await expect(link).toBeVisible();
+      // The panel once stayed above the screen: its rows were "visible" at a negative y.
+      await expect
+        .poll(async () => {
+          const box = await link.boundingBox();
+          return box !== null && box.y >= 0 && box.y + box.height <= view.height;
+        })
+        .toBe(true);
+    }
+  });
+
   test("plays the card video on the first scroll, then opens the page", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1, name: HERO })).toBeVisible();

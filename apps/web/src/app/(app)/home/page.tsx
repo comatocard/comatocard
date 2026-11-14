@@ -46,7 +46,7 @@ function VaultHome({ vault }: { vault: string }) {
   const balances = useBalances(vault);
   const cards = useCards(vault);
   const payments = usePayments(vault);
-  const feed = useLiveFeed(vault);
+  useLiveFeed(vault);
   const now = useNow();
   const [sheet, setSheet] = useState<"card" | "topup" | "vault" | null>(null);
   const close = () => setSheet(null);
@@ -115,17 +115,7 @@ function VaultHome({ vault }: { vault: string }) {
         </section>
 
         <section>
-          <SectionHead
-            title={
-              <>
-                Activity
-                <span
-                  title={feed === "live" ? "Live" : "Reconnecting"}
-                  className={`inline-block size-1.5 rounded-full ${feed === "live" ? "bg-pos" : "bg-faint"}`}
-                />
-              </>
-            }
-          >
+          <SectionHead title="Activity">
             <div className="flex items-center gap-3">
               <Pager
                 page={activity.page}

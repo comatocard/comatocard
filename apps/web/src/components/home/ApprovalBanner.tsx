@@ -21,12 +21,12 @@ export function ApprovalBanner({ vault, className }: { vault: string; className?
         <Clock3 />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[14px] font-semibold">
+        <span className="block truncate text-[14px] font-semibold">
           {waiting === 1 ? "1 payment waits for you" : `${waiting} payments wait for you`}
         </span>
-        <span className="block text-[12px] text-warn">Above a threshold or a flagged merchant</span>
+        <span className="block truncate text-[12px] text-warn">Over your limit or flagged</span>
       </span>
-      <span className="rounded-full bg-ink px-3.5 py-2 text-[13px] font-semibold text-white">
+      <span className="shrink-0 rounded-full bg-ink px-3.5 py-2 text-[13px] font-semibold text-white">
         Review
       </span>
     </Link>

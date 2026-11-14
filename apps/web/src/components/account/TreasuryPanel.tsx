@@ -68,7 +68,9 @@ function PlanBody({
     <div className="text-[13.5px]">
       <div className="flex items-baseline justify-between">
         <span className="font-semibold">{PLAN_TITLE[plan.action]}</span>
-        <span className="text-[12px] text-muted">dry run</span>
+        <span className="rounded-full bg-pill px-2 py-0.5 text-[11.5px] font-medium text-muted">
+          Plan only
+        </span>
       </div>
       <p className="mt-1 text-muted">
         Cards may still spend {displayUnits(plan.required, decimals)} {symbol}; your card account

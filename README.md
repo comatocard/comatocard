@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/comatocard/comatocard/actions/workflows/ci.yml/badge.svg)](https://github.com/comatocard/comatocard/actions/workflows/ci.yml) [![Docs](https://github.com/comatocard/comatocard/actions/workflows/docs.yml/badge.svg)](https://docs.comatocard.xyz) [![Release](https://img.shields.io/github/v/release/comatocard/comatocard)](https://github.com/comatocard/comatocard/releases) [![NEAR testnet](https://img.shields.io/badge/NEAR-testnet-00ec97)](docs/deployments.md) [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-[App](https://app.comatocard.xyz) · [Website](https://comatocard.xyz) · [Documentation](https://docs.comatocard.xyz) · [Indexer GraphQL](https://indexer.comatocard.xyz/graphql) · [Testnet deployment](docs/deployments.md)
+[Demo video](https://x.com/comatocard/status/2121701040001303007) · [App](https://app.comatocard.xyz) · [Website](https://comatocard.xyz) · [Documentation](https://docs.comatocard.xyz) · [Indexer GraphQL](https://indexer.comatocard.xyz/graphql) · [Testnet deployment](docs/deployments.md)
 
 > Everything runs on NEAR testnet with tUSD, a test stablecoin: no real money moves. The app, the demo merchant, the indexer and the relayer are hosted and stay up through judging.
 
@@ -43,6 +43,7 @@ A Comatocard vault is a self-custodial NEAR account that holds stablecoins and i
 | Component | Where |
 |-|-|
 | Owner app | https://app.comatocard.xyz |
+| Demo video, 2 minutes on a phone | https://x.com/comatocard/status/2121701040001303007 |
 | Website and HTTP 402 demo merchant | https://comatocard.xyz, https://comatocard.xyz/shop |
 | Documentation | https://docs.comatocard.xyz |
 | Indexer, GraphQL explorer | https://indexer.comatocard.xyz/graphql |

@@ -16,5 +16,5 @@ USER node
 ENV PORT=4100
 EXPOSE 4100
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD ["node", "-e", "fetch('http://127.0.0.1:4100/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+  CMD ["node", "-e", "fetch('http://127.0.0.1:' + (process.env.PORT || 4100) + '/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
 CMD ["node", "dist/main.js"]

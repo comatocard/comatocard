@@ -37,6 +37,8 @@ Events follow NEP-297 and are logged as `EVENT_JSON:{...}`.
 | `approver_set` | `account_id`, `max_amount` (null means removed) |
 | `deposit` | `token`, `sender_id`, `amount` |
 | `withdrawal` | `token`, `receiver_id`, `amount`, `success` |
+| `yield_supplied` | `token`, `venue`, `amount`, `accepted` (what the venue kept; the rest is back in available) |
+| `yield_recalled` | `token`, `venue`, `amount`, `success` |
 | `payment_submitted` | `payment_id`, `card_id`, `merchant`, `token`, `amount`, `memo`, `reference` |
 | `payment_queued` | `payment_id`, `card_id`, `merchant`, `token`, `amount`, `memo`, `reference`, `cause` (`threshold` or `risk_flagged`) |
 | `payment_approved` | `payment_id`, `approver_id` |

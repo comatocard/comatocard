@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useLayoutEffect, useRef } from "react";
 import { DURATION, EASE, gsap, prefersReducedMotion } from "../../lib/motion/gsap";
 import { cn } from "../../lib/utils";
-import { LINKS, NAV_ITEMS } from "./links";
+import { APP_LINK, NAV_ITEMS } from "./links";
 
 /**
  * The fixed header: white over the photo, dark once the page below is open. On a phone the links
@@ -92,7 +92,7 @@ export function Nav({
           ))}
           <Link
             data-menu-row
-            href={LINKS.app}
+            {...APP_LINK}
             className="mt-6 self-start rounded-full bg-white px-5 py-2.5 text-sm font-medium text-ink opacity-0"
           >
             Open app
@@ -139,7 +139,7 @@ export function Nav({
         </nav>
 
         <Link
-          href={LINKS.app}
+          {...APP_LINK}
           className={cn(
             "hidden rounded-full px-5 py-2.5 text-sm font-medium transition-[background-color,color,transform] duration-300 active:scale-[.97] md:block",
             d ? "bg-[#18161B] text-white" : "bg-white text-ink",

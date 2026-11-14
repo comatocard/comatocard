@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useLayoutEffect, useRef, useState } from "react";
 import { DURATION, EASE, gsap, prefersReducedMotion } from "../../lib/motion/gsap";
 import { cn } from "../../lib/utils";
-import { LINKS, SECTION } from "./links";
+import { APP_LINK, LINKS, SECTION } from "./links";
 
 const FAQS = [
   { q: "Who holds the money?", a: "You. Only your wallet controls the card account." },
@@ -121,7 +121,7 @@ export function Closing() {
               Your agents spend. You set the rules.
             </p>
             <Link
-              href={LINKS.app}
+              {...APP_LINK}
               className="rounded-xl bg-[#18161B] px-8 py-3.5 text-[0.95rem] font-semibold text-white shadow-[0_10px_20px_rgba(0,0,0,0.3)] transition-transform duration-200 active:scale-[.97]"
             >
               Open app

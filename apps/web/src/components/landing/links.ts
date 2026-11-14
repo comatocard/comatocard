@@ -8,6 +8,9 @@ export const LINKS = {
   near: "https://near.org",
 } as const;
 
+/** Props for every "Open app" link: the app opens in a new tab and the landing page stays. */
+export const APP_LINK = { href: LINKS.app, target: "_blank", rel: "noopener noreferrer" } as const;
+
 /** In-page targets for the nav and the footer. */
 export const SECTION = {
   safety: "safety",

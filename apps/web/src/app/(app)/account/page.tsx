@@ -1,5 +1,12 @@
 "use client";
-import { ChevronDown, Download, LogOut } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Download,
+  FileSpreadsheet,
+  LogOut,
+  ReceiptText,
+} from "lucide-react";
 import { useNearWallet } from "near-connect-hooks";
 import { useRef, useState } from "react";
 import { Identicon } from "../../../components/account/Identicon";
@@ -156,18 +163,35 @@ export default function AccountPage() {
                 <Card className="divide-y divide-line px-5">
                   <a
                     href={exportCsvUrl(vaultId)}
-                    className="flex items-center justify-between py-3.5 text-[13.5px] font-semibold"
+                    className="flex items-center gap-3 py-3.5 text-[13.5px] font-semibold"
                   >
-                    Download CSV for your accountant
+                    <FileSpreadsheet
+                      size={17}
+                      strokeWidth={2}
+                      aria-hidden="true"
+                      className="shrink-0 text-muted"
+                    />
+                    <span className="flex-1">Download CSV for your accountant</span>
                     <Download size={15} strokeWidth={2} aria-hidden="true" className="text-faint" />
                   </a>
                   <button
                     type="button"
                     onClick={() => nav.forward("/activity")}
-                    className="flex w-full items-center justify-between py-3.5 text-left text-[13.5px] font-semibold"
+                    className="flex w-full items-center gap-3 py-3.5 text-left text-[13.5px] font-semibold"
                   >
-                    Full history
-                    <span aria-hidden="true">→</span>
+                    <ReceiptText
+                      size={17}
+                      strokeWidth={2}
+                      aria-hidden="true"
+                      className="shrink-0 text-muted"
+                    />
+                    <span className="flex-1">Full history</span>
+                    <ChevronRight
+                      size={15}
+                      strokeWidth={2}
+                      aria-hidden="true"
+                      className="text-faint"
+                    />
                   </button>
                 </Card>
               </Section>

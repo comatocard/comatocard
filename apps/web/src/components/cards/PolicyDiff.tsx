@@ -1,4 +1,5 @@
 import type { Policy } from "@comatocard/sdk";
+import { ArrowRight } from "lucide-react";
 import { merchantsText } from "../../lib/cards";
 import { changedFields } from "../../lib/policy-form";
 import { displayUnits } from "../../lib/units";
@@ -63,9 +64,12 @@ export function PolicyDiff({
             <span className="text-muted line-through decoration-1">
               {show(f, before, decimals, symbol)}
             </span>
-            <span aria-hidden="true" className="text-muted">
-              →
-            </span>
+            <ArrowRight
+              size={14}
+              strokeWidth={2}
+              aria-hidden="true"
+              className="translate-y-[2px] text-muted"
+            />
             <span className="font-semibold">{show(f, after, decimals, symbol)}</span>
           </div>
         </div>

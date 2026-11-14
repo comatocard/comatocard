@@ -1,13 +1,18 @@
 import type { Verification } from "@comatocard/agents/private-chat";
+import { Check as CheckIcon, TriangleAlert } from "lucide-react";
 
 function Check({ ok, label, detail }: { ok: boolean; label: string; detail: string }) {
   return (
     <li className="flex gap-2.5 py-2.5">
       <span
         aria-hidden="true"
-        className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-bold ${ok ? "bg-ink text-white" : "bg-[#f8e9e7] text-neg"}`}
+        className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full ${ok ? "bg-ink text-white" : "bg-[#f8e9e7] text-neg"}`}
       >
-        {ok ? "✓" : "!"}
+        {ok ? (
+          <CheckIcon size={12} strokeWidth={3} />
+        ) : (
+          <TriangleAlert size={12} strokeWidth={2.4} />
+        )}
       </span>
       <span className="min-w-0">
         <span className="block text-[13px] font-semibold">

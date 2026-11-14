@@ -110,8 +110,13 @@ export function toPolicy(
   };
 }
 
-/** The form for an existing policy, so an edit starts from what the card has today. */
-export function fromPolicy(policy: Policy, decimals: number): PolicyForm {
+/**
+ * The form for an existing policy, so an edit starts from what the card has today. Null until the
+ * token's decimals are known: a form built with a guessed 0 would show the smallest unit, and
+ * saving it would multiply every limit.
+ */
+export function fromPolicy(policy: Policy, decimals: number | undefined): PolicyForm | null {
+  if (decimals === undefined) return null;
   let merchantMode: PolicyForm["merchantMode"] = "any";
   let merchants = "";
   if (policy.merchants !== "any") {

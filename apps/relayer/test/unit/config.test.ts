@@ -27,4 +27,22 @@ describe("loadConfig", () => {
       "RELAYER_PRIVATE_KEY is not a valid ed25519 secret key",
     );
   });
+
+  it("keeps the assistant off without a NEAR AI key and never echoes the key", () => {
+    expect(loadConfig(env).nearAi).toBeNull();
+    expect(loadConfig({ ...env, NEAR_AI_API_KEY: "" }).nearAi).toBeNull();
+    expect(loadConfig({ ...env, NEAR_AI_API_KEY: "sk-secret" }).nearAi).toEqual({
+      baseUrl: "https://cloud-api.near.ai/v1",
+      apiKey: "sk-secret",
+      model: "Qwen/Qwen3.8-27B",
+    });
+    expect(() =>
+      loadConfig({ ...env, NEAR_AI_API_KEY: "sk-secret", NEAR_AI_BASE_URL: "not a url" }),
+    ).toThrow(/NEAR_AI_BASE_URL/);
+    try {
+      loadConfig({ ...env, NEAR_AI_API_KEY: "sk-secret", NEAR_AI_BASE_URL: "not a url" });
+    } catch (error) {
+      expect(String(error)).not.toContain("sk-secret");
+    }
+  });
 });

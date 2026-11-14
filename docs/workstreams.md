@@ -26,10 +26,10 @@ Who builds what, in which order, and what "done" means. Each task becomes a GitH
 |-|-|
 | Owner app: sign in, vaults, cards, top up (M1) | Built in `apps/web`, #103 |
 | Approvals, freeze, revoke, rotate, history with reasons, live feed (M2) | Built, #104 |
-| DAO-owned vault: proposals and votes (M3) | Built, #106; not yet run against a DAO-owned vault on testnet |
+| DAO-owned vault: proposals and votes (M3) | Done, #106; run on testnet with the app's proposal calls, see `docs/deployments.md` |
 | Policy assistant with Verified in TEE, treasury dry run (M4) | Built, #105; assistant checked end to end on testnet |
 | HTTP 402 merchant as `/shop` in `apps/web` | Built, #107 |
-| Hosted demo | Not yet |
+| Hosted demo | Live at https://app.comatocard.xyz, see `docs/deployments.md` |
 
 ## Interfaces between workstreams
 The specs are the contract. Agree on them first, then build in parallel against mocks.

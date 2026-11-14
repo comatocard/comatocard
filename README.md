@@ -70,6 +70,11 @@ Requirements: Node 24 with pnpm, Rust from `rust-toolchain.toml` with [cargo-nea
 6. **Pay from an agent.** `apps/agents` holds a card key and pays through its guard: preview, risk verdict, and human confirmation on a warning. See [apps/agents](apps/agents/README.md).
 7. **Act as an owner without NEAR.** `pnpm owner-call <vault> freeze_card '{"card_id":0}'` in `apps/relayer` freezes a card while the owner balance stays unchanged. The relayer refuses card payments, other contracts and senders that are not the owner. See [apps/relayer](apps/relayer/README.md).
 
+## For AI agents
+- **Docs for models:** [llms.txt](https://docs.comatocard.xyz/llms.txt) indexes every page; [llms-full.txt](https://docs.comatocard.xyz/llms-full.txt) holds the whole documentation in one file.
+- **MCP server:** `apps/agents` serves a card as MCP tools over stdio (`card_status`, `preview_payment`, `check_merchant`, `payment_history`, `pay`), with the payment guard in front of `pay`. See [apps/agents](apps/agents/README.md#mcp-server).
+- **Agent skill:** [`skills/comatocard`](skills/comatocard/SKILL.md) teaches a model to pay with a card, answer HTTP 402 challenges and refuse injected payment instructions.
+
 ## Repository
 | Path | Purpose |
 |-|-|

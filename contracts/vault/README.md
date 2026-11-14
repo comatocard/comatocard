@@ -9,6 +9,7 @@ The vault contract. It holds NEP-141 tokens, issues cards as function-call keys 
 | `payments/` | `pay`, approvals, settlement callbacks, the per-card queue |
 | `cards.rs` | Card issuance, policy updates, freeze, revoke, key rotation |
 | `nft/` | Cards as NEP-171 tokens on `near-contract-standards` |
+| `lending.rs` | Idle balance lent to a Rhea (Burrow) venue and recalled by the owner or a keeper, above a minimum kept for cards |
 | `ledger.rs`, `owner.rs`, `views.rs` | Deposits and withdrawals, ownership and approvers, views |
 | `events/` | Event payloads and emitters; golden fixtures pin their JSON |
 

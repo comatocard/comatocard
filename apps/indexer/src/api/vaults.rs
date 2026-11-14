@@ -114,7 +114,8 @@ pub async fn summary<C: Chain>(
     for (token, kind, total) in flows {
         let entry = balances.entry(token).or_default();
         let total: u128 = total.parse().unwrap_or_default();
-        if kind == "deposit" {
+        // Recalled lending returns to the vault like a deposit.
+        if kind == "deposit" || kind == "yield_recalled" {
             entry.incoming += total;
         } else {
             entry.outgoing += total;

@@ -29,6 +29,8 @@ payloads! {
     ApproverSet { account_id: AccountId, max_amount: Option<U128> }
     Deposit { token: AccountId, sender_id: AccountId, amount: U128 }
     Withdrawal { token: AccountId, receiver_id: AccountId, amount: U128, success: bool }
+    YieldSupplied { token: AccountId, venue: AccountId, amount: U128, accepted: U128 }
+    YieldRecalled { token: AccountId, venue: AccountId, amount: U128, success: bool }
     PaymentSubmitted {
         payment_id: u64, card_id: u64, merchant: AccountId, token: AccountId, amount: U128,
         memo: Option<String>, reference: Option<String>,
@@ -78,6 +80,8 @@ pub enum EventData {
     ApproverSet(ApproverSet),
     Deposit(Deposit),
     Withdrawal(Withdrawal),
+    YieldSupplied(YieldSupplied),
+    YieldRecalled(YieldRecalled),
     PaymentSubmitted(PaymentSubmitted),
     PaymentQueued(PaymentQueued),
     PaymentApproved(PaymentDecision),
@@ -93,7 +97,7 @@ pub enum EventData {
 }
 
 /// Every event name the indexer accepts, in `docs/specs/events.md` order.
-pub const EVENT_NAMES: [&str; 25] = [
+pub const EVENT_NAMES: [&str; 27] = [
     "vault_code_published",
     "vault_created",
     "card_created",
@@ -107,6 +111,8 @@ pub const EVENT_NAMES: [&str; 25] = [
     "approver_set",
     "deposit",
     "withdrawal",
+    "yield_supplied",
+    "yield_recalled",
     "payment_submitted",
     "payment_queued",
     "payment_approved",

@@ -13,6 +13,7 @@ export default defineConfig({
         "src/treasury-cli.ts",
         "src/policy-cli.ts",
         "src/mcp.ts",
+        "src/keeper-cli.ts",
       ],
       reporter: ["text", "lcov"],
     },

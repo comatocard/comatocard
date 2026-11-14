@@ -7,7 +7,7 @@ pub use payloads::Rejection;
 use payloads::{
     ApproverSet, CardCreated, CardKeyRejected, CardKeyRotated, CardPolicyUpdated, CardRef,
     CardTransferred, Deposit, OwnerRef, PaymentDecided, PaymentFailed, PaymentQueued, PaymentRef,
-    PaymentSettled, PaymentSubmitted, Withdrawal,
+    PaymentSettled, PaymentSubmitted, Withdrawal, YieldRecalled, YieldSupplied,
 };
 
 use comatocard_common::events::emit;
@@ -145,6 +145,30 @@ pub fn withdrawal(token: &AccountId, receiver_id: &AccountId, amount: U128, succ
         &Withdrawal {
             token,
             receiver_id,
+            amount,
+            success,
+        },
+    );
+}
+
+pub fn yield_supplied(token: &AccountId, venue: &AccountId, amount: U128, accepted: U128) {
+    emit(
+        "yield_supplied",
+        &YieldSupplied {
+            token,
+            venue,
+            amount,
+            accepted,
+        },
+    );
+}
+
+pub fn yield_recalled(token: &AccountId, venue: &AccountId, amount: U128, success: bool) {
+    emit(
+        "yield_recalled",
+        &YieldRecalled {
+            token,
+            venue,
             amount,
             success,
         },

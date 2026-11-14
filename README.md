@@ -23,6 +23,7 @@ A Comatocard vault is a self-custodial NEAR account that holds stablecoins and i
 | **Counterparty checks** | An on-chain registry of evidence-backed reports and curator statuses, including sanctions listings, is checked before a payment settles. |
 | **Gasless owner actions** | A relayer sponsors owner calls signed as delegate actions, so freezing or updating a card costs the owner no NEAR. |
 | **Payments over HTTP 402** | A merchant answers `402 Payment Required` with a challenge; an agent pays it with its card and the merchant unlocks on settlement. |
+| **Idle balance earns** | From vault 0.5.0, the owner or a keeper lends balance above a minimum kept for cards to Rhea lending and recalls it with interest. The vault itself holds the position, so the funds never leave its control. |
 | **Books that reconcile** | A Rust indexer serves the payment history, approvals and risk verdicts over REST, WebSocket and GraphQL, plus an accountant CSV with optional fiat valuation. |
 
 ## How a payment works

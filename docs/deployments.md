@@ -146,6 +146,26 @@ Every contract on testnet now runs the assets of [release v0.4.1](https://github
 | Owner issues a card checked by the registry | `7iP8drQZo1S5hFzHv2aLGvPm649uXgK9DSLpUpM5SXbb` | `card_created`, `nft_mint`, key added |
 | Card pays 1 tUSD with 100 Tgas | `7nK8SHcVnQWgDjeng4ozKgUA7ueGMRei5d6FSyZmbVmR` | Registry check, `payment_submitted`, `payment_settled` |
 
+### Vault lending on testnet (0.5.0) on 2026-11-14
+A vault built from this branch (`cargo near build non-reproducible-wasm`, contract version 0.5.0) runs standalone at `lend.comatocard.testnet`, owner `comatocard.testnet`, keeper `comatocard-agent.testnet`, accepting `usdc.fakes.testnet` (6 decimals). It lends to the Rhea (Burrow) testnet deployment `contract.burrow.testnet`, whose USDC asset reports 12 extra decimals; the vault reads them from the venue on every recall. The factory still publishes the v0.4.1 code, so vaults made in the app are unchanged.
+
+| Step | Transaction | Result |
+|-|-|-|
+| Deploy and init the vault | `CePsJd8WwDw6DUCCiFzfA53kugjx1JkhuiPqCLWqYwbB` | `get_config` reports `0.5.0` |
+| Owner deposits 100 USDC.e | `EFyQYqxQy9MRkd23Um1XKxhg4Uji12epnTDAX1RjDBU4` | `deposit`, available 100 |
+| Owner sets venue and keeper | `HkuoXrem2YWFWHXaDkCyHZvG1gdZ1q8PrEp7px959vA1` | `get_yield` shows both |
+| Owner enables USDC.e with `min_liquid` 30 | `GRt2YvpEY1Yj4DTR6wPgj5c9218bDLKWQSLKPFbYZzNR` | |
+| Storage deposit for the vault at the venue | `FmbML2x4XtV8wL81zKihnB8eZ2sxGoGNeUxLB2LuPj3k` | Registered at `contract.burrow.testnet` |
+| Keeper supplies 50 | `BYLpUgexARs4nh8uxqES8xKE8CUQfMU62FXVNisAGFHH` | Burrow `deposit`, vault `yield_supplied` accepted 50; available 50 |
+| Keeper supplies 30 more | refused | `supply would leave less than min_liquid available` |
+| `comatocard-shop.testnet` supplies 1 | refused | `only the owner or the keeper may call this method` |
+| Keeper recalls up to 1,000 with 150 Tgas | `8kEBZZn8VsbysZvA4f4vmmfBveFSMdGSwS3hvMfkgZRy` | Burrow `withdraw_succeeded` for what it held, vault `yield_recalled`; available 100, supplied 0 |
+| `pnpm keeper --execute` with no cards | `9ySwgVC7iDHZ4f7x2LanHFBEaYi2S49oWDLLVDJAiPnh` | Plan `supply` 70 (target `min_liquid` 30) |
+| Owner issues a card with a daily limit of 80 | `5punYigLhyqaKFHgYTueNfPe3NWVJvZRNig2SUXubWQv` | `card_created` |
+| `pnpm keeper --execute` again | `Bv27FbKoSiD6xDY5rddVAkXgstCLYWP5jitpLZXTew9A` | Plan `recall` 90 (target 80 x 1.5 = 120, available 30); the vault takes the 70 the venue holds; available 100, supplied 0 |
+
+The venue refusing a supply from a vault without a storage deposit, which returns everything to available, is covered by the sandbox test against the same Burrow code (`contracts/vault/tests/lending.rs`). Testnet USDC has no borrowers on this venue, so its supply APR is near zero; on mainnet, `contract.main.burrow.near` reported about 10.7 % for USDC on 2026-11-14 from its interest model.
+
 ### Indexer
 `https://indexer.comatocard.xyz` runs the image `ghcr.io/comatocard/comatocard-indexer:main` (published by `.github/workflows/indexer-image.yml`) on a VPS through Coolify, with its own Postgres 17. It indexes testnet from `factory.comatocard.testnet` and `registry.comatocard.testnet`.
 

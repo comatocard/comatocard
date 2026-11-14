@@ -15,12 +15,17 @@ import {
   tokenBalance,
   type VaultConfig,
   vaultConfig,
+  type YieldView,
+  yieldView,
 } from "./types.js";
 
 /** Gas a card attaches to `pay`; it fits the default card key allowance. */
 export const CARD_PAY_GAS = "100000000000000";
 /** Gas for owner methods. */
 export const OWNER_CALL_GAS = "50000000000000";
+/** Smallest prepaid gas the vault accepts for `supply` and `recall`, proven against Rhea. */
+export const SUPPLY_GAS = "100000000000000";
+export const RECALL_GAS = "150000000000000";
 /** Gas for owner methods that make cross-contract calls (approve, withdraw). */
 export const OWNER_ASYNC_CALL_GAS = "100000000000000";
 
@@ -134,6 +139,7 @@ export function createVaultClient(options: VaultClientOptions) {
     getPayment: (paymentId: number): Promise<Payment | null> =>
       view("get_payment", { payment_id: paymentId }, payment.nullable()),
     listApprovers: (): Promise<Approver[]> => view("list_approvers", {}, z.array(approver)),
+    getYield: (): Promise<YieldView> => view("get_yield", {}, yieldView),
     previewPayment: (key: PublicKey, merchant: AccountId, amount: U128): Promise<PaymentPreview> =>
       view("preview_payment", { public_key: key, merchant, amount }, paymentPreview),
   };
@@ -185,6 +191,12 @@ export function vaultCalls(vaultId: AccountId) {
       }),
     updatePolicy: (cardId: number, newPolicy: Policy) =>
       call(vaultId, "update_policy", { card_id: cardId, policy: newPolicy }),
+    /** Lends `amount` of `token` to the venue; owner or keeper. */
+    supply: (token: AccountId, amount: U128) =>
+      call(vaultId, "supply", { token, amount }, SUPPLY_GAS),
+    /** Takes back up to `amount` of `token` from the venue; owner or keeper. */
+    recall: (token: AccountId, amount: U128) =>
+      call(vaultId, "recall", { token, amount }, RECALL_GAS),
     freezeCard: (cardId: number) => call(vaultId, "freeze_card", { card_id: cardId }),
     unfreezeCard: (cardId: number) => call(vaultId, "unfreeze_card", { card_id: cardId }),
     revokeCard: (cardId: number) => call(vaultId, "revoke_card", { card_id: cardId }),

@@ -3,6 +3,8 @@ import {
   CARD_PAY_GAS,
   createVaultClient,
   MIN_HOLDER_ALLOWANCE,
+  RECALL_GAS,
+  SUPPLY_GAS,
   ViewError,
   vaultCalls,
 } from "../src/client.js";
@@ -66,6 +68,23 @@ describe("createVaultClient", () => {
     await expect(broken.getConfig()).rejects.toBeInstanceOf(ViewError);
   });
 
+  it("reads the lending view", async () => {
+    const view = {
+      venue: "contract.burrow.testnet",
+      keeper: null,
+      tokens: [
+        {
+          token: "usdc.testnet",
+          min_liquid: "30",
+          supplied: "50",
+          pending: false,
+        },
+      ],
+    };
+    const client = createVaultClient({ rpcUrl, vaultId, fetch: rpcReturning(view) });
+    await expect(client.getYield()).resolves.toEqual(view);
+  });
+
   it("passes pagination and nullable results through", async () => {
     const fetch = rpcReturning(null);
     const client = createVaultClient({ rpcUrl, vaultId, fetch });
@@ -103,6 +122,19 @@ describe("createVaultClient", () => {
 
 describe("vaultCalls", () => {
   const calls = vaultCalls(vaultId);
+
+  it("builds supply and recall with the gas the vault requires", () => {
+    expect(calls.supply("usdc.testnet", "5")).toMatchObject({
+      methodName: "supply",
+      args: { token: "usdc.testnet", amount: "5" },
+      gas: SUPPLY_GAS,
+      deposit: "0",
+    });
+    expect(calls.recall("usdc.testnet", "5")).toMatchObject({
+      methodName: "recall",
+      gas: RECALL_GAS,
+    });
+  });
 
   it("builds a card payment with the card gas and no deposit", () => {
     expect(calls.pay({ merchant: "shop.testnet", amount: "25" })).toEqual({

@@ -319,6 +319,32 @@ pub struct VaultConfig {
     pub contract_version: String,
 }
 
+/// Lending settings and position of one token.
+#[near(serializers = [borsh])]
+#[derive(Default)]
+pub struct LendingToken {
+    pub min_liquid: U128,
+    /// Principal lent and not yet recalled.
+    pub supplied: U128,
+    /// A supply or recall is in flight.
+    pub pending: bool,
+}
+
+#[near(serializers = [json])]
+pub struct YieldTokenView {
+    pub token: AccountId,
+    pub min_liquid: U128,
+    pub supplied: U128,
+    pub pending: bool,
+}
+
+#[near(serializers = [json])]
+pub struct YieldView {
+    pub venue: Option<AccountId>,
+    pub keeper: Option<AccountId>,
+    pub tokens: Vec<YieldTokenView>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

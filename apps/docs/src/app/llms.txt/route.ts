@@ -1,0 +1,10 @@
+import { origin } from "~/lib/llms";
+import { llmsTxt } from "~/lib/markdown.mjs";
+
+export const dynamic = "force-static";
+
+export function GET() {
+  return new Response(llmsTxt(origin), {
+    headers: { "content-type": "text/plain; charset=utf-8" },
+  });
+}

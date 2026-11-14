@@ -6,7 +6,7 @@ Workstream C. It reads the vaults over RPC with `@comatocard/sdk`, the history f
 
 ## Run locally
 1. Start the indexer (`apps/indexer/README.md`) and, for gasless owner actions, the relayer (`apps/relayer/README.md`).
-2. `cp apps/web/.env.example apps/web/.env.local`, then set `INDEXER_URL`, `NEXT_PUBLIC_INDEXER_WS_URL` and `RELAYER_URL`. `NEAR_AI_API_KEY` enables the policy assistant, `TREASURY_ACCOUNT` (an existing mainnet account, used only to quote) enables the treasury panel.
+2. `cp apps/web/.env.example apps/web/.env.local`, then set `INDEXER_URL`, `NEXT_PUBLIC_INDEXER_WS_URL` and `RELAYER_URL`. The policy assistant runs on the relayer, which needs `NEAR_AI_API_KEY`. `TREASURY_ACCOUNT` (an existing mainnet account, used only to quote) enables the treasury panel.
 3. `pnpm turbo run build --filter=@comatocard/web^...`, then from `apps/web`: `pnpm dev`, and open `http://localhost:3000`.
 
 ## Try it
@@ -28,7 +28,7 @@ The indexer and the relayer send no CORS headers, so the browser reaches them th
 |-|-|
 | `GET /api/indexer/*` | Proxies the indexer read API; any path outside it is 404 |
 | `POST /api/relay` | Checks the body is `{ signed_delegate }` and forwards it to the relayer |
-| `POST /api/assistant` | Policy assistant on NEAR AI Cloud with response signature and TDX attestation checks; 6 requests per minute per client |
+| `POST /api/assistant` | Proxy to the relayer's `POST /assistant` (policy assistant on NEAR AI Cloud with response signature and TDX attestation checks); 6 requests per minute per client here, the relayer holds the key and the overall limit |
 | `GET /api/treasury?vault=` | Treasury dry run with a 1Click quote; nothing is signed |
 | `GET /api/shop/report` | HTTP 402 resource; a reference unlocks it once, after a settled payment to the merchant |
 

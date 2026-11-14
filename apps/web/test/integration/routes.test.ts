@@ -35,10 +35,15 @@ const indexer = await startUpstream((req: Recorded) => {
   if (req.url.startsWith("/vaults?owner=")) return { status: 200, body: [] };
   return { status: 404, body: { error: "not found" } };
 });
-const relayer = await startUpstream(() => ({
+let assistantAnswer: { status: number; body: unknown } = {
   status: 200,
-  body: { status: "relayed", tx_hash: "tx-relayed", failure: null },
-}));
+  body: { kind: "invalid", cardId: 0, reason: "r", answer: "ok", verification: {} },
+};
+const relayer = await startUpstream((req) =>
+  req.url === "/assistant"
+    ? assistantAnswer
+    : { status: 200, body: { status: "relayed", tx_hash: "tx-relayed", failure: null } },
+);
 const rpc = await startUpstream((req) => {
   const { method } = JSON.parse(req.body) as { method: string };
   if (method === "gas_price") return { status: 200, body: { result: { gas_price: "100000000" } } };
@@ -51,6 +56,7 @@ vi.stubEnv("NEXT_PUBLIC_RPC_URL", rpc.url);
 
 const indexerRoute = await import("../../src/app/api/indexer/[...path]/route");
 const relayRoute = await import("../../src/app/api/relay/route");
+const assistantRoute = await import("../../src/app/api/assistant/route");
 const shopRoute = await import("../../src/app/api/shop/report/route");
 
 const params = (path: string) => ({ params: Promise.resolve({ path: path.split("/") }) });
@@ -111,6 +117,42 @@ describe("relayer proxy", () => {
       failure: null,
     });
     expect(JSON.parse(relayer.requests.at(-1)?.body ?? "{}")).toEqual({ signed_delegate: "AAEC" });
+  });
+});
+
+describe("assistant proxy", () => {
+  const ask = { vault: "acme.factory.comatocard.testnet", cardId: 0, request: "raise daily to 80" };
+  const post = (body: unknown, client = "203.0.113.9") =>
+    assistantRoute.POST(
+      new Request("https://app.test/api/assistant", {
+        method: "POST",
+        headers: { "x-forwarded-for": client },
+        body: JSON.stringify(body),
+      }),
+    );
+
+  it("refuses a malformed request without calling the relayer", async () => {
+    const before = relayer.requests.length;
+    const response = await post({ ...ask, request: "x" });
+    expect(response.status).toBe(400);
+    expect(relayer.requests).toHaveLength(before);
+  });
+
+  it("forwards the request to the relayer and returns its answer, with no key of its own", async () => {
+    const response = await post(ask);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ kind: "invalid", answer: "ok" });
+    const forwarded = relayer.requests.at(-1);
+    expect(forwarded?.url).toBe("/assistant");
+    expect(JSON.parse(forwarded?.body ?? "{}")).toEqual(ask);
+    expect(process.env.NEAR_AI_API_KEY).toBeUndefined();
+  });
+
+  it("passes the relayer's refusals through", async () => {
+    assistantAnswer = { status: 503, body: { error: "The assistant is not configured." } };
+    const response = await post(ask, "203.0.113.10");
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ error: "The assistant is not configured." });
   });
 });
 

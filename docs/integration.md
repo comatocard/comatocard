@@ -30,7 +30,7 @@ Amounts are strings in the token's smallest unit; tUSD has 6 decimals, so `"2500
 
 ## Approvals
 - Payments above the card `approval_threshold` are queued. The owner, or an approver set with `set_approver(account, max_amount)` whose limit covers the amount, calls `approve_payment` or `decline_payment`. Anyone can call `expire_payment` after the approval TTL (24 hours by default).
-- **DAO owner.** Transfer ownership with `propose_owner(<dao>)` from the current owner, then a DAO proposal calling `accept_owner`. Proposals on Sputnik DAO v2:
+- **DAO owner.** Transfer ownership with `propose_owner(<dao>)` from the current owner, then a DAO proposal calling `accept_owner`. Accepting hands every owner-held card to the DAO and deletes its key, so the DAO sets keys again with a `rotate_card_key` proposal; give the key an allowance of at least 0.2 NEAR, since a 100 Tgas card transaction costs about 0.1 NEAR of it. Proposals on Sputnik DAO v2:
   - `add_proposal` with `{ "proposal": { "description": "...", "kind": { "FunctionCall": { "receiver_id": "<vault>", "actions": [{ "method_name": "approve_payment", "args": "<base64 JSON>", "deposit": "0", "gas": "150000000000000" }] } } } }` and exactly the DAO proposal bond attached (1 NEAR by default)
   - `act_proposal` with `{ "id": <id>, "action": "VoteApprove", "proposal": <the same kind> }`
   - Tested end to end in `contracts/vault/tests/dao.rs`.

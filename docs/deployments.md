@@ -154,6 +154,20 @@ Every contract on testnet now runs the assets of [release v0.4.1](https://github
 | Owner issues a card checked by the registry | `7iP8drQZo1S5hFzHv2aLGvPm649uXgK9DSLpUpM5SXbb` | `card_created`, `nft_mint`, key added |
 | Card pays 1 tUSD with 100 Tgas | `7nK8SHcVnQWgDjeng4ozKgUA7ueGMRei5d6FSyZmbVmR` | Registry check, `payment_submitted`, `payment_settled` |
 
+### DAO-owned vault on 2026-11-14
+A Sputnik DAO v2 owns `dao.factory.comatocard.testnet` (vault code version 6, 0.5.0) and decides its queued payments. The DAO is `comatocard-council.sputnik-v2.testnet`, created from `sputnik-v2.testnet` with one council member, `comatocard-council.testnet`, and the default policy (1 NEAR bond, more than half of the council). The approval proposal and the vote were built by the web app's own `addProposalCall` and `actProposalCall` (`apps/web/src/lib/dao.ts`), and `proposalDecision` read the proposal back as `approve_payment` of payment 0.
+
+| Step | Transaction | Result |
+|-|-|-|
+| Create the DAO | `DmuGrr2zTJweoXh3tCprTyGegeJss4DDkZQVNav2mZv3` | `get_policy`: council `comatocard-council.testnet` |
+| Factory creates the vault for `comatocard.testnet`, which deposits 20 tUSD and issues a card with an approval threshold of 2 tUSD | `2r3J9NLpbzt7gD4gS2w8jps44oTbUh3dboT4Q3ypZj6P`, `Df5zL7ZB4MaotMEnmQF5BHCVH92hejgHLdX8TZXUdeMW`, `2YGZoaiEe95NwfpUkaxULv9CDAiJoXQqBK5szX8VB6rQ` | `vault_created`, `deposit`, `card_created` |
+| Owner proposes the DAO | `AdSAigeEBWLq9JpH2h818Btw3rUYfE4hofVzx31c2GTS` | `owner_proposed` |
+| Council proposes and approves `accept_owner` | `AHkftpqqx5NXYAmwxonsRPEQVzxwMroNM25ixmmkXQJX`, `GL4htLWpoYqc4drMm26uoSLemZtGC2P4gTezz2geAZ7H` | `owner_changed`; the owner-held card is handed to the DAO and its key deleted (`card_transferred`) |
+| Council proposes and approves `rotate_card_key` with a 0.3 NEAR allowance | `6cebc7zetZPWVb3bygkifoQrxbLLLmuwy6N7U72xCkvy`, `4MbcWt51Er7muddV74ioRSVL96dt4tvpW9KJimGYjJkE` | `card_key_rotated`. A first key with 0.1 NEAR was below the cost of a 100 Tgas card transaction |
+| Card pays the demo shop 3 tUSD | `FZsr8pvQ1ruxBuyBqkMj9DmXUwsg8yF9k99TY8gecYqz` | Guard preview `needs_approval`; vault `payment_queued`, cause `threshold`; listed by the indexer under `/approvals` |
+| Council adds the app's `approve_payment` proposal (proposal 3) | `H8gWCtixFTgzZshRRZR5ckvtjDcwm9QjUXvH3s7LSrh8` | Bond 1 NEAR, action gas 150 Tgas |
+| Council votes with the app's `act_proposal` call | `DTTHicbzkDWMb2rAyY5Aj2PX3oSLRFvRwjexVSvJLZNj` | `payment_approved`, `ft_transfer`, `payment_settled`; the indexer shows it `settled` with approver `comatocard-council.sputnik-v2.testnet` |
+
 ### Release v0.5.0 on 2026-11-14
 `factory.comatocard.testnet` publishes the vault code of [release v0.5.0](https://github.com/comatocard/comatocard/releases/tag/v0.5.0) as code version 6, so every vault created in the app from now on runs `contract_version` 0.5.0 and can lend. Existing vaults keep their code. The vault code hash equals the release `CODE_HASHES`: `Dy7N2F5XwXCEAUudrJMJFWBmingVuhVNGWTN9PCGqzb`. Factory, registry and tUSD keep the v0.4.1 code.
 
